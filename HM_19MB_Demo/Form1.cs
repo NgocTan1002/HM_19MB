@@ -1,0 +1,837 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Globalization;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
+
+namespace HM_19MB_Demo
+{
+    public partial class Form1 : Form
+    {
+        // ── Serial ───────────────────────────────────────────────────────────
+        private readonly SerialReader _serialReader = new SerialReader();
+        private readonly FakeDataGenerator _fakeDataGenerator = new FakeDataGenerator();
+        private MeasurementBlock? _lastBlock;
+
+        // ── Chart history ────────────────────────────────────────────────────
+        private const int MaxChartPoints = 720;
+        private readonly List<double>[] _probeHistory = new List<double>[10];
+        private readonly List<double>[] _humidityHistory = new List<double>[10];
+        private readonly List<double> _avgHistory = new List<double>();
+        private readonly List<double> _avgHumidityHistory = new List<double>();
+        private readonly List<string> _timeLabels = new List<string>();
+
+        // ── Session state ────────────────────────────────────────────────────
+        private int? _currentSessionId = null;
+
+        // ── Probe colors (referenced by Designer) ────────────────────────────
+        private static readonly Color[] ProbeColors =
+        {
+            Color.Red, Color.Blue, Color.Green, Color.Orange, Color.Purple,
+            Color.Teal, Color.Brown, Color.Magenta, Color.DarkCyan, Color.DarkGreen
+        };
+
+        // ────────────────────────────────────────────────────────────────────
+        public Form1()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                _probeHistory[i] = new List<double>();
+                _humidityHistory[i] = new List<double>();
+            }
+            InitializeComponent();
+            InitializeChartSeries();
+            InitializeGridContent();
+            WireEvents();
+            RefreshPorts();
+            InitializeDefaultValues();
+            
+            // Hiển thị trạng thái auto-save
+            _lblStatus.Text = "Chưa kết nối";
+            _lblStatus.ForeColor = Color.DarkBlue;
+        }
+
+        // ── Initialize default values ────────────────────────────────────────
+        private void InitializeDefaultValues()
+        {
+            // Tự động điền ngày tháng năm hiện tại
+            DateTime now = DateTime.Now;
+            txtCalibDay.Text = now.Day.ToString();
+            txtCalibMonth.Text = now.Month.ToString();
+            txtCalibYear.Text = now.Year.ToString();
+        }
+
+        // ── Form Load — safe place to set SplitterDistance ──────────────────
+        private void Form1_Load(object? sender, EventArgs e)
+        {
+            int min = _split.Panel1MinSize;
+            int max = _split.Width - _split.Panel2MinSize;
+            int desired = _split.Width / 2;
+            if (max > min)
+                _split.SplitterDistance = Math.Max(min, Math.Min(desired, max));
+            
+            // Điều chỉnh chiều cao các dòng trong grid để fill toàn bộ
+            AdjustRowHeights();
+        }
+
+        // ── Event wiring ─────────────────────────────────────────────────────
+        private void WireEvents()
+        {
+            _serialReader.BlockReceived += SerialReader_BlockReceived;
+            _serialReader.ErrorOccurred += SerialReader_ErrorOccurred;
+
+            _fakeDataGenerator.BlockReceived += SerialReader_BlockReceived;
+            _fakeDataGenerator.ErrorOccurred += SerialReader_ErrorOccurred;
+
+            _btnConnect.Click += BtnConnect_Click;
+            _btnFakeData.Click += BtnFakeData_Click;
+            _btnSave.Click += BtnSave_Click;
+            _btnExport.Click += BtnExport_Click;
+            _btnUncertainty.Click += BtnUncertainty_Click;
+
+            // Điều chỉnh lại chiều cao các dòng khi resize
+            _grid.SizeChanged += (s, e) => AdjustRowHeights();
+
+            this.Load += Form1_Load;
+            this.FormClosing += async (_, e) =>
+            {
+                // Lưu dữ liệu chưa lưu trước khi đóng
+                if (_pendingRecords.Count > 0)
+                {
+                    e.Cancel = true;
+                    await SaveAllPendingBeforeCloseAsync();
+                    _autoSaveTimer?.Dispose();
+                    _serialReader.Dispose();
+                    _fakeDataGenerator.Dispose();
+                    Application.Exit();
+                }
+                else
+                {
+                    _autoSaveTimer?.Dispose();
+                    _serialReader.Dispose();
+                    _fakeDataGenerator.Dispose();
+                }
+            };
+        }
+
+        // ── Serial events ─────────────────────────────────────────────────────
+        private void SerialReader_BlockReceived(object? sender, MeasurementBlock block)
+        {
+            if (InvokeRequired) { Invoke(new Action(() => SerialReader_BlockReceived(sender, block))); return; }
+
+            _lastBlock = block;
+            _btnSave.Enabled = true;
+
+            // Thêm vào hàng đợi để lưu tự động (nếu bật)
+            if (_autoSaveEnabled)
+            {
+                QueueRecordForSaving(block);
+            }
+
+            UpdateGrid(block);
+            UpdateChart(block);
+            _lblLastReceived.Text = $"Lần nhận cuối: {block.Timestamp:HH:mm dd/MM/yyyy}  |  Thiết bị: {block.DeviceId}";
+            _lblStatus.Text = $"Đang kết nối — nhận lúc {DateTime.Now:HH:mm}";
+        }
+
+        private void SerialReader_ErrorOccurred(object? sender, string msg)
+        {
+            if (InvokeRequired) { Invoke(new Action(() => SerialReader_ErrorOccurred(sender, msg))); return; }
+            _lblStatus.Text = $"Lỗi: {msg}";
+            _lblStatus.ForeColor = Color.DarkRed;
+        }
+
+        // ── Button handlers ───────────────────────────────────────────────────
+        private void BtnConnect_Click(object? sender, EventArgs e)
+        {
+            if (_serialReader.IsConnected)
+            {
+                try { _serialReader.Disconnect(); } catch { }
+                _btnConnect.Text = "Kết nối";
+                _lblStatus.Text = "Đã ngắt kết nối";
+                _lblStatus.ForeColor = Color.DarkRed;
+            }
+            else
+            {
+                if (_cmbPort.SelectedItem is not string portName || string.IsNullOrEmpty(portName))
+                {
+                    MessageBox.Show("Vui lòng chọn cổng COM.", "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                try
+                {
+                    _serialReader.Connect(portName);
+                    _btnConnect.Text = "Ngắt kết nối";
+                    _lblStatus.Text = $"Đã kết nối {portName} @ 9600";
+                    _lblStatus.ForeColor = Color.DarkGreen;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Không thể mở cổng {portName}:\n{ex.Message}",
+                        "Lỗi kết nối", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void BtnFakeData_Click(object? sender, EventArgs e)
+        {
+            if (_fakeDataGenerator.IsRunning)
+            {
+                // Dừng fake data
+                _fakeDataGenerator.Stop();
+                _btnFakeData.Text = "Fake";
+                _btnFakeData.BackColor = Color.FromArgb(255, 245, 220);
+                _lblStatus.Text = "Đã dừng fake data";
+                _lblStatus.ForeColor = Color.DarkRed;
+            }
+            else
+            {
+                // Hiển thị dialog để cấu hình fake data
+                using var configForm = new Form
+                {
+                    Text = "Cấu hình Fake Data",
+                    Size = new Size(400, 280),
+                    StartPosition = FormStartPosition.CenterParent,
+                    FormBorderStyle = FormBorderStyle.FixedDialog,
+                    MaximizeBox = false,
+                    MinimizeBox = false
+                };
+
+                var panel = new TableLayoutPanel
+                {
+                    Dock = DockStyle.Fill,
+                    Padding = new Padding(20),
+                    ColumnCount = 2,
+                    RowCount = 5
+                };
+                panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+                panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
+
+                // Nhiệt độ cơ bản
+                var lblTemp = new Label { Text = "Nhiệt độ (°C):", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
+                var numTemp = new NumericUpDown { Minimum = -50, Maximum = 100, Value = 25, DecimalPlaces = 1, Dock = DockStyle.Fill };
+                panel.Controls.Add(lblTemp, 0, 0);
+                panel.Controls.Add(numTemp, 1, 0);
+
+                // Độ ẩm cơ bản
+                var lblHum = new Label { Text = "Độ ẩm (%):", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
+                var numHum = new NumericUpDown { Minimum = 0, Maximum = 100, Value = 60, DecimalPlaces = 1, Dock = DockStyle.Fill };
+                panel.Controls.Add(lblHum, 0, 1);
+                panel.Controls.Add(numHum, 1, 1);
+
+                // Biến thiên nhiệt độ
+                var lblTempVar = new Label { Text = "Biến thiên nhiệt độ:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
+                var numTempVar = new NumericUpDown { Minimum = 0, Maximum = 10, Value = 2, DecimalPlaces = 1, Dock = DockStyle.Fill };
+                panel.Controls.Add(lblTempVar, 0, 2);
+                panel.Controls.Add(numTempVar, 1, 2);
+
+                // Biến thiên độ ẩm
+                var lblHumVar = new Label { Text = "Biến thiên độ ẩm:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
+                var numHumVar = new NumericUpDown { Minimum = 0, Maximum = 20, Value = 5, DecimalPlaces = 1, Dock = DockStyle.Fill };
+                panel.Controls.Add(lblHumVar, 0, 3);
+                panel.Controls.Add(numHumVar, 1, 3);
+
+                // Chu kỳ (giây)
+                var lblInterval = new Label { Text = "Chu kỳ (giây):", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
+                var numInterval = new NumericUpDown { Minimum = 1, Maximum = 60, Value = 2, Dock = DockStyle.Fill };
+                panel.Controls.Add(lblInterval, 0, 4);
+                panel.Controls.Add(numInterval, 1, 4);
+
+                var btnPanel = new FlowLayoutPanel
+                {
+                    Dock = DockStyle.Bottom,
+                    Height = 50,
+                    FlowDirection = FlowDirection.RightToLeft,
+                    Padding = new Padding(10)
+                };
+
+                var btnOK = new Button { Text = "Bắt đầu", Width = 100, Height = 35, DialogResult = DialogResult.OK };
+                var btnCancel = new Button { Text = "Hủy", Width = 100, Height = 35, DialogResult = DialogResult.Cancel };
+                btnPanel.Controls.Add(btnOK);
+                btnPanel.Controls.Add(btnCancel);
+
+                configForm.Controls.Add(panel);
+                configForm.Controls.Add(btnPanel);
+                configForm.AcceptButton = btnOK;
+                configForm.CancelButton = btnCancel;
+
+                if (configForm.ShowDialog() == DialogResult.OK)
+                {
+                    // Cấu hình và bắt đầu fake data
+                    _fakeDataGenerator.SetBaseValues(
+                        (float)numTemp.Value,
+                        (float)numHum.Value,
+                        (float)numTempVar.Value,
+                        (float)numHumVar.Value
+                    );
+
+                    _fakeDataGenerator.Start((int)numInterval.Value * 1000);
+
+                    _btnFakeData.Text = "Dừng Fake";
+                    _btnFakeData.BackColor = Color.FromArgb(255, 200, 200);
+                    _lblStatus.Text = $"Đang fake data: {numTemp.Value}°C, {numHum.Value}%";
+                    _lblStatus.ForeColor = Color.DarkOrange;
+                }
+            }
+        }
+
+        private async void BtnSave_Click(object? sender, EventArgs e)
+        {
+            _btnSave.Enabled = false;
+            try
+            {
+                await SaveCurrentRecordAsync();
+            }
+            finally
+            {
+                _btnSave.Enabled = _lastBlock != null;
+            }
+        }
+
+        private async void BtnExport_Click(object? sender, EventArgs e)
+        {
+            // Kiểm tra có session không
+            if (_currentSessionId == null)
+            {
+                MessageBox.Show(
+                    "Chưa có dữ liệu để xuất báo cáo.\n" +
+                    "Vui lòng kết nối thiết bị hoặc bật Fake Data để bắt đầu đo.",
+                    "Thông báo",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Lưu tất cả dữ liệu chưa lưu trước
+            try
+            {
+                if (_pendingRecords.Count > 0)
+                {
+                    await SavePendingRecordsAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi lưu dữ liệu: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Hỏi người dùng chọn định dạng
+            using var formatDialog = new Form
+            {
+                Text = "Chọn định dạng báo cáo",
+                Size = new Size(400, 200),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false
+            };
+
+            var panel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.TopDown,
+                Padding = new Padding(20)
+            };
+
+            var lblTitle = new Label
+            {
+                Text = "Chọn định dạng file báo cáo:",
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                AutoSize = true,
+                Margin = new Padding(0, 0, 0, 15)
+            };
+            panel.Controls.Add(lblTitle);
+
+            var btnWord = new Button
+            {
+                Text = "📄 Word (.docx) - Giấy chứng nhận hiệu chuẩn",
+                Width = 340,
+                Height = 40,
+                Tag = "word"
+            };
+            btnWord.Click += (s, ev) => { formatDialog.Tag = "word"; formatDialog.DialogResult = DialogResult.OK; };
+            panel.Controls.Add(btnWord);
+
+            var btnCsv = new Button
+            {
+                Text = "📊 CSV (.csv) - Dữ liệu chi tiết",
+                Width = 340,
+                Height = 40,
+                Tag = "csv",
+                Margin = new Padding(0, 10, 0, 0)
+            };
+            btnCsv.Click += (s, ev) => { formatDialog.Tag = "csv"; formatDialog.DialogResult = DialogResult.OK; };
+            panel.Controls.Add(btnCsv);
+
+            formatDialog.Controls.Add(panel);
+
+            if (formatDialog.ShowDialog() != DialogResult.OK)
+                return;
+
+            string format = formatDialog.Tag?.ToString() ?? "csv";
+
+            // Chọn nơi lưu file
+            using var saveDialog = new SaveFileDialog
+            {
+                Title = "Lưu báo cáo hiệu chuẩn"
+            };
+
+            if (format == "word")
+            {
+                saveDialog.Filter = "Word Documents (*.docx)|*.docx|All Files (*.*)|*.*";
+                saveDialog.DefaultExt = "docx";
+                saveDialog.FileName = $"GiayChungNhanHieuChuan_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
+            }
+            else
+            {
+                saveDialog.Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
+                saveDialog.DefaultExt = "csv";
+                saveDialog.FileName = $"BaoCaoHieuChuan_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            }
+
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    _btnExport.Enabled = false;
+                    _lblStatus.Text = "Đang tạo báo cáo...";
+                    _lblStatus.ForeColor = Color.DarkOrange;
+
+                    string outputPath;
+                    
+                    // Xuất báo cáo theo định dạng
+                    if (format == "word")
+                    {
+                        outputPath = await WordReportGenerator.ExportToWordAsync(
+                            _currentSessionId.Value,
+                            saveDialog.FileName);
+                    }
+                    else
+                    {
+                        outputPath = await ReportGenerator.ExportToExcelAsync(
+                            _currentSessionId.Value,
+                            saveDialog.FileName);
+                    }
+
+                    _lblStatus.Text = "Đã xuất báo cáo thành công!";
+                    _lblStatus.ForeColor = Color.DarkGreen;
+
+                    var result = MessageBox.Show(
+                        $"Đã xuất báo cáo thành công!\n\n" +
+                        $"File: {outputPath}\n\n" +
+                        $"Bạn có muốn mở file ngay không?",
+                        "Thành công",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = outputPath,
+                            UseShellExecute = true
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi khi xuất báo cáo:\n{ex.Message}", "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                    _lblStatus.Text = $"Lỗi xuất báo cáo: {ex.Message}";
+                    _lblStatus.ForeColor = Color.Red;
+                }
+                finally
+                {
+                    _btnExport.Enabled = true;
+                }
+            }
+        }
+
+        private void BtnUncertainty_Click(object? sender, EventArgs e)
+        {
+            // Mở form tính toán độ không đảm bảo đo
+            using var uncertaintyForm = new UncertaintyCalculationForm();
+            uncertaintyForm.ShowDialog(this);
+        }
+
+        // ── Grid update ───────────────────────────────────────────────────────
+        private void UpdateGrid(MeasurementBlock block)
+        {
+            string t = block.Timestamp.ToString("HH:mm", CultureInfo.InvariantCulture);
+
+            bool showTemp = _chkTemperature.Checked;
+            bool showHum = _chkHumidity.Checked;
+
+            for (int i = 0; i < 10; i++)
+            {
+                bool hasTemp = i < block.ProbeCount && !float.IsNaN(block.ProbeTemperatures[i]);
+                bool hasHum = i < block.ProbeCount && !float.IsNaN(block.ProbeHumidities[i]);
+                _grid.Rows[i].Cells["NhietDo"].Value = showTemp
+                    ? hasTemp ? block.ProbeTemperatures[i].ToString("F1", CultureInfo.InvariantCulture) : "---"
+                    : "---";
+                _grid.Rows[i].Cells["DoAm"].Value = showHum
+                    ? hasHum ? block.ProbeHumidities[i].ToString("F1", CultureInfo.InvariantCulture) : "---"
+                    : "---";
+                _grid.Rows[i].Cells["ThoiGian"].Value = hasTemp || hasHum ? t : "---";
+            }
+
+            _grid.Rows[10].Cells["NhietDo"].Value = showTemp
+                ? block.AvgTemperature.ToString("F1", CultureInfo.InvariantCulture) : "---";
+            _grid.Rows[10].Cells["DoAm"].Value = showHum
+                ? !float.IsNaN(block.AvgHumidity) ? block.AvgHumidity.ToString("F1", CultureInfo.InvariantCulture) : "---" : "---";
+            _grid.Rows[10].Cells["ThoiGian"].Value = t;
+
+            _grid.Rows[11].Cells["NhietDo"].Value = showTemp
+                ? block.UniformityTemp.ToString("F1", CultureInfo.InvariantCulture) : "---";
+            _grid.Rows[11].Cells["DoAm"].Value = showHum
+                ? !float.IsNaN(block.UniformityHumidity) ? block.UniformityHumidity.ToString("F1", CultureInfo.InvariantCulture) : "---" : "---";
+            _grid.Rows[11].Cells["ThoiGian"].Value = t;
+
+            _grid.Rows[12].Cells["NhietDo"].Value = showTemp ? block.StabilityTemperature : "---";
+            _grid.Rows[12].Cells["DoAm"].Value = showHum ? block.StabilityHumidity : "---";
+            _grid.Rows[12].Cells["ThoiGian"].Value = t;
+        }
+
+        // ── Chart update ──────────────────────────────────────────────────────
+        private void UpdateChart(MeasurementBlock block)
+        {
+            string label = block.Timestamp.ToString("HH:mm", CultureInfo.InvariantCulture);
+            _timeLabels.Add(label);
+            if (_timeLabels.Count > MaxChartPoints) _timeLabels.RemoveAt(0);
+
+            // Lưu lịch sử
+            for (int i = 0; i < 10; i++)
+            {
+                if (i < block.ProbeCount && !float.IsNaN(block.ProbeTemperatures[i]))
+                {
+                    _probeHistory[i].Add(block.ProbeTemperatures[i]);
+                    if (_probeHistory[i].Count > MaxChartPoints) _probeHistory[i].RemoveAt(0);
+                }
+
+                if (i < block.ProbeCount && !float.IsNaN(block.ProbeHumidities[i]))
+                {
+                    _humidityHistory[i].Add(block.ProbeHumidities[i]);
+                    if (_humidityHistory[i].Count > MaxChartPoints) _humidityHistory[i].RemoveAt(0);
+                }
+            }
+            _avgHistory.Add(block.AvgTemperature);
+            if (_avgHistory.Count > MaxChartPoints) _avgHistory.RemoveAt(0);
+
+            _avgHumidityHistory.Add(block.AvgHumidity);
+            if (_avgHumidityHistory.Count > MaxChartPoints) _avgHumidityHistory.RemoveAt(0);
+
+            // ── Vẽ series nhiệt độ (index 0–10) ─────────────────────────────────
+            bool showTemp = _chkTemperature.Checked;
+            for (int i = 0; i < 10; i++)
+            {
+                _chart.Series[i].Points.Clear();
+                if (showTemp)
+                {
+                    int offset = Math.Max(0, _timeLabels.Count - _probeHistory[i].Count);
+                    for (int j = 0; j < _probeHistory[i].Count; j++)
+                        _chart.Series[i].Points.AddXY(_timeLabels[offset + j], _probeHistory[i][j]);
+                }
+            }
+            var avgTemp = _chart.Series["Trung bình"];
+            avgTemp.Points.Clear();
+            if (showTemp)
+            {
+                int avgTOffset = Math.Max(0, _timeLabels.Count - _avgHistory.Count);
+                for (int j = 0; j < _avgHistory.Count; j++)
+                    avgTemp.Points.AddXY(_timeLabels[avgTOffset + j], _avgHistory[j]);
+            }
+
+            // ── Vẽ series độ ẩm (index 11–21) ───────────────────────────────────
+            bool showHum = _chkHumidity.Checked;
+            for (int i = 0; i < 10; i++)
+            {
+                var s = _chart.Series[$"ĐA Đầu đo {i + 1}"];
+                s.Points.Clear();
+                if (showHum)
+                {
+                    int offset = Math.Max(0, _timeLabels.Count - _humidityHistory[i].Count);
+                    for (int j = 0; j < _humidityHistory[i].Count; j++)
+                        s.Points.AddXY(_timeLabels[offset + j], _humidityHistory[i][j]);
+                }
+            }
+            var avgHum = _chart.Series["TB Độ ẩm"];
+            avgHum.Points.Clear();
+            if (showHum)
+            {
+                int avgHOffset = Math.Max(0, _timeLabels.Count - _avgHumidityHistory.Count);
+                for (int j = 0; j < _avgHumidityHistory.Count; j++)
+                    avgHum.Points.AddXY(_timeLabels[avgHOffset + j], _avgHumidityHistory[j]);
+            }
+
+            AutoScaleChartAxes();
+        }
+
+        private void RedrawChart()
+        {
+            bool showTemp = _chkTemperature.Checked;
+            bool showHum = _chkHumidity.Checked;
+
+            // Vẽ lại series nhiệt độ
+            for (int i = 0; i < 10; i++)
+            {
+                _chart.Series[i].Points.Clear();
+                _chart.Series[i].Enabled = showTemp;
+                if (showTemp)
+                {
+                    int offset = Math.Max(0, _timeLabels.Count - _probeHistory[i].Count);
+                    for (int j = 0; j < _probeHistory[i].Count; j++)
+                        _chart.Series[i].Points.AddXY(_timeLabels[offset + j], _probeHistory[i][j]);
+                }
+            }
+
+            var avgTempSeries = _chart.Series["Trung bình"];
+            avgTempSeries.Points.Clear();
+            avgTempSeries.Enabled = showTemp;
+            if (showTemp)
+            {
+                int avgOffset = Math.Max(0, _timeLabels.Count - _avgHistory.Count);
+                for (int j = 0; j < _avgHistory.Count; j++)
+                    avgTempSeries.Points.AddXY(_timeLabels[avgOffset + j], _avgHistory[j]);
+            }
+
+            // Vẽ lại series độ ẩm
+            for (int i = 0; i < 10; i++)
+            {
+                var s = _chart.Series[$"ĐA Đầu đo {i + 1}"];
+                s.Points.Clear();
+                s.Enabled = showHum;
+                if (showHum)
+                {
+                    int offset = Math.Max(0, _timeLabels.Count - _humidityHistory[i].Count);
+                    for (int j = 0; j < _humidityHistory[i].Count; j++)
+                        s.Points.AddXY(_timeLabels[offset + j], _humidityHistory[i][j]);
+                }
+            }
+
+            var avgHumSeries = _chart.Series["TB Độ ẩm"];
+            avgHumSeries.Points.Clear();
+            avgHumSeries.Enabled = showHum;
+            if (showHum)
+            {
+                int avgOffset = Math.Max(0, _timeLabels.Count - _avgHumidityHistory.Count);
+                for (int j = 0; j < _avgHumidityHistory.Count; j++)
+                    avgHumSeries.Points.AddXY(_timeLabels[avgOffset + j], _avgHumidityHistory[j]);
+            }
+
+            // Cập nhật trục Y
+            _chart.ChartAreas["MainArea"].AxisY.Enabled = showTemp ? AxisEnabled.True : AxisEnabled.False;
+            _chart.ChartAreas["MainArea"].AxisY2.Enabled = showHum ? AxisEnabled.True : AxisEnabled.False;
+            AutoScaleChartAxes();
+        }
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+        private void AutoScaleChartAxes()
+        {
+            var area = _chart.ChartAreas["MainArea"];
+            area.AxisY.Minimum = double.NaN;
+            area.AxisY.Maximum = double.NaN;
+            area.AxisY2.Minimum = double.NaN;
+            area.AxisY2.Maximum = double.NaN;
+            area.RecalculateAxesScale();
+        }
+
+        private SessionMetadata CollectMetadata()
+        {
+            int.TryParse(txtCalibDay.Text, out int day);
+            int.TryParse(txtCalibMonth.Text, out int month);
+            int.TryParse(txtCalibYear.Text, out int year);
+
+            return new SessionMetadata
+            {
+                DeviceName = txtDeviceName.Text,
+                DeviceCode = txtDeviceCode.Text,
+                DeviceNumber = txtDeviceNumber.Text,
+                SealNumber = txtSealNumber.Text,
+                Manufacturer = txtManufacturer.Text,
+                ManufactureYear = txtManufactureYear.Text,
+                UsingUnit = txtUsingUnit.Text,
+                Method = txtMethod.Text,
+                EnvTemperature = txtEnvTemp.Text,
+                EnvHumidity = txtEnvHumidity.Text,
+                TechnicalSpecs = txtTechnicalSpecs.Text,
+                MeasuringDevices = txtMeasuringDevices.Text,
+                CalibrationDay = day,
+                CalibrationMonth = month,
+                CalibrationYear = year
+            };
+        }
+
+        private void RefreshPorts()
+        {
+            _cmbPort.Items.Clear();
+            foreach (var p in SerialReader.GetAvailablePorts())
+                _cmbPort.Items.Add(p);
+            if (_cmbPort.Items.Count > 0)
+                _cmbPort.SelectedIndex = 0;
+        }
+
+        private void _chkDisplayFilter_CheckedChanged(object sender, EventArgs e)
+        {
+            bool showTemp = _chkTemperature.Checked;
+            bool showHum = _chkHumidity.Checked;
+
+            // ── Cập nhật cột trong bảng ─────────────────────────────────
+            _grid.Columns["NhietDo"].Visible = showTemp;
+            _grid.Columns["DoAm"].Visible = showHum;
+
+            // ── Cập nhật series nhiệt độ trên biểu đồ ──────────────────
+            for (int i = 0; i < 10; i++)
+                _chart.Series[i].Enabled = showTemp;
+            _chart.Series["Trung bình"].Enabled = showTemp;
+
+            _chart.ChartAreas["MainArea"].AxisY.Enabled = showTemp
+                ? AxisEnabled.True
+                : AxisEnabled.False;
+
+            // ── Cập nhật series độ ẩm trên biểu đồ ─────────────────────
+            for (int i = 0; i < 10; i++)
+                _chart.Series[$"ĐA Đầu đo {i + 1}"].Enabled = showHum;
+            _chart.Series["TB Độ ẩm"].Enabled = showHum;
+
+            _chart.ChartAreas["MainArea"].AxisY2.Enabled = showHum
+                ? AxisEnabled.True
+                : AxisEnabled.False;
+
+            // ── Cập nhật lại dữ liệu grid nếu đang có block ────────────
+            if (_lastBlock != null)
+                UpdateGrid(_lastBlock);
+        }
+
+        private void ShowProbeGuideDialog(int probeCount)
+        {
+            string message = probeCount switch
+            {
+                9 => "Thể tích > 0,5 m³ — Dùng sơ đồ a)\n\n" +
+                     "• Đầu đo 1-8: đặt tại 8 góc của hộp\n" +
+                     "• Đầu đo 9: đặt tại tâm hình học\n" +
+                     "• Cách thành tủ: 50–60 mm (hoặc 1/10 cạnh tủ)",
+
+                5 => "Thể tích ≤ 0,5 m³ — Dùng sơ đồ b)\n\n" +
+                     "• Đầu đo 1-4: đặt tại 4 góc chéo nhau\n" +
+                     "• Đầu đo 5: đặt tại tâm hình học\n" +
+                     "• Cách thành tủ: 50–60 mm (hoặc 1/10 cạnh tủ)",
+
+                3 => "Thể tích ≤ 0,5 m³ — Dùng sơ đồ c)\n\n" +
+                     "• Đầu đo 1, 3: đặt tại 2 góc chéo xa nhất\n" +
+                     "• Đầu đo 2: đặt tại tâm hình học\n" +
+                     "• Cách thành tủ: 50–60 mm (hoặc 1/10 cạnh tủ)",
+
+                _ => "Số đầu đo không hợp lệ. Chọn 3, 5 hoặc 9."
+            };
+
+            MessageBox.Show(message, $"Hướng dẫn đặt {probeCount} đầu đo",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void BtnShowGuide_Click(object sender, EventArgs e)
+        {
+            // Cho user chọn số đầu đo
+            int probeCount = GetProbeCount();
+            
+            if (probeCount > 0)
+            {
+                using var guide = new ProbeGuideForm(probeCount);
+                guide.ShowDialog(this);
+            }
+        }
+
+        private int GetProbeCount()
+        {
+            // Tạo form chọn số đầu đo
+            using var selectForm = new Form
+            {
+                Text = "Chọn sơ đồ đặt đầu đo",
+                Size = new Size(500, 280),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false
+            };
+
+            var mainPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(20),
+                RowCount = 5,
+                ColumnCount = 1
+            };
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Tiêu đề
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 15F)); // Khoảng cách
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Nút 1
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Nút 2
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Nút 3
+
+            // Tiêu đề
+            var lblTitle = new Label
+            {
+                Text = "Chọn số lượng đầu đo theo thể tích buồng nhiệt:",
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                AutoSize = true,
+                Dock = DockStyle.Top,
+                Padding = new Padding(0, 0, 0, 10)
+            };
+            mainPanel.Controls.Add(lblTitle, 0, 0);
+
+            int selectedCount = 0;
+
+            // Nút 9 đầu đo
+            var btn9 = new Button
+            {
+                Text = "9 đầu đo - Thể tích > 0,5 m³",
+                Height = 45,
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 9.5F),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(10, 0, 0, 0),
+                Cursor = Cursors.Hand
+            };
+            btn9.Click += (s, e) => { selectedCount = 9; selectForm.DialogResult = DialogResult.OK; selectForm.Close(); };
+            mainPanel.Controls.Add(btn9, 0, 2);
+
+            // Nút 5 đầu đo
+            var btn5 = new Button
+            {
+                Text = "5 đầu đo - Thể tích ≤ 0,5 m³",
+                Height = 45,
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 9.5F),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(10, 0, 0, 0),
+                Margin = new Padding(0, 8, 0, 0),
+                Cursor = Cursors.Hand
+            };
+            btn5.Click += (s, e) => { selectedCount = 5; selectForm.DialogResult = DialogResult.OK; selectForm.Close(); };
+            mainPanel.Controls.Add(btn5, 0, 3);
+
+            // Nút 3 đầu đo
+            var btn3 = new Button
+            {
+                Text = "3 đầu đo - Thể tích ≤ 0,5 m³",
+                Height = 45,
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 9.5F),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(10, 0, 0, 0),
+                Margin = new Padding(0, 8, 0, 0),
+                Cursor = Cursors.Hand
+            };
+            btn3.Click += (s, e) => { selectedCount = 3; selectForm.DialogResult = DialogResult.OK; selectForm.Close(); };
+            mainPanel.Controls.Add(btn3, 0, 4);
+
+            selectForm.Controls.Add(mainPanel);
+
+            return selectForm.ShowDialog() == DialogResult.OK ? selectedCount : 0;
+        }
+    }
+}
