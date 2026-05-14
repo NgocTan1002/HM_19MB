@@ -70,11 +70,10 @@ namespace HM_19MB_Demo
             bottomFlow = new FlowLayoutPanel();
             _cmbPort = new ComboBox();
             lblBaudRate = new Label();
-            _btnConnect = new Button();
-            _btnFakeData = new Button();
-            _btnSave = new Button();
-            _btnExport = new Button();
-            _btnUncertainty = new Button();
+            this._btnConnect = new Button();
+            this._btnSave = new Button();
+            this._btnExport = new Button();
+            this._btnUncertainty = new Button();
             _lblStatus = new Label();
             mainLayout.SuspendLayout();
             metadataPanel.SuspendLayout();
@@ -605,11 +604,10 @@ namespace HM_19MB_Demo
             // 
             bottomFlow.Controls.Add(_cmbPort);
             bottomFlow.Controls.Add(lblBaudRate);
-            bottomFlow.Controls.Add(_btnConnect);
-            bottomFlow.Controls.Add(_btnFakeData);
-            bottomFlow.Controls.Add(_btnSave);
-            bottomFlow.Controls.Add(_btnExport);
-            bottomFlow.Controls.Add(_btnUncertainty);
+            bottomFlow.Controls.Add(this._btnConnect);
+            bottomFlow.Controls.Add(this._btnSave);
+            bottomFlow.Controls.Add(this._btnExport);
+            bottomFlow.Controls.Add(this._btnUncertainty);
             bottomFlow.Controls.Add(_lblStatus);
             bottomFlow.Dock = DockStyle.Fill;
             bottomFlow.Location = new Point(5, 5);
@@ -643,63 +641,52 @@ namespace HM_19MB_Demo
             // 
             // _btnConnect
             // 
-            _btnConnect.Location = new Point(293, 4);
-            _btnConnect.Margin = new Padding(3, 4, 3, 4);
-            _btnConnect.Name = "_btnConnect";
-            _btnConnect.Size = new Size(126, 40);
-            _btnConnect.TabIndex = 2;
-            _btnConnect.Text = "Kết nối";
-            _btnConnect.UseVisualStyleBackColor = true;
-            // 
-            // _btnFakeData
-            // 
-            _btnFakeData.BackColor = Color.FromArgb(255, 245, 220);
-            _btnFakeData.Location = new Point(425, 4);
-            _btnFakeData.Margin = new Padding(3, 4, 3, 4);
-            _btnFakeData.Name = "_btnFakeData";
-            _btnFakeData.Size = new Size(126, 40);
-            _btnFakeData.TabIndex = 6;
-            _btnFakeData.Text = "Fake";
-            _btnFakeData.UseVisualStyleBackColor = false;
+            this._btnConnect.Location = new Point(293, 4);
+            this._btnConnect.Margin = new Padding(3, 4, 3, 4);
+            this._btnConnect.Name = "_btnConnect";
+            this._btnConnect.Size = new Size(126, 40);
+            this._btnConnect.TabIndex = 2;
+            this._btnConnect.Text = "Kết nối";
+            this._btnConnect.UseVisualStyleBackColor = true;
             // 
             // _btnSave
             // 
-            _btnSave.Enabled = false;
-            _btnSave.Location = new Point(557, 4);
-            _btnSave.Margin = new Padding(3, 4, 3, 4);
-            _btnSave.Name = "_btnSave";
-            _btnSave.Size = new Size(126, 40);
-            _btnSave.TabIndex = 3;
-            _btnSave.Text = "Lưu dữ liệu";
-            _btnSave.UseVisualStyleBackColor = true;
+            this._btnSave.Enabled = false;
+            this._btnSave.Location = new Point(425, 4);
+            this._btnSave.Margin = new Padding(3, 4, 3, 4);
+            this._btnSave.Name = "_btnSave";
+            this._btnSave.Size = new Size(126, 40);
+            this._btnSave.TabIndex = 3;
+            this._btnSave.Text = "Lưu dữ liệu";
+            this._btnSave.UseVisualStyleBackColor = true;
             // 
             // _btnExport
             // 
-            _btnExport.Location = new Point(689, 4);
-            _btnExport.Margin = new Padding(3, 4, 3, 4);
-            _btnExport.Name = "_btnExport";
-            _btnExport.Size = new Size(137, 40);
-            _btnExport.TabIndex = 4;
-            _btnExport.Text = "Xuất báo cáo";
-            _btnExport.UseVisualStyleBackColor = true;
+            this._btnExport.Location = new Point(557, 4);
+            this._btnExport.Margin = new Padding(3, 4, 3, 4);
+            this._btnExport.Name = "_btnExport";
+            this._btnExport.Size = new Size(137, 40);
+            this._btnExport.TabIndex = 4;
+            this._btnExport.Text = "Xuất báo cáo";
+            this._btnExport.UseVisualStyleBackColor = true;
             // 
             // _btnUncertainty
             // 
-            _btnUncertainty.BackColor = Color.FromArgb(230, 240, 255);
-            _btnUncertainty.Location = new Point(832, 4);
-            _btnUncertainty.Margin = new Padding(3, 4, 3, 4);
-            _btnUncertainty.Name = "_btnUncertainty";
-            _btnUncertainty.Size = new Size(315, 40);
-            _btnUncertainty.TabIndex = 6;
-            _btnUncertainty.Text = "Tính số hiệu chính và độ không đảm bảo đo";
-            _btnUncertainty.UseVisualStyleBackColor = false;
+            this._btnUncertainty.BackColor = Color.FromArgb(230, 240, 255);
+            this._btnUncertainty.Location = new Point(700, 4);
+            this._btnUncertainty.Margin = new Padding(3, 4, 3, 4);
+            this._btnUncertainty.Name = "_btnUncertainty";
+            this._btnUncertainty.Size = new Size(315, 40);
+            this._btnUncertainty.TabIndex = 6;
+            this._btnUncertainty.Text = "Tính số hiệu chính và độ không đảm bảo đo";
+            this._btnUncertainty.UseVisualStyleBackColor = false;
             // 
             // _lblStatus
             // 
             _lblStatus.AutoSize = true;
             _lblStatus.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             _lblStatus.ForeColor = Color.DarkRed;
-            _lblStatus.Location = new Point(1168, 11);
+            _lblStatus.Location = new Point(1036, 11);
             _lblStatus.Margin = new Padding(18, 11, 0, 0);
             _lblStatus.Name = "_lblStatus";
             _lblStatus.Size = new Size(97, 20);
@@ -898,7 +885,10 @@ namespace HM_19MB_Demo
 
         private SplitContainer _split;
         private ComboBox _cmbPort;
-        private Button _btnConnect, _btnFakeData, _btnSave, _btnExport, _btnUncertainty;
+        private Button _btnConnect;
+        private Button _btnSave;
+        private Button _btnExport;
+        private Button _btnUncertainty;
         private Label _lblStatus;
 
         private Panel _chartToolbar;

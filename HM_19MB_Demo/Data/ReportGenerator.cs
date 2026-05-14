@@ -26,28 +26,26 @@ namespace HM_19MB_Demo
 
             await writer.WriteLineAsync("KẾT QUẢ ĐO");
             await writer.WriteLineAsync("");
-            await writer.WriteLineAsync(
-                "Thời gian,Đầu đo,Nhiệt độ (°C),Độ ẩm (%)," +
-                "Trung bình nhiệt độ,Trung bình độ ẩm," +
-                "Độ đồng đều nhiệt độ,Độ đồng đều độ ẩm,Độ ổn định");
+            var headerParts = new System.Text.StringBuilder("Thời gian");
+            for (int i = 1; i <= 10; i++) headerParts.Append($",Nhiệt độ {i} (°C),Độ ẩm {i} (%)");
+            headerParts.Append(",TB nhiệt độ,TB độ ẩm,Độ đồng đều nhiệt,Độ đồng đều ẩm,Ổn định nhiệt,Ổn định ẩm");
+            await writer.WriteLineAsync(headerParts.ToString());
 
+            // THAY vòng lặp foreach cũ (dùng SoLieuDauDo) bằng:
             foreach (var kq in ketQua)
             {
-                for (int i = 0; i < kq.SoLieuDauDo.Count; i++)
+                var line = new System.Text.StringBuilder();
+                line.Append($"{kq.ThoiGianDo:yyyy-MM-dd HH:mm:ss}");
+                for (int i = 0; i < 10; i++)
                 {
-                    var dd = kq.SoLieuDauDo[i];
-                    if (i == 0)
-                        await writer.WriteLineAsync(
-                            $"{kq.ThoiGianDo:yyyy-MM-dd HH:mm:ss}," +
-                            $"{dd.SoDauDo},{dd.NhietDo:F1},{dd.DoAm:F1}," +
-                            $"{kq.NhietDoTb:F1},{kq.DoAmTb:F1}," +
-                            $"{kq.DoDongDeuNhiet:F1},{kq.DoDongDeuAm:F1},{kq.DoOnDinhRaw}");
-                    else
-                        await writer.WriteLineAsync(
-                            $"{kq.ThoiGianDo:yyyy-MM-dd HH:mm:ss}," +
-                            $"{dd.SoDauDo},{dd.NhietDo:F1},{dd.DoAm:F1},,,,,");
+                    line.Append($",{FormatNullable(kq.HasNhietDo[i], kq.NhietDo[i])},{FormatNullable(kq.HasDoAm[i], kq.DoAm[i])}");
                 }
+                line.Append($",{kq.NhietDoTb:F1},{FormatNullable(kq.HasDoAmTb, kq.DoAmTb)}");
+                line.Append($",{kq.DoDongDeuNhiet:F1},{FormatNullable(kq.HasDoDongDeuAm, kq.DoDongDeuAm)}");
+                line.Append($",{FormatNullable(kq.HasDoOnDinhNhiet, kq.DoOnDinhNhiet)},{FormatNullable(kq.HasDoOnDinhAm, kq.DoOnDinhAm)}");
+                await writer.WriteLineAsync(line.ToString());
             }
+
 
             // Thống kê — LINQ giữ nguyên vì dữ liệu đã có trong bộ nhớ
             await writer.WriteLineAsync("");
@@ -62,7 +60,7 @@ namespace HM_19MB_Demo
                 await writer.WriteLineAsync(
                     $"{stat.SoDauDo}," +
                     $"{stat.NhietDoTb:F2},{stat.NhietDoMin:F2},{stat.NhietDoMax:F2}," +
-                    $"{stat.DoAmTb:F2},{stat.DoAmMin:F2},{stat.DoAmMax:F2},{stat.SoLanDo}");
+                    $"{FormatNullable(stat.HasDoAm, stat.DoAmTb)},{FormatNullable(stat.HasDoAm, stat.DoAmMin)},{FormatNullable(stat.HasDoAm, stat.DoAmMax)},{stat.SoLanDo}");
             }
 
             await writer.WriteLineAsync("");
@@ -80,22 +78,29 @@ namespace HM_19MB_Demo
         /// Tính AVG/MIN/MAX cho từng đầu đo từ danh sách kết quả đã load.
         public static List<ThongKeDauDo> TinhThongKeDauDo(List<KetQuaDo> danhSach)
         {
-            return danhSach
-                .SelectMany(kq => kq.SoLieuDauDo)
-                .GroupBy(dd => dd.SoDauDo)
-                .OrderBy(g => g.Key)
-                .Select(g => new ThongKeDauDo
+            var result = new List<ThongKeDauDo>();
+            for (int i = 0; i < 10; i++)
+            {
+                var vals = danhSach
+                    .Where(kq => kq.HasNhietDo[i])
+                    .ToList();
+                if (vals.Count == 0) continue;
+
+                var humVals = vals.Where(kq => kq.HasDoAm[i]).ToList();
+                result.Add(new ThongKeDauDo
                 {
-                    SoDauDo = g.Key,
-                    NhietDoTb = g.Average(d => d.NhietDo),
-                    NhietDoMin = g.Min(d => d.NhietDo),
-                    NhietDoMax = g.Max(d => d.NhietDo),
-                    DoAmTb = g.Average(d => d.DoAm),
-                    DoAmMin = g.Min(d => d.DoAm),
-                    DoAmMax = g.Max(d => d.DoAm),
-                    SoLanDo = g.Count(),
-                })
-                .ToList();
+                    SoDauDo = i + 1,
+                    NhietDoTb = vals.Average(kq => kq.NhietDo[i]),
+                    NhietDoMin = vals.Min(kq => kq.NhietDo[i]),
+                    NhietDoMax = vals.Max(kq => kq.NhietDo[i]),
+                    HasDoAm = humVals.Count > 0,
+                    DoAmTb = humVals.Count > 0 ? humVals.Average(kq => kq.DoAm[i]) : 0,
+                    DoAmMin = humVals.Count > 0 ? humVals.Min(kq => kq.DoAm[i]) : 0,
+                    DoAmMax = humVals.Count > 0 ? humVals.Max(kq => kq.DoAm[i]) : 0,
+                    SoLanDo = vals.Count,
+                });
+            }
+            return result;
         }
 
         private static async Task GhiHeaderMetadata(StreamWriter writer, SessionMetadata m)
@@ -118,6 +123,12 @@ namespace HM_19MB_Demo
             await writer.WriteLineAsync("");
         }
 
+        private static string FormatNullable(bool hasValue, float value)
+            => hasValue ? value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) : "";
+
+        private static string FormatNullable(bool hasValue, double value)
+            => hasValue ? value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : "";
+
         [Obsolete("Dùng LayPhienAsync + LayKetQuaTheoPhienAsync thay thế.")]
         public static async Task<SessionReportData> GetSessionDataAsync(int sessionId)
         {
@@ -135,29 +146,35 @@ namespace HM_19MB_Demo
                     AvgHumidity = kq.DoAmTb,
                     UniformityTemp = kq.DoDongDeuNhiet,
                     UniformityHumidity = kq.DoDongDeuAm,
-                    StabilityRaw = kq.DoOnDinhRaw,
-                    ProbeData = kq.SoLieuDauDo.Select(dd => new ProbeData
+                    StabilityRaw = $"{kq.DoOnDinhNhiet:F1} / {kq.DoOnDinhAm:F1}", // thay DoOnDinhRaw
+                    ProbeData = Enumerable.Range(0, 10).Select(i => new ProbeData
                     {
-                        ProbeNumber = dd.SoDauDo,
-                        Temperature = dd.NhietDo,
-                        Humidity = dd.DoAm,
-                    }).ToList(),
+                        ProbeNumber = i + 1,
+                        Temperature = kq.NhietDo[i],
+                        Humidity = kq.DoAm[i],
+                    }).Where(p => kq.HasNhietDo[p.ProbeNumber - 1] || kq.HasDoAm[p.ProbeNumber - 1]).ToList(),
                 }).ToList(),
             };
         }
 
         [Obsolete("Dùng TinhThongKeDauDo(List<KetQuaDo>) thay thế.")]
-        public static List<ProbeStatistics> CalculateProbeStatistics(
-            List<MeasurementRecordData> records)
+        public static List<ProbeStatistics> CalculateProbeStatistics(List<MeasurementRecordData> records)
         {
-            var mapped = records.Select(r => new KetQuaDo
+            var mapped = records.Select(r =>
             {
-                SoLieuDauDo = r.ProbeData.Select(p => new SoLieuDauDo
+                var kq = new KetQuaDo();
+                foreach (var p in r.ProbeData)
                 {
-                    SoDauDo = p.ProbeNumber,
-                    NhietDo = p.Temperature,
-                    DoAm = p.Humidity,
-                }).ToList(),
+                    int idx = p.ProbeNumber - 1;
+                    if (idx >= 0 && idx < 10)
+                    {
+                        kq.NhietDo[idx] = p.Temperature;
+                        kq.DoAm[idx] = p.Humidity;
+                        kq.HasNhietDo[idx] = true;
+                        kq.HasDoAm[idx] = true;
+                    }
+                }
+                return kq;
             }).ToList();
 
             return TinhThongKeDauDo(mapped).Select(s => new ProbeStatistics
@@ -185,12 +202,20 @@ namespace HM_19MB_Demo
     {
         public int Id { get; set; }
         public DateTime ThoiGianDo { get; set; }
+        public float[] NhietDo { get; set; } = new float[10];
+        public float[] DoAm { get; set; } = new float[10];
+        public bool[] HasNhietDo { get; set; } = new bool[10];
+        public bool[] HasDoAm { get; set; } = new bool[10];
         public float NhietDoTb { get; set; }
         public float DoAmTb { get; set; }
+        public bool HasDoAmTb { get; set; }
         public float DoDongDeuNhiet { get; set; }
         public float DoDongDeuAm { get; set; }
-        public string DoOnDinhRaw { get; set; } = "";
-        public List<SoLieuDauDo> SoLieuDauDo { get; set; } = new();
+        public bool HasDoDongDeuAm { get; set; }
+        public float DoOnDinhNhiet { get; set; }
+        public bool HasDoOnDinhNhiet { get; set; }
+        public float DoOnDinhAm { get; set; }
+        public bool HasDoOnDinhAm { get; set; }
     }
 
     public class SoLieuDauDo
@@ -209,6 +234,7 @@ namespace HM_19MB_Demo
         public double DoAmTb { get; set; }
         public double DoAmMin { get; set; }
         public double DoAmMax { get; set; }
+        public bool HasDoAm { get; set; }
         public int SoLanDo { get; set; }
     }
 

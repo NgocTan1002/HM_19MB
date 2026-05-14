@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "dgSpecHash": "N4FqiONXqIo=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Admin\\Documents\\Demo_CanDienTu\\WeighingKeli\\HM_19MB_Demo\\HM_19MB_Demo\\HM_19MB_Demo.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Admin\\.nuget\\packages\\documentformat.openxml\\3.0.2\\documentformat.openxml.3.0.2.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\documentformat.openxml.framework\\3.0.2\\documentformat.openxml.framework.3.0.2.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.0\\microsoft.extensions.dependencyinjection.abstractions.10.0.0.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.0\\microsoft.extensions.logging.abstractions.10.0.0.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\npgsql\\10.0.2\\npgsql.10.0.2.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.android-arm.runtime.native.system.io.ports\\10.0.7\\runtime.android-arm.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.android-arm64.runtime.native.system.io.ports\\10.0.7\\runtime.android-arm64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.android-x64.runtime.native.system.io.ports\\10.0.7\\runtime.android-x64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.android-x86.runtime.native.system.io.ports\\10.0.7\\runtime.android-x86.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.linux-arm.runtime.native.system.io.ports\\10.0.7\\runtime.linux-arm.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.linux-arm64.runtime.native.system.io.ports\\10.0.7\\runtime.linux-arm64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.linux-bionic-arm64.runtime.native.system.io.ports\\10.0.7\\runtime.linux-bionic-arm64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.linux-bionic-x64.runtime.native.system.io.ports\\10.0.7\\runtime.linux-bionic-x64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.linux-musl-arm.runtime.native.system.io.ports\\10.0.7\\runtime.linux-musl-arm.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.linux-musl-arm64.runtime.native.system.io.ports\\10.0.7\\runtime.linux-musl-arm64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.linux-musl-x64.runtime.native.system.io.ports\\10.0.7\\runtime.linux-musl-x64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.linux-x64.runtime.native.system.io.ports\\10.0.7\\runtime.linux-x64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.maccatalyst-arm64.runtime.native.system.io.ports\\10.0.7\\runtime.maccatalyst-arm64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.maccatalyst-x64.runtime.native.system.io.ports\\10.0.7\\runtime.maccatalyst-x64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.native.system.io.ports\\10.0.7\\runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.osx-arm64.runtime.native.system.io.ports\\10.0.7\\runtime.osx-arm64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\runtime.osx-x64.runtime.native.system.io.ports\\10.0.7\\runtime.osx-x64.runtime.native.system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\system.io.ports\\10.0.7\\system.io.ports.10.0.7.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\winforms.datavisualization\\1.10.0\\winforms.datavisualization.1.10.0.nupkg.sha512"
+  ],
+  "logs": []
+}

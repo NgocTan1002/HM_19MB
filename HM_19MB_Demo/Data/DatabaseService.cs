@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using HM_19MB_Demo.Data;
@@ -32,7 +33,7 @@ namespace HM_19MB_Demo.Data
                 "Thiếu 'PostgresConnectionString' trong app.config.");
 
         // Tạo bảng và đăng ký function nếu chưa tồn tại
-        private const int SCHEMA_VERSION = 2;
+        private const int SCHEMA_VERSION = 3;
         public static async Task EnsureSchemaAsync()
         {
             await using var conn = new NpgsqlConnection(ConnectionString);
@@ -116,29 +117,41 @@ namespace HM_19MB_Demo.Data
         // Lưu 1 block đo
         public static async Task<int> LuuKetQuaDoAsync(int phienId, MeasurementBlock block)
         {
-            string soLieuJson = BuildSoLieuJson(block);
+            double?[] temps = new double?[10];
+            double?[] hums = new double?[10];
+            for (int i = 0; i < 10; i++)
+            {
+                temps[i] = i < block.ProbeCount && !float.IsNaN(block.ProbeTemperatures[i])
+                    ? block.ProbeTemperatures[i]
+                    : null;
+                hums[i] = i < block.ProbeCount && !float.IsNaN(block.ProbeHumidities[i])
+                    ? block.ProbeHumidities[i]
+                    : null;
+            }
+
+            object stabNhiet = TryParseFloat(block.StabilityTemperature, out float sn) ? sn : DBNull.Value;
+            object stabAm = TryParseFloat(block.StabilityHumidity, out float sa) ? sa : DBNull.Value;
 
             await using var conn = new NpgsqlConnection(ConnectionString);
             await conn.OpenAsync();
 
             await using var cmd = new NpgsqlCommand(
                 "SELECT fn_luu_ket_qua_do(" +
-                "@p_phien_id, @p_thoi_gian_do," +
-                "@p_nhiet_do_tb, @p_do_am_tb," +
-                "@p_do_dong_deu_nhiet, @p_do_dong_deu_am," +
-                "@p_do_on_dinh_raw, @p_so_lieu_json::jsonb)", conn);
+                "@phien::int, @tgian::timestamp, @nd::float[], @da::float[]," +
+                "@ndtb::float, @datb::float, @ddnhiet::float, @ddam::float, @odnhiet::float, @odam::float)", conn);
 
-            cmd.Parameters.AddWithValue("@p_phien_id", phienId);
-            cmd.Parameters.AddWithValue("@p_thoi_gian_do", block.Timestamp);
-            cmd.Parameters.AddWithValue("@p_nhiet_do_tb", block.AvgTemperature);
-            cmd.Parameters.AddWithValue("@p_do_am_tb", block.AvgHumidity);
-            cmd.Parameters.AddWithValue("@p_do_dong_deu_nhiet", block.UniformityTemp);
-            cmd.Parameters.AddWithValue("@p_do_dong_deu_am", block.UniformityHumidity);
-            cmd.Parameters.AddWithValue("@p_do_on_dinh_raw", block.StabilityRaw);
-            cmd.Parameters.AddWithValue("@p_so_lieu_json", soLieuJson);
+            cmd.Parameters.AddWithValue("@phien", phienId);
+            cmd.Parameters.AddWithValue("@tgian", block.Timestamp);
+            cmd.Parameters.Add(new NpgsqlParameter("@nd", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Double) { Value = temps });
+            cmd.Parameters.Add(new NpgsqlParameter("@da", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Double) { Value = hums });
+            cmd.Parameters.AddWithValue("@ndtb", block.AvgTemperature);
+            cmd.Parameters.AddWithValue("@datb", float.IsNaN(block.AvgHumidity) ? (object)DBNull.Value : block.AvgHumidity);
+            cmd.Parameters.AddWithValue("@ddnhiet", block.UniformityTemp);
+            cmd.Parameters.AddWithValue("@ddam", float.IsNaN(block.UniformityHumidity) ? (object)DBNull.Value : block.UniformityHumidity);
+            cmd.Parameters.AddWithValue("@odnhiet", stabNhiet);
+            cmd.Parameters.AddWithValue("@odam", stabAm);
 
-            var result = await cmd.ExecuteScalarAsync();
-            return Convert.ToInt32(result);
+            return Convert.ToInt32(await cmd.ExecuteScalarAsync());
         }
 
         // ĐỌC DỮ LIỆU
@@ -185,37 +198,39 @@ namespace HM_19MB_Demo.Data
             cmd.Parameters.AddWithValue("@p_phien_id", phienId);
 
             var danhSach = new List<KetQuaDo>();
-            KetQuaDo? current = null;
-            int lastId = -1;
-
             await using var rdr = await cmd.ExecuteReaderAsync();
+
             while (await rdr.ReadAsync())
             {
-                int id = rdr.GetInt32(0);
-                if (id != lastId)
+                var kq = new KetQuaDo
                 {
-                    if (current != null) danhSach.Add(current);
-                    current = new KetQuaDo
-                    {
-                        Id = id,
-                        ThoiGianDo = rdr.GetDateTime(1),
-                        NhietDoTb = ReadSingle(rdr, 2),
-                        DoAmTb = ReadSingle(rdr, 3),
-                        DoDongDeuNhiet = ReadSingle(rdr, 4),
-                        DoDongDeuAm = ReadSingle(rdr, 5),
-                        DoOnDinhRaw = rdr.GetString(6),
-                    };
-                    lastId = id;
+                    Id = rdr.GetInt32(0),
+                    ThoiGianDo = rdr.GetDateTime(1),
+                    NhietDoTb = ReadSingle(rdr, 22),
+                    DoAmTb = ReadSingleNullable(rdr, 23),
+                    HasDoAmTb = !rdr.IsDBNull(23),
+                    DoDongDeuNhiet = ReadSingle(rdr, 24),
+                    DoDongDeuAm = ReadSingleNullable(rdr, 25),
+                    HasDoDongDeuAm = !rdr.IsDBNull(25),
+                    DoOnDinhNhiet = ReadSingleNullable(rdr, 26),
+                    HasDoOnDinhNhiet = !rdr.IsDBNull(26),
+                    DoOnDinhAm = ReadSingleNullable(rdr, 27),
+                    HasDoOnDinhAm = !rdr.IsDBNull(27),
+                };
+
+                // Đọc 10 đầu đo từ cột nhiet_do_1..10 và do_am_1..10
+                for (int i = 0; i < 10; i++)
+                {
+                    int tempOrdinal = 2 + i;
+                    int humidityOrdinal = 12 + i;
+                    kq.HasNhietDo[i] = !rdr.IsDBNull(tempOrdinal);
+                    kq.HasDoAm[i] = !rdr.IsDBNull(humidityOrdinal);
+                    kq.NhietDo[i] = ReadSingleNullable(rdr, tempOrdinal);
+                    kq.DoAm[i] = ReadSingleNullable(rdr, humidityOrdinal);
                 }
 
-                current!.SoLieuDauDo.Add(new SoLieuDauDo
-                {
-                    SoDauDo = rdr.GetInt16(7),
-                    NhietDo = ReadSingle(rdr, 8),
-                    DoAm = ReadSingle(rdr, 9),
-                });
+                danhSach.Add(kq);
             }
-            if (current != null) danhSach.Add(current);
 
             return danhSach;
         }
@@ -223,26 +238,12 @@ namespace HM_19MB_Demo.Data
         private static float ReadSingle(NpgsqlDataReader reader, int ordinal)
             => Convert.ToSingle(reader.GetValue(ordinal));
 
-        // Chuyển dữ liệu đầu đo trong MeasurementBlock thành chuỗi JSON
-        private static string BuildSoLieuJson(MeasurementBlock block)
-        {
-            var items = new List<object>();
-            for (int i = 0; i < block.ProbeCount && i < 10; i++)
-            {
-                if (float.IsNaN(block.ProbeTemperatures[i]))
-                    continue;
+        private static float ReadSingleNullable(NpgsqlDataReader reader, int ordinal)
+             => reader.IsDBNull(ordinal) ? 0f : Convert.ToSingle(reader.GetValue(ordinal));
 
-                items.Add(new
-                {
-                    so_dau_do = i + 1,
-                    nhiet_do = Math.Round(block.ProbeTemperatures[i], 2),
-                    do_am = float.IsNaN(block.ProbeHumidities[i])
-                    ? (double?)null
-                    : Math.Round(block.ProbeHumidities[i], 2),
-                });
-            }
-            return JsonSerializer.Serialize(items);
-        }
+        private static bool TryParseFloat(string value, out float result)
+            => float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out result);
+
 
         [Obsolete("Dùng TaoPhienMoiAsync thay thế.")]
         public static Task<int> InsertSessionAsync(SessionMetadata meta)

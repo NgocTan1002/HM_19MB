@@ -87,7 +87,6 @@ namespace HM_19MB_Demo
             _fakeDataGenerator.ErrorOccurred += SerialReader_ErrorOccurred;
 
             _btnConnect.Click += BtnConnect_Click;
-            _btnFakeData.Click += BtnFakeData_Click;
             _btnSave.Click += BtnSave_Click;
             _btnExport.Click += BtnExport_Click;
             _btnUncertainty.Click += BtnUncertainty_Click;
@@ -177,107 +176,6 @@ namespace HM_19MB_Demo
             }
         }
 
-        private void BtnFakeData_Click(object? sender, EventArgs e)
-        {
-            if (_fakeDataGenerator.IsRunning)
-            {
-                // Dừng fake data
-                _fakeDataGenerator.Stop();
-                _btnFakeData.Text = "Fake";
-                _btnFakeData.BackColor = Color.FromArgb(255, 245, 220);
-                _lblStatus.Text = "Đã dừng fake data";
-                _lblStatus.ForeColor = Color.DarkRed;
-            }
-            else
-            {
-                // Hiển thị dialog để cấu hình fake data
-                using var configForm = new Form
-                {
-                    Text = "Cấu hình Fake Data",
-                    Size = new Size(400, 280),
-                    StartPosition = FormStartPosition.CenterParent,
-                    FormBorderStyle = FormBorderStyle.FixedDialog,
-                    MaximizeBox = false,
-                    MinimizeBox = false
-                };
-
-                var panel = new TableLayoutPanel
-                {
-                    Dock = DockStyle.Fill,
-                    Padding = new Padding(20),
-                    ColumnCount = 2,
-                    RowCount = 5
-                };
-                panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
-                panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
-
-                // Nhiệt độ cơ bản
-                var lblTemp = new Label { Text = "Nhiệt độ (°C):", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
-                var numTemp = new NumericUpDown { Minimum = -50, Maximum = 100, Value = 25, DecimalPlaces = 1, Dock = DockStyle.Fill };
-                panel.Controls.Add(lblTemp, 0, 0);
-                panel.Controls.Add(numTemp, 1, 0);
-
-                // Độ ẩm cơ bản
-                var lblHum = new Label { Text = "Độ ẩm (%):", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
-                var numHum = new NumericUpDown { Minimum = 0, Maximum = 100, Value = 60, DecimalPlaces = 1, Dock = DockStyle.Fill };
-                panel.Controls.Add(lblHum, 0, 1);
-                panel.Controls.Add(numHum, 1, 1);
-
-                // Biến thiên nhiệt độ
-                var lblTempVar = new Label { Text = "Biến thiên nhiệt độ:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
-                var numTempVar = new NumericUpDown { Minimum = 0, Maximum = 10, Value = 2, DecimalPlaces = 1, Dock = DockStyle.Fill };
-                panel.Controls.Add(lblTempVar, 0, 2);
-                panel.Controls.Add(numTempVar, 1, 2);
-
-                // Biến thiên độ ẩm
-                var lblHumVar = new Label { Text = "Biến thiên độ ẩm:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
-                var numHumVar = new NumericUpDown { Minimum = 0, Maximum = 20, Value = 5, DecimalPlaces = 1, Dock = DockStyle.Fill };
-                panel.Controls.Add(lblHumVar, 0, 3);
-                panel.Controls.Add(numHumVar, 1, 3);
-
-                // Chu kỳ (giây)
-                var lblInterval = new Label { Text = "Chu kỳ (giây):", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
-                var numInterval = new NumericUpDown { Minimum = 1, Maximum = 60, Value = 2, Dock = DockStyle.Fill };
-                panel.Controls.Add(lblInterval, 0, 4);
-                panel.Controls.Add(numInterval, 1, 4);
-
-                var btnPanel = new FlowLayoutPanel
-                {
-                    Dock = DockStyle.Bottom,
-                    Height = 50,
-                    FlowDirection = FlowDirection.RightToLeft,
-                    Padding = new Padding(10)
-                };
-
-                var btnOK = new Button { Text = "Bắt đầu", Width = 100, Height = 35, DialogResult = DialogResult.OK };
-                var btnCancel = new Button { Text = "Hủy", Width = 100, Height = 35, DialogResult = DialogResult.Cancel };
-                btnPanel.Controls.Add(btnOK);
-                btnPanel.Controls.Add(btnCancel);
-
-                configForm.Controls.Add(panel);
-                configForm.Controls.Add(btnPanel);
-                configForm.AcceptButton = btnOK;
-                configForm.CancelButton = btnCancel;
-
-                if (configForm.ShowDialog() == DialogResult.OK)
-                {
-                    // Cấu hình và bắt đầu fake data
-                    _fakeDataGenerator.SetBaseValues(
-                        (float)numTemp.Value,
-                        (float)numHum.Value,
-                        (float)numTempVar.Value,
-                        (float)numHumVar.Value
-                    );
-
-                    _fakeDataGenerator.Start((int)numInterval.Value * 1000);
-
-                    _btnFakeData.Text = "Dừng Fake";
-                    _btnFakeData.BackColor = Color.FromArgb(255, 200, 200);
-                    _lblStatus.Text = $"Đang fake data: {numTemp.Value}°C, {numHum.Value}%";
-                    _lblStatus.ForeColor = Color.DarkOrange;
-                }
-            }
-        }
 
         private async void BtnSave_Click(object? sender, EventArgs e)
         {

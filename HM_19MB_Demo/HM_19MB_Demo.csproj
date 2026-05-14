@@ -34,4 +34,8 @@
     <EmbeddedResource Include="Sql\*.sql" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Remove="Form1_DataSaving.resx" />
+  </ItemGroup>
+
 </Project>
