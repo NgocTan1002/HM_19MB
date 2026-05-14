@@ -99,7 +99,6 @@ namespace HM_19MB_Demo
             gridStandards.Columns.Add("Max", "Max");
             var maxColumn = gridStandards.Columns["Max"];
             maxColumn.ReadOnly = true;
-            maxColumn.DefaultCellStyle.BackColor = Color.LightCoral;
             maxColumn.DefaultCellStyle.Font = new Font(gridStandards.Font, FontStyle.Bold);
 
             // Dòng 0: U
@@ -131,16 +130,8 @@ namespace HM_19MB_Demo
             for (int j = 1; j <= _j; j++) rowCorrection.Cells[j].Value = "0.0";
             rowCorrection.Cells[_j + 1].Value = ""; // Không có Max cho ∂t_j
             rowCorrection.Cells[_j + 1].ReadOnly = true;
-            rowCorrection.DefaultCellStyle.BackColor = Color.LightSalmon;
             gridStandards.Rows.Add(rowCorrection);
 
-            // Dòng 3: Max (readonly, tự tính)
-            var rowMax = new DataGridViewRow();
-            rowMax.CreateCells(gridStandards);
-            rowMax.Cells[0].Value = "Max";
-            rowMax.DefaultCellStyle.BackColor = Color.LightCoral;
-            rowMax.ReadOnly = true;
-            gridStandards.Rows.Add(rowMax);
 
             // --- Khởi tạo gridIndicator ---
             gridIndicator.Columns.Clear();

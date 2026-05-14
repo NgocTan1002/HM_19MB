@@ -1,3 +1,4 @@
+using HM_19MB_Demo.Data;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -643,27 +644,25 @@ namespace HM_19MB_Demo
 
         private SessionMetadata CollectMetadata()
         {
-            int.TryParse(txtCalibDay.Text, out int day);
-            int.TryParse(txtCalibMonth.Text, out int month);
-            int.TryParse(txtCalibYear.Text, out int year);
-
             return new SessionMetadata
             {
-                DeviceName = txtDeviceName.Text,
-                DeviceCode = txtDeviceCode.Text,
-                DeviceNumber = txtDeviceNumber.Text,
-                SealNumber = txtSealNumber.Text,
-                Manufacturer = txtManufacturer.Text,
-                ManufactureYear = txtManufactureYear.Text,
-                UsingUnit = txtUsingUnit.Text,
-                Method = txtMethod.Text,
-                EnvTemperature = txtEnvTemp.Text,
-                EnvHumidity = txtEnvHumidity.Text,
-                TechnicalSpecs = txtTechnicalSpecs.Text,
-                MeasuringDevices = txtMeasuringDevices.Text,
-                CalibrationDay = day,
-                CalibrationMonth = month,
-                CalibrationYear = year
+                TenThietBi = txtDeviceName.Text,
+                KyHieu = txtDeviceCode.Text,
+                SoHieu = txtDeviceNumber.Text,
+                SoTem = txtSealNumber.Text,
+                NoiSanXuat = txtManufacturer.Text,
+                NamSanXuat = txtManufactureYear.Text,
+                DonViSuDung = txtUsingUnit.Text,
+                PhuongPhap = txtMethod.Text,
+                NhietDoMoiTruong = txtEnvTemp.Text,
+                DoAmTuongDoi = txtEnvHumidity.Text,
+                DacTinhKyThuat = txtTechnicalSpecs.Text,
+                ThietBiChuan = txtMeasuringDevices.Text,
+                NgayHieuChuan = int.TryParse(txtCalibDay.Text, out int day) &&
+                           int.TryParse(txtCalibMonth.Text, out int month) &&
+                           int.TryParse(txtCalibYear.Text, out int year)
+                    ? new DateTime(year, month, day)
+                    : DateTime.Today
             };
         }
 

@@ -1,3 +1,4 @@
+using HM_19MB_Demo.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -88,8 +89,8 @@ namespace HM_19MB_Demo
                 if (_currentSessionId == null)
                 {
                     var meta = CollectMetadata();
-                    _currentSessionId = await DatabaseService.InsertSessionAsync(meta);
-                    
+                    _currentSessionId = await DatabaseService.TaoPhienMoiAsync(meta);
+
                     // Cập nhật UI
                     if (InvokeRequired)
                     {
@@ -105,7 +106,7 @@ namespace HM_19MB_Demo
                 int savedCount = 0;
                 foreach (var record in recordsToSave)
                 {
-                    await DatabaseService.InsertMeasurementRecordAsync(_currentSessionId.Value, record);
+                    await DatabaseService.LuuKetQuaDoAsync(_currentSessionId.Value, record);
                     savedCount++;
                 }
 
@@ -188,10 +189,11 @@ namespace HM_19MB_Demo
 
                 var meta = CollectMetadata();
                 if (_currentSessionId == null)
-                    _currentSessionId = await DatabaseService.InsertSessionAsync(meta);
+                    _currentSessionId = await DatabaseService.TaoPhienMoiAsync(meta);
 
-                await DatabaseService.InsertMeasurementRecordAsync(_currentSessionId.Value, _lastBlock);
-                
+                await DatabaseService.LuuKetQuaDoAsync(_currentSessionId.Value, _lastBlock);
+
+
                 MessageBox.Show("Lưu dữ liệu thành công!", "Thông báo",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

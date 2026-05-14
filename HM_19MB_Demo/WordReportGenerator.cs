@@ -67,28 +67,28 @@ namespace HM_19MB_Demo
             AddCenteredParagraph(body, "(Calibration Certificate)", false, 12);
             AddEmptyLine(body);
 
-            AddLeftParagraph(body, $"Số (No): {DateTime.Now:yyyyMMdd}-{data.Metadata.DeviceCode}", false, 11);
+            AddLeftParagraph(body, $"Số (No): {DateTime.Now:yyyyMMdd}-{data.Metadata.KyHieu}", false, 11);
             AddEmptyLine(body);
 
             // Thông tin thiết bị
-            AddLeftParagraph(body, $"Tên phương tiện đo (Object): {meta.DeviceName}", false, 11);
-            AddLeftParagraph(body, $"Kiểu (Type): {meta.DeviceCode}                    Số (Serial No): {meta.DeviceNumber}", false, 11);
-            AddLeftParagraph(body, $"Nơi sản xuất (Manufacturer): {meta.Manufacturer}", false, 11);
-            AddLeftParagraph(body, $"Đặc trưng kỹ thuật (Technical Specification): {meta.TechnicalSpecs}", false, 11);
-            AddLeftParagraph(body, $"Cơ sở sử dụng (Customer): {meta.UsingUnit}", false, 11);
+            AddLeftParagraph(body, $"Tên phương tiện đo (Object): {meta.TenThietBi}", false, 11);
+            AddLeftParagraph(body, $"Kiểu (Type): {meta.KyHieu}                    Số (Serial No): {meta.SoHieu}", false, 11);
+            AddLeftParagraph(body, $"Nơi sản xuất (Manufacturer): {meta.NoiSanXuat}", false, 11);
+            AddLeftParagraph(body, $"Đặc trưng kỹ thuật (Technical Specification): {meta.DacTinhKyThuat}", false, 11);
+            AddLeftParagraph(body, $"Cơ sở sử dụng (Customer): {meta.DonViSuDung}", false, 11);
             AddEmptyLine(body);
 
-            AddLeftParagraph(body, $"Phương pháp thực hiện (Method of Calibration): {meta.Method}", false, 11);
-            AddLeftParagraph(body, $"Điều kiện môi trường (Environmental Conditions): Nhiệt độ: {meta.EnvTemperature}, Độ ẩm: {meta.EnvHumidity}", false, 11);
-            AddLeftParagraph(body, $"Chuẩn được sử dụng (Standards used): {meta.MeasuringDevices}", false, 11);
+            AddLeftParagraph(body, $"Phương pháp thực hiện (Method of Calibration): {meta.PhuongPhap}", false, 11);
+            AddLeftParagraph(body, $"Điều kiện môi trường (Environmental Conditions): Nhiệt độ: {meta.NhietDoMoiTruong}, Độ ẩm: {meta.DoAmTuongDoi}", false, 11);
+            AddLeftParagraph(body, $"Chuẩn được sử dụng (Standards used): {meta.ThietBiChuan}", false, 11);
             AddEmptyLine(body);
 
             AddLeftParagraph(body, "Kết quả (Results): Xem trang kèm theo", false, 11);
             AddEmptyLine(body);
 
-            AddLeftParagraph(body, $"Ngày hiệu chuẩn (Date of Cal): {meta.CalibrationDay:D2}/{meta.CalibrationMonth:D2}/{meta.CalibrationYear}", false, 11);
-            AddLeftParagraph(body, $"Số tem hiệu chuẩn (No of Cal. Label): {meta.SealNumber}", false, 11);
-            AddLeftParagraph(body, $"Ngày khuyến nghị hiệu chuẩn tới (Recalibration Recommended): {meta.CalibrationDay:D2}/{meta.CalibrationMonth:D2}/{meta.CalibrationYear + 1}", false, 11);
+            AddLeftParagraph(body, $"Ngày hiệu chuẩn (Date of Cal): {meta.NgayHieuChuan:dd/MM/yyyy}", false, 11);
+            AddLeftParagraph(body, $"Số tem hiệu chuẩn (No of Cal. Label): {meta.SoTem}", false, 11);
+            AddLeftParagraph(body, $"Ngày khuyến nghị hiệu chuẩn tới (Recalibration Recommended): {meta.NgayHieuChuan.AddYears(1):dd/MM/yyyy}", false, 11);
             AddEmptyLine(body);
             AddEmptyLine(body);
 
@@ -170,7 +170,7 @@ namespace HM_19MB_Demo
             AddEmptyLine(body);
 
             // Footer
-            AddLeftParagraph(body, $"Kèm theo giấy chứng nhận hiệu chuẩn số: {DateTime.Now:yyyyMMdd}-{data.Metadata.DeviceCode}", false, 10);
+            AddLeftParagraph(body, $"Kèm theo giấy chứng nhận hiệu chuẩn số: {DateTime.Now:yyyyMMdd}-{data.Metadata.KyHieu}", false, 10);
             AddLeftParagraph(body, "(Attached to certificate No)", false, 9);
             AddCenteredParagraph(body, "Trang: 2", false, 10);
         }

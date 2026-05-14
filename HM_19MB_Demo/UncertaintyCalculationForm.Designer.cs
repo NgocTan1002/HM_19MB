@@ -183,7 +183,6 @@ namespace HM_19MB_Demo
             step2Panel.Controls.Add(lblStep2Title);
             step2Panel.Controls.Add(gridMeasurements);
             step2Panel.Controls.Add(lblUch1Result);
-            step2Panel.Controls.Add(lblTchResult);
             step2Panel.Dock = DockStyle.Fill;
             step2Panel.Location = new Point(13, 113);
             step2Panel.Name = "step2Panel";
@@ -231,7 +230,7 @@ namespace HM_19MB_Demo
             lblTchResult.AutoSize = true;
             lblTchResult.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             lblTchResult.ForeColor = Color.DarkMagenta;
-            lblTchResult.Location = new Point(310, 394);
+            lblTchResult.Location = new Point(29, 75);
             lblTchResult.Name = "lblTchResult";
             lblTchResult.Size = new Size(85, 23);
             lblTchResult.TabIndex = 3;
@@ -309,7 +308,7 @@ namespace HM_19MB_Demo
             gridStandards.Location = new Point(10, 63);
             gridStandards.Name = "gridStandards";
             gridStandards.RowHeadersWidth = 51;
-            gridStandards.Size = new Size(727, 209);
+            gridStandards.Size = new Size(727, 201);
             gridStandards.TabIndex = 3;
             // 
             // lblUch2Result
@@ -360,7 +359,7 @@ namespace HM_19MB_Demo
             gridIndicator.Location = new Point(10, 40);
             gridIndicator.Name = "gridIndicator";
             gridIndicator.RowHeadersWidth = 51;
-            gridIndicator.Size = new Size(591, 189);
+            gridIndicator.Size = new Size(591, 196);
             gridIndicator.TabIndex = 1;
             // 
             // lblResA
@@ -414,6 +413,7 @@ namespace HM_19MB_Demo
             resultPanel.Controls.Add(lblUch1Final);
             resultPanel.Controls.Add(lblUch2Final);
             resultPanel.Controls.Add(lblUcFinal);
+            resultPanel.Controls.Add(lblTchResult);
             resultPanel.Controls.Add(lblUbk1);
             resultPanel.Controls.Add(lblUbk2);
             resultPanel.Controls.Add(lblUbk3);
@@ -434,7 +434,7 @@ namespace HM_19MB_Demo
             // 
             lblUch1Final.AutoSize = true;
             lblUch1Final.Font = new Font("Segoe UI", 9F);
-            lblUch1Final.Location = new Point(12, 12);
+            lblUch1Final.Location = new Point(504, 32);
             lblUch1Final.Name = "lblUch1Final";
             lblUch1Final.Size = new Size(76, 20);
             lblUch1Final.TabIndex = 1;
@@ -444,7 +444,7 @@ namespace HM_19MB_Demo
             // 
             lblUch2Final.AutoSize = true;
             lblUch2Final.Font = new Font("Segoe UI", 9F);
-            lblUch2Final.Location = new Point(170, 12);
+            lblUch2Final.Location = new Point(504, 75);
             lblUch2Final.Name = "lblUch2Final";
             lblUch2Final.Size = new Size(76, 20);
             lblUch2Final.TabIndex = 2;
@@ -455,7 +455,7 @@ namespace HM_19MB_Demo
             lblUcFinal.AutoSize = true;
             lblUcFinal.Font = new Font("Segoe UI", 9F);
             lblUcFinal.ForeColor = Color.DarkBlue;
-            lblUcFinal.Location = new Point(328, 12);
+            lblUcFinal.Location = new Point(504, 114);
             lblUcFinal.Name = "lblUcFinal";
             lblUcFinal.Size = new Size(60, 20);
             lblUcFinal.TabIndex = 3;
@@ -465,7 +465,7 @@ namespace HM_19MB_Demo
             // 
             lblUbk1.AutoSize = true;
             lblUbk1.Font = new Font("Segoe UI", 9F);
-            lblUbk1.Location = new Point(520, 12);
+            lblUbk1.Location = new Point(777, 32);
             lblUbk1.Name = "lblUbk1";
             lblUbk1.Size = new Size(77, 20);
             lblUbk1.TabIndex = 5;
@@ -475,7 +475,7 @@ namespace HM_19MB_Demo
             // 
             lblUbk2.AutoSize = true;
             lblUbk2.Font = new Font("Segoe UI", 9F);
-            lblUbk2.Location = new Point(660, 12);
+            lblUbk2.Location = new Point(777, 75);
             lblUbk2.Name = "lblUbk2";
             lblUbk2.Size = new Size(77, 20);
             lblUbk2.TabIndex = 6;
@@ -485,7 +485,7 @@ namespace HM_19MB_Demo
             // 
             lblUbk3.AutoSize = true;
             lblUbk3.Font = new Font("Segoe UI", 9F);
-            lblUbk3.Location = new Point(800, 12);
+            lblUbk3.Location = new Point(777, 114);
             lblUbk3.Name = "lblUbk3";
             lblUbk3.Size = new Size(77, 20);
             lblUbk3.TabIndex = 7;
@@ -495,7 +495,7 @@ namespace HM_19MB_Demo
             // 
             lblUbk4.AutoSize = true;
             lblUbk4.Font = new Font("Segoe UI", 9F);
-            lblUbk4.Location = new Point(940, 12);
+            lblUbk4.Location = new Point(1089, 32);
             lblUbk4.Name = "lblUbk4";
             lblUbk4.Size = new Size(77, 20);
             lblUbk4.TabIndex = 8;
@@ -506,7 +506,7 @@ namespace HM_19MB_Demo
             lblUbkResult.AutoSize = true;
             lblUbkResult.Font = new Font("Segoe UI", 9F);
             lblUbkResult.ForeColor = Color.DarkOrange;
-            lblUbkResult.Location = new Point(1080, 12);
+            lblUbkResult.Location = new Point(1089, 75);
             lblUbkResult.Name = "lblUbkResult";
             lblUbkResult.Size = new Size(69, 20);
             lblUbkResult.TabIndex = 9;
@@ -516,7 +516,7 @@ namespace HM_19MB_Demo
             // 
             lblTtnResult.AutoSize = true;
             lblTtnResult.Font = new Font("Segoe UI", 9F);
-            lblTtnResult.Location = new Point(12, 55);
+            lblTtnResult.Location = new Point(29, 32);
             lblTtnResult.Name = "lblTtnResult";
             lblTtnResult.Size = new Size(69, 20);
             lblTtnResult.TabIndex = 1;
@@ -526,7 +526,7 @@ namespace HM_19MB_Demo
             // 
             lblDeltaT.AutoSize = true;
             lblDeltaT.Font = new Font("Segoe UI", 9F);
-            lblDeltaT.Location = new Point(250, 55);
+            lblDeltaT.Location = new Point(32, 114);
             lblDeltaT.Name = "lblDeltaT";
             lblDeltaT.Size = new Size(60, 20);
             lblDeltaT.TabIndex = 2;
@@ -536,7 +536,7 @@ namespace HM_19MB_Demo
             // 
             lblDeltaOd.AutoSize = true;
             lblDeltaOd.Font = new Font("Segoe UI", 9F);
-            lblDeltaOd.Location = new Point(490, 55);
+            lblDeltaOd.Location = new Point(220, 32);
             lblDeltaOd.Name = "lblDeltaOd";
             lblDeltaOd.Size = new Size(83, 20);
             lblDeltaOd.TabIndex = 3;
@@ -546,7 +546,7 @@ namespace HM_19MB_Demo
             // 
             lblDeltaDd.AutoSize = true;
             lblDeltaDd.Font = new Font("Segoe UI", 9F);
-            lblDeltaDd.Location = new Point(730, 55);
+            lblDeltaDd.Location = new Point(220, 77);
             lblDeltaDd.Name = "lblDeltaDd";
             lblDeltaDd.Size = new Size(83, 20);
             lblDeltaDd.TabIndex = 4;
@@ -557,12 +557,12 @@ namespace HM_19MB_Demo
             lblUFinal.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             lblUFinal.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
             lblUFinal.ForeColor = Color.DarkRed;
-            lblUFinal.Location = new Point(12, 98);
+            lblUFinal.Location = new Point(1089, 103);
             lblUFinal.Name = "lblUFinal";
-            lblUFinal.Size = new Size(1348, 36);
+            lblUFinal.Size = new Size(263, 36);
             lblUFinal.TabIndex = 4;
-            lblUFinal.Text = "U (k=2, P=95%) = ---";
-            lblUFinal.TextAlign = ContentAlignment.MiddleCenter;
+            lblUFinal.Text = "U = ---";
+            lblUFinal.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // bottomPanel
             // 
