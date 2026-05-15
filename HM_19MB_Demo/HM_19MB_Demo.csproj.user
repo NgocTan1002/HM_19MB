@@ -7,6 +7,9 @@
     <Compile Update="HealthDotPanel.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Update="MathLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Update="ProbeGuideForm.cs">
       <SubType>Form</SubType>
     </Compile>
