@@ -1,10 +1,5 @@
 -- ----------------------------------------------------------------
 -- fn_tao_phien: Tạo phiên hiệu chuẩn mới, trả về id vừa tạo.
---
--- Tại sao dùng function thay vì INSERT trực tiếp:
---   • Cho phép thêm validation (ví dụ: kiểm tra ngày hợp lệ) mà
---     không cần sửa code C# hay câu SQL phía client.
---   • Có thể thêm logic mặc định / audit log về sau chỉ ở 1 chỗ.
 -- ----------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_tao_phien(
     p_ten_thiet_bi          VARCHAR,
@@ -201,15 +196,22 @@ $$;
 
 
 -- ================================================================
--- FUNCTIONS VERSION 4 — ket_qua_hieu_chuan
+-- FUNCTIONS VERSION 5 — ket_qua_hieu_chuan
+-- Thay đổi: vi_tri_1..9 → kenh_1..10
 -- ================================================================
 
 -- ----------------------------------------------------------------
 -- fn_luu_ket_qua_hieu_chuan
--- Lưu 1 dòng kết quả tổng hợp tại 1 điểm kiểm tra.
--- Nếu đã tồn tại (phien_id, stt) thì cập nhật (upsert).
--- Trả về id của dòng vừa lưu.
 -- ----------------------------------------------------------------
+DROP FUNCTION IF EXISTS fn_luu_ket_qua_hieu_chuan(
+    INT, INT, FLOAT, FLOAT,
+    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
+    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
+    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
+    INT, INT, VARCHAR
+);
+
+-- Xoá signature cũ (9 kênh) nếu tồn tại
 DROP FUNCTION IF EXISTS fn_luu_ket_qua_hieu_chuan(
     INT, INT, FLOAT, FLOAT,
     FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
@@ -227,16 +229,17 @@ CREATE OR REPLACE FUNCTION fn_luu_ket_qua_hieu_chuan(
     p_gia_tri_dat           FLOAT,
     p_gia_tri_chi_thi       FLOAT,
 
-    -- Giá trị từng vị trí chuẩn (NULL nếu không dùng)
-    p_vi_tri_1              FLOAT,
-    p_vi_tri_2              FLOAT,
-    p_vi_tri_3              FLOAT,
-    p_vi_tri_4              FLOAT,
-    p_vi_tri_5              FLOAT,
-    p_vi_tri_6              FLOAT,
-    p_vi_tri_7              FLOAT,
-    p_vi_tri_8              FLOAT,
-    p_vi_tri_9              FLOAT,
+    -- Giá trị từng kênh chuẩn (NULL nếu không dùng) — tối đa 10
+    p_kenh_1                FLOAT,
+    p_kenh_2                FLOAT,
+    p_kenh_3                FLOAT,
+    p_kenh_4                FLOAT,
+    p_kenh_5                FLOAT,
+    p_kenh_6                FLOAT,
+    p_kenh_7                FLOAT,
+    p_kenh_8                FLOAT,
+    p_kenh_9                FLOAT,
+    p_kenh_10               FLOAT,
 
     -- Kết quả tổng hợp
     p_gia_tri_trung_binh    FLOAT,
@@ -269,8 +272,8 @@ BEGIN
     INSERT INTO ket_qua_hieu_chuan (
         phien_id, stt,
         gia_tri_dat, gia_tri_chi_thi,
-        vi_tri_1, vi_tri_2, vi_tri_3, vi_tri_4, vi_tri_5,
-        vi_tri_6, vi_tri_7, vi_tri_8, vi_tri_9,
+        kenh_1, kenh_2, kenh_3, kenh_4, kenh_5,
+        kenh_6, kenh_7, kenh_8, kenh_9, kenh_10,
         gia_tri_trung_binh, so_hieu_chinh,
         do_on_dinh, do_dong_deu, do_khong_dam_bao,
         uch1, uch2, uch,
@@ -280,8 +283,8 @@ BEGIN
     VALUES (
         p_phien_id, p_stt,
         p_gia_tri_dat, p_gia_tri_chi_thi,
-        p_vi_tri_1, p_vi_tri_2, p_vi_tri_3, p_vi_tri_4, p_vi_tri_5,
-        p_vi_tri_6, p_vi_tri_7, p_vi_tri_8, p_vi_tri_9,
+        p_kenh_1, p_kenh_2, p_kenh_3, p_kenh_4, p_kenh_5,
+        p_kenh_6, p_kenh_7, p_kenh_8, p_kenh_9, p_kenh_10,
         p_gia_tri_trung_binh, p_so_hieu_chinh,
         p_do_on_dinh, p_do_dong_deu, p_do_khong_dam_bao,
         p_uch1, p_uch2, p_uch,
@@ -291,15 +294,16 @@ BEGIN
     ON CONFLICT (phien_id, stt) DO UPDATE SET
         gia_tri_dat          = EXCLUDED.gia_tri_dat,
         gia_tri_chi_thi      = EXCLUDED.gia_tri_chi_thi,
-        vi_tri_1             = EXCLUDED.vi_tri_1,
-        vi_tri_2             = EXCLUDED.vi_tri_2,
-        vi_tri_3             = EXCLUDED.vi_tri_3,
-        vi_tri_4             = EXCLUDED.vi_tri_4,
-        vi_tri_5             = EXCLUDED.vi_tri_5,
-        vi_tri_6             = EXCLUDED.vi_tri_6,
-        vi_tri_7             = EXCLUDED.vi_tri_7,
-        vi_tri_8             = EXCLUDED.vi_tri_8,
-        vi_tri_9             = EXCLUDED.vi_tri_9,
+        kenh_1               = EXCLUDED.kenh_1,
+        kenh_2               = EXCLUDED.kenh_2,
+        kenh_3               = EXCLUDED.kenh_3,
+        kenh_4               = EXCLUDED.kenh_4,
+        kenh_5               = EXCLUDED.kenh_5,
+        kenh_6               = EXCLUDED.kenh_6,
+        kenh_7               = EXCLUDED.kenh_7,
+        kenh_8               = EXCLUDED.kenh_8,
+        kenh_9               = EXCLUDED.kenh_9,
+        kenh_10              = EXCLUDED.kenh_10,
         gia_tri_trung_binh   = EXCLUDED.gia_tri_trung_binh,
         so_hieu_chinh        = EXCLUDED.so_hieu_chinh,
         do_on_dinh           = EXCLUDED.do_on_dinh,
@@ -326,7 +330,6 @@ $$;
 
 -- ----------------------------------------------------------------
 -- fn_lay_ket_qua_hieu_chuan
--- Lấy toàn bộ kết quả tổng hợp của 1 phiên, sắp xếp theo stt.
 -- ----------------------------------------------------------------
 DROP FUNCTION IF EXISTS fn_lay_ket_qua_hieu_chuan(INT);
 
@@ -336,15 +339,16 @@ RETURNS TABLE (
     stt                 INT,
     gia_tri_dat         FLOAT,
     gia_tri_chi_thi     FLOAT,
-    vi_tri_1            FLOAT,
-    vi_tri_2            FLOAT,
-    vi_tri_3            FLOAT,
-    vi_tri_4            FLOAT,
-    vi_tri_5            FLOAT,
-    vi_tri_6            FLOAT,
-    vi_tri_7            FLOAT,
-    vi_tri_8            FLOAT,
-    vi_tri_9            FLOAT,
+    kenh_1              FLOAT,
+    kenh_2              FLOAT,
+    kenh_3              FLOAT,
+    kenh_4              FLOAT,
+    kenh_5              FLOAT,
+    kenh_6              FLOAT,
+    kenh_7              FLOAT,
+    kenh_8              FLOAT,
+    kenh_9              FLOAT,
+    kenh_10             FLOAT,
     gia_tri_trung_binh  FLOAT,
     so_hieu_chinh       FLOAT,
     do_on_dinh          FLOAT,
@@ -368,8 +372,8 @@ AS $$
     SELECT
         id, stt,
         gia_tri_dat, gia_tri_chi_thi,
-        vi_tri_1, vi_tri_2, vi_tri_3, vi_tri_4, vi_tri_5,
-        vi_tri_6, vi_tri_7, vi_tri_8, vi_tri_9,
+        kenh_1, kenh_2, kenh_3, kenh_4, kenh_5,
+        kenh_6, kenh_7, kenh_8, kenh_9, kenh_10,
         gia_tri_trung_binh, so_hieu_chinh,
         do_on_dinh, do_dong_deu, do_khong_dam_bao,
         uch1, uch2, uch,
@@ -383,8 +387,6 @@ $$;
 
 -- ----------------------------------------------------------------
 -- fn_xoa_ket_qua_hieu_chuan
--- Xoá 1 dòng kết quả theo phien_id + stt.
--- Sau khi xoá tự động cập nhật lại stt liên tục (1, 2, 3...).
 -- ----------------------------------------------------------------
 DROP FUNCTION IF EXISTS fn_xoa_ket_qua_hieu_chuan(INT, INT);
 
@@ -409,7 +411,6 @@ $$;
 
 -- ----------------------------------------------------------------
 -- fn_lay_stt_tiep_theo
--- Lấy STT tiếp theo cho phiên (dùng khi thêm dòng mới).
 -- ----------------------------------------------------------------
 DROP FUNCTION IF EXISTS fn_lay_stt_tiep_theo(INT);
 

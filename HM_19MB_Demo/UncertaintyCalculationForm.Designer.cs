@@ -21,6 +21,11 @@ namespace HM_19MB_Demo
         private void InitializeComponent()
         {
             mainLayout = new TableLayoutPanel();
+            step0Panel = new Panel();
+            lblStep0Title = new Label();
+            lblGiaTriDat = new Label();
+            txtGiaTriDat = new TextBox();
+            lblGiaTriDatUnit = new Label();
             step1Panel = new Panel();
             lblStep1Title = new Label();
             lblChannels = new Label();
@@ -47,6 +52,7 @@ namespace HM_19MB_Demo
             lblResD = new Label();
             numResolutionD = new NumericUpDown();
             resultPanel = new Panel();
+            lblStep4Title = new Label();
             lblUch1Final = new Label();
             lblUch2Final = new Label();
             lblUcFinal = new Label();
@@ -63,10 +69,11 @@ namespace HM_19MB_Demo
             lblUFinal = new Label();
             bottomPanel = new Panel();
             btnCalculate = new Button();
+            btnAddToTable = new Button();
             btnSaveToDb = new Button();
-            lblStep4Title = new Label();
             lblStep5Title = new Label();
             mainLayout.SuspendLayout();
+            step0Panel.SuspendLayout();
             step1Panel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numChannels).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numMeasurements).BeginInit();
@@ -87,23 +94,75 @@ namespace HM_19MB_Demo
             // 
             mainLayout.ColumnCount = 1;
             mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            mainLayout.Controls.Add(step1Panel, 0, 0);
-            mainLayout.Controls.Add(step2Panel, 0, 1);
-            mainLayout.Controls.Add(splitStep3, 0, 2);
-            mainLayout.Controls.Add(resultPanel, 0, 3);
-            mainLayout.Controls.Add(bottomPanel, 0, 4);
+            mainLayout.Controls.Add(step0Panel, 0, 0);
+            mainLayout.Controls.Add(step1Panel, 0, 1);
+            mainLayout.Controls.Add(step2Panel, 0, 2);
+            mainLayout.Controls.Add(splitStep3, 0, 3);
+            mainLayout.Controls.Add(resultPanel, 0, 4);
+            mainLayout.Controls.Add(bottomPanel, 0, 5);
             mainLayout.Dock = DockStyle.Fill;
             mainLayout.Location = new Point(0, 0);
             mainLayout.Name = "mainLayout";
             mainLayout.Padding = new Padding(10);
-            mainLayout.RowCount = 5;
+            mainLayout.RowCount = 6;
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 220F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 220F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
-            mainLayout.Size = new Size(1400, 1100);
+            mainLayout.Size = new Size(1400, 1170);
             mainLayout.TabIndex = 0;
+            // 
+            // step0Panel
+            // 
+            step0Panel.BackColor = Color.FromArgb(255, 248, 230);
+            step0Panel.BorderStyle = BorderStyle.FixedSingle;
+            step0Panel.Controls.Add(lblStep0Title);
+            step0Panel.Controls.Add(lblGiaTriDat);
+            step0Panel.Controls.Add(txtGiaTriDat);
+            step0Panel.Controls.Add(lblGiaTriDatUnit);
+            step0Panel.Dock = DockStyle.Fill;
+            step0Panel.Location = new Point(13, 13);
+            step0Panel.Name = "step0Panel";
+            step0Panel.Size = new Size(1374, 64);
+            step0Panel.TabIndex = 0;
+            // 
+            // lblStep0Title
+            // 
+            lblStep0Title.AutoSize = true;
+            lblStep0Title.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            lblStep0Title.Location = new Point(10, 8);
+            lblStep0Title.Name = "lblStep0Title";
+            lblStep0Title.Size = new Size(136, 25);
+            lblStep0Title.TabIndex = 0;
+            lblStep0Title.Text = "Điểm kiểm tra";
+            // 
+            // lblGiaTriDat
+            // 
+            lblGiaTriDat.AutoSize = true;
+            lblGiaTriDat.Location = new Point(10, 38);
+            lblGiaTriDat.Name = "lblGiaTriDat";
+            lblGiaTriDat.Size = new Size(107, 20);
+            lblGiaTriDat.TabIndex = 1;
+            lblGiaTriDat.Text = "Giá trị đặt (°C):";
+            // 
+            // txtGiaTriDat
+            // 
+            txtGiaTriDat.Location = new Point(120, 35);
+            txtGiaTriDat.Name = "txtGiaTriDat";
+            txtGiaTriDat.Size = new Size(100, 27);
+            txtGiaTriDat.TabIndex = 2;
+            txtGiaTriDat.Text = "0.0";
+            // 
+            // lblGiaTriDatUnit
+            // 
+            lblGiaTriDatUnit.AutoSize = true;
+            lblGiaTriDatUnit.Location = new Point(228, 38);
+            lblGiaTriDatUnit.Name = "lblGiaTriDatUnit";
+            lblGiaTriDatUnit.Size = new Size(24, 20);
+            lblGiaTriDatUnit.TabIndex = 3;
+            lblGiaTriDatUnit.Text = "°C";
             // 
             // step1Panel
             // 
@@ -116,10 +175,10 @@ namespace HM_19MB_Demo
             step1Panel.Controls.Add(numMeasurements);
             step1Panel.Controls.Add(btnApplyConfig);
             step1Panel.Dock = DockStyle.Fill;
-            step1Panel.Location = new Point(13, 13);
+            step1Panel.Location = new Point(13, 83);
             step1Panel.Name = "step1Panel";
             step1Panel.Size = new Size(1374, 94);
-            step1Panel.TabIndex = 0;
+            step1Panel.TabIndex = 1;
             // 
             // lblStep1Title
             // 
@@ -184,10 +243,10 @@ namespace HM_19MB_Demo
             step2Panel.Controls.Add(gridMeasurements);
             step2Panel.Controls.Add(lblUch1Result);
             step2Panel.Dock = DockStyle.Fill;
-            step2Panel.Location = new Point(13, 113);
+            step2Panel.Location = new Point(13, 183);
             step2Panel.Name = "step2Panel";
             step2Panel.Size = new Size(1374, 474);
-            step2Panel.TabIndex = 1;
+            step2Panel.TabIndex = 2;
             // 
             // lblStep2Title
             // 
@@ -232,12 +291,12 @@ namespace HM_19MB_Demo
             splitStep3.Controls.Add(pnlStandards, 0, 0);
             splitStep3.Controls.Add(pnlIndicator, 1, 0);
             splitStep3.Dock = DockStyle.Fill;
-            splitStep3.Location = new Point(13, 593);
+            splitStep3.Location = new Point(13, 663);
             splitStep3.Name = "splitStep3";
             splitStep3.RowCount = 1;
             splitStep3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             splitStep3.Size = new Size(1374, 214);
-            splitStep3.TabIndex = 2;
+            splitStep3.TabIndex = 3;
             // 
             // pnlStandards
             // 
@@ -393,6 +452,7 @@ namespace HM_19MB_Demo
             // 
             resultPanel.BackColor = Color.FromArgb(240, 255, 240);
             resultPanel.BorderStyle = BorderStyle.FixedSingle;
+            resultPanel.Controls.Add(lblStep4Title);
             resultPanel.Controls.Add(lblUch1Final);
             resultPanel.Controls.Add(lblUch2Final);
             resultPanel.Controls.Add(lblUcFinal);
@@ -408,13 +468,24 @@ namespace HM_19MB_Demo
             resultPanel.Controls.Add(lblDeltaDd);
             resultPanel.Controls.Add(lblUFinal);
             resultPanel.Dock = DockStyle.Fill;
-            resultPanel.Location = new Point(13, 813);
+            resultPanel.Location = new Point(13, 883);
             resultPanel.Name = "resultPanel";
             resultPanel.Size = new Size(1374, 214);
             resultPanel.TabIndex = 4;
             // 
+            // lblStep4Title
+            // 
+            lblStep4Title.AutoSize = true;
+            lblStep4Title.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            lblStep4Title.Location = new Point(10, 10);
+            lblStep4Title.Name = "lblStep4Title";
+            lblStep4Title.Size = new Size(166, 25);
+            lblStep4Title.TabIndex = 0;
+            lblStep4Title.Text = "Kết quả tính toán";
+            // 
             // lblUch1Final
             // 
+            lblUch1Final.Anchor = AnchorStyles.None;
             lblUch1Final.AutoSize = true;
             lblUch1Final.Font = new Font("Segoe UI", 9F);
             lblUch1Final.Location = new Point(504, 32);
@@ -425,6 +496,7 @@ namespace HM_19MB_Demo
             // 
             // lblUch2Final
             // 
+            lblUch2Final.Anchor = AnchorStyles.None;
             lblUch2Final.AutoSize = true;
             lblUch2Final.Font = new Font("Segoe UI", 9F);
             lblUch2Final.Location = new Point(504, 75);
@@ -435,6 +507,7 @@ namespace HM_19MB_Demo
             // 
             // lblUcFinal
             // 
+            lblUcFinal.Anchor = AnchorStyles.None;
             lblUcFinal.AutoSize = true;
             lblUcFinal.Font = new Font("Segoe UI", 9F);
             lblUcFinal.ForeColor = Color.Black;
@@ -446,7 +519,7 @@ namespace HM_19MB_Demo
             // 
             // lblTchResult
             // 
-            lblTchResult.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            lblTchResult.Anchor = AnchorStyles.None;
             lblTchResult.AutoSize = true;
             lblTchResult.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lblTchResult.ForeColor = Color.Black;
@@ -458,6 +531,7 @@ namespace HM_19MB_Demo
             // 
             // lblUbk1
             // 
+            lblUbk1.Anchor = AnchorStyles.None;
             lblUbk1.AutoSize = true;
             lblUbk1.Font = new Font("Segoe UI", 9F);
             lblUbk1.Location = new Point(777, 32);
@@ -468,6 +542,7 @@ namespace HM_19MB_Demo
             // 
             // lblUbk2
             // 
+            lblUbk2.Anchor = AnchorStyles.None;
             lblUbk2.AutoSize = true;
             lblUbk2.Font = new Font("Segoe UI", 9F);
             lblUbk2.Location = new Point(777, 75);
@@ -478,6 +553,7 @@ namespace HM_19MB_Demo
             // 
             // lblUbk3
             // 
+            lblUbk3.Anchor = AnchorStyles.None;
             lblUbk3.AutoSize = true;
             lblUbk3.Font = new Font("Segoe UI", 9F);
             lblUbk3.Location = new Point(777, 114);
@@ -488,6 +564,7 @@ namespace HM_19MB_Demo
             // 
             // lblUbk4
             // 
+            lblUbk4.Anchor = AnchorStyles.None;
             lblUbk4.AutoSize = true;
             lblUbk4.Font = new Font("Segoe UI", 9F);
             lblUbk4.Location = new Point(1089, 32);
@@ -498,6 +575,7 @@ namespace HM_19MB_Demo
             // 
             // lblUbkResult
             // 
+            lblUbkResult.Anchor = AnchorStyles.None;
             lblUbkResult.AutoSize = true;
             lblUbkResult.Font = new Font("Segoe UI", 9F);
             lblUbkResult.ForeColor = Color.Black;
@@ -509,6 +587,7 @@ namespace HM_19MB_Demo
             // 
             // lblTtnResult
             // 
+            lblTtnResult.Anchor = AnchorStyles.None;
             lblTtnResult.AutoSize = true;
             lblTtnResult.Font = new Font("Segoe UI", 9F);
             lblTtnResult.Location = new Point(29, 32);
@@ -519,6 +598,7 @@ namespace HM_19MB_Demo
             // 
             // lblDeltaT
             // 
+            lblDeltaT.Anchor = AnchorStyles.None;
             lblDeltaT.AutoSize = true;
             lblDeltaT.Font = new Font("Segoe UI", 9F);
             lblDeltaT.Location = new Point(32, 114);
@@ -529,6 +609,7 @@ namespace HM_19MB_Demo
             // 
             // lblDeltaOd
             // 
+            lblDeltaOd.Anchor = AnchorStyles.None;
             lblDeltaOd.AutoSize = true;
             lblDeltaOd.Font = new Font("Segoe UI", 9F);
             lblDeltaOd.Location = new Point(220, 32);
@@ -539,6 +620,7 @@ namespace HM_19MB_Demo
             // 
             // lblDeltaDd
             // 
+            lblDeltaDd.Anchor = AnchorStyles.None;
             lblDeltaDd.AutoSize = true;
             lblDeltaDd.Font = new Font("Segoe UI", 9F);
             lblDeltaDd.Location = new Point(220, 77);
@@ -549,7 +631,7 @@ namespace HM_19MB_Demo
             // 
             // lblUFinal
             // 
-            lblUFinal.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            lblUFinal.Anchor = AnchorStyles.None;
             lblUFinal.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             lblUFinal.ForeColor = Color.Black;
             lblUFinal.Location = new Point(1089, 103);
@@ -562,12 +644,13 @@ namespace HM_19MB_Demo
             // bottomPanel
             // 
             bottomPanel.Controls.Add(btnCalculate);
+            bottomPanel.Controls.Add(btnAddToTable);
             bottomPanel.Controls.Add(btnSaveToDb);
             bottomPanel.Dock = DockStyle.Fill;
-            bottomPanel.Location = new Point(13, 1033);
+            bottomPanel.Location = new Point(13, 1103);
             bottomPanel.Name = "bottomPanel";
             bottomPanel.Size = new Size(1374, 54);
-            bottomPanel.TabIndex = 4;
+            bottomPanel.TabIndex = 5;
             // 
             // btnCalculate
             // 
@@ -580,49 +663,55 @@ namespace HM_19MB_Demo
             btnCalculate.Text = "Tính toán";
             btnCalculate.UseVisualStyleBackColor = true;
             // 
+            // btnAddToTable
+            // 
+            btnAddToTable.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnAddToTable.BackColor = Color.FromArgb(0, 120, 215);
+            btnAddToTable.Enabled = false;
+            btnAddToTable.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnAddToTable.ForeColor = Color.White;
+            btnAddToTable.Location = new Point(1094, 7);
+            btnAddToTable.Name = "btnAddToTable";
+            btnAddToTable.Size = new Size(150, 40);
+            btnAddToTable.TabIndex = 1;
+            btnAddToTable.Text = "Thêm vào bảng";
+            btnAddToTable.UseVisualStyleBackColor = false;
+            // 
             // btnSaveToDb
             // 
             btnSaveToDb.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnSaveToDb.BackColor = Color.LightGreen;
-            btnSaveToDb.Location = new Point(1134, 7);
+            btnSaveToDb.Location = new Point(974, 7);
             btnSaveToDb.Name = "btnSaveToDb";
-            btnSaveToDb.Size = new Size(120, 40);
-            btnSaveToDb.TabIndex = 3;
+            btnSaveToDb.Size = new Size(110, 40);
+            btnSaveToDb.TabIndex = 2;
             btnSaveToDb.Text = "Lưu vào DB";
             btnSaveToDb.UseVisualStyleBackColor = false;
-            // 
-            // lblStep4Title
-            // 
-            lblStep4Title.AutoSize = true;
-            lblStep4Title.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblStep4Title.Location = new Point(10, 10);
-            lblStep4Title.Name = "lblStep4Title";
-            lblStep4Title.Size = new Size(166, 25);
-            lblStep4Title.TabIndex = 0;
-            lblStep4Title.Text = "Kết quả tính toán";
             // 
             // lblStep5Title
             // 
             lblStep5Title.AutoSize = true;
-            lblStep5Title.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblStep5Title.Location = new Point(10, 5);
+            lblStep5Title.Location = new Point(0, 0);
             lblStep5Title.Name = "lblStep5Title";
-            lblStep5Title.Size = new Size(280, 23);
+            lblStep5Title.Size = new Size(100, 23);
             lblStep5Title.TabIndex = 0;
-            lblStep5Title.Text = "Kết quả tính ubk (chỉ thị tủ nhiệt)";
+            lblStep5Title.Visible = false;
             // 
             // UncertaintyCalculationForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             AutoScroll = true;
-            ClientSize = new Size(1400, 1100);
+            ClientSize = new Size(1400, 1170);
             Controls.Add(mainLayout);
             MinimumSize = new Size(1200, 700);
             Name = "UncertaintyCalculationForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Tính toán độ không đảm bảo đo";
+            WindowState = FormWindowState.Maximized;
             mainLayout.ResumeLayout(false);
+            step0Panel.ResumeLayout(false);
+            step0Panel.PerformLayout();
             step1Panel.ResumeLayout(false);
             step1Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numChannels).EndInit();
@@ -647,6 +736,14 @@ namespace HM_19MB_Demo
 
         #endregion
 
+        // ── Step 0 controls ──────────────────────────────────────────────
+        private Panel step0Panel;
+        private Label lblStep0Title;
+        private Label lblGiaTriDat;
+        private TextBox txtGiaTriDat;
+        private Label lblGiaTriDatUnit;
+
+        // ── Step 1 controls ──────────────────────────────────────────────
         private TableLayoutPanel mainLayout;
         private Panel step1Panel;
         private Label lblStep1Title;
@@ -692,6 +789,7 @@ namespace HM_19MB_Demo
         private Label lblUbkResult;
         private Panel bottomPanel;
         private Button btnCalculate;
+        private Button btnAddToTable;   // MỚI
         private Button btnSaveToDb;
     }
 }

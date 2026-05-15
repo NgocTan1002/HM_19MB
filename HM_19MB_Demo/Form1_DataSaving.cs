@@ -121,7 +121,12 @@ namespace HM_19MB_Demo
                         {
                             _lblStatus.Text = $"Đã tạo session mới (ID: {_currentSessionId})";
                             _lblStatus.ForeColor = System.Drawing.Color.DarkGreen;
+                            OnSessionIdAssigned();
                         }));
+                    }
+                    else
+                    {
+                        OnSessionIdAssigned();
                     }
                 }
 
@@ -267,6 +272,7 @@ namespace HM_19MB_Demo
             _currentSessionId = null;
             _pendingRecords.Clear();
             _lastAutoSave = DateTime.MinValue;
+            ResetCalibrationResults();
         }
 
         /// <summary>

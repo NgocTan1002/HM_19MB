@@ -33,7 +33,7 @@ namespace HM_19MB_Demo.Data
                 "Thiếu 'PostgresConnectionString' trong app.config.");
 
         // Tạo bảng và đăng ký function nếu chưa tồn tại
-        private const int SCHEMA_VERSION = 4;
+        private const int SCHEMA_VERSION = 5;
         public static async Task EnsureSchemaAsync()
         {
             await using var conn = new NpgsqlConnection(ConnectionString);

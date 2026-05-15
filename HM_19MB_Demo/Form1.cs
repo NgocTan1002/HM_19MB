@@ -118,6 +118,8 @@ namespace HM_19MB_Demo
                     _serialReader.Dispose();
                 }
             };
+            // Khởi tạo bảng kết quả hiệu chuẩn
+            InitializeCalibrationResultsPanel();
         }
 
         // ── Connection Health Indicator ──────────────────────────────────────
@@ -212,7 +214,7 @@ namespace HM_19MB_Demo
             UpdateGrid(block);
             UpdateChart(block);
             _lblLastReceived.Text = $"Lần nhận cuối: {block.Timestamp:HH:mm dd/MM/yyyy}  |  Thiết bị: {block.DeviceId}";
-            _lblStatus.Text = $"Đã kết nối — nhận lúc {DateTime.Now:HH:mm}";
+            _lblStatus.Text = $"Đang kết nối — nhận lúc {DateTime.Now:HH:mm}";
         }
 
         private void SerialReader_ErrorOccurred(object? sender, string msg)
@@ -431,11 +433,50 @@ namespace HM_19MB_Demo
             }
         }
 
-        private void BtnUncertainty_Click(object? sender, EventArgs e)
+        private async void BtnUncertainty_Click(object? sender, EventArgs e)
         {
             // Mở form tính toán độ không đảm bảo đo
-            using var uncertaintyForm = new UncertaintyCalculationForm();
-            uncertaintyForm.ShowDialog(this);
+            if (_currentSessionId == null)
+            {
+                try
+                {
+                    await DatabaseService.EnsureSchemaAsync();
+                    _currentSessionId = await DatabaseService.TaoPhienMoiAsync(CollectMetadata());
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Không thể tạo phiên hiệu chuẩn:\n{ex.Message}", "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
+            int phienId = _currentSessionId.Value;
+            var uncertaintyForm = new UncertaintyCalculationForm(
+                phienId,
+                row => HandleCalibrationResultAdded(phienId, row));
+            uncertaintyForm.Show(this);
+        }
+
+        private async Task HandleCalibrationResultAdded(int phienId, CalibrationResultRow row)
+        {
+            if (phienId <= 0)
+            {
+                MessageBox.Show("Chưa có phiên hiệu chuẩn để lưu kết quả.", "Thông báo",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                row.STT = await DatabaseService.LaySTTTiepTheoAsync(phienId);
+                row.Id = await DatabaseService.LuuKetQuaHieuChuanAsync(phienId, row);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi lưu kết quả hiệu chuẩn:\n{ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         // ── Grid update ───────────────────────────────────────────────────────

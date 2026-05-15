@@ -13,7 +13,7 @@ namespace HM_19MB_Demo.Data
         public double GiaTriDat { get; set; }
         public double GiaTriChiThi { get; set; }
 
-        public double[] ViTri { get; set; } = new double[9];
+        public double[] Kenh { get; set; } = new double[10];
 
         public double GiaTriTrungBinh { get; set; }
         public double SoHieuChinh { get; set; }
@@ -34,27 +34,21 @@ namespace HM_19MB_Demo.Data
         public int SoLanDo { get; set; }
         public string PhuongPhapB { get; set; } = "U";
 
-        // Số vị trí thực sự có trong dữ liệu
-        public int SoViTriHopLe 
+        public int SoKenhHopLe
         {
             get
             {
                 int count = 0;
-                foreach (var v in ViTri)
-                {
+                foreach (var v in Kenh)
                     if (!double.IsNaN(v)) count++;
-                }
                 return count;
             }
         }
 
         public CalibrationResultRow()
         {
-            // Khởi tạo ViTri với NaN
-            for (int i = 0; i < ViTri.Length; i++)
-            {
-                ViTri[i] = double.NaN;
-            }
+            for (int i = 0; i < Kenh.Length; i++)
+                Kenh[i] = double.NaN;
         }
     }
 
@@ -84,8 +78,8 @@ namespace HM_19MB_Demo.Data
                 "SELECT fn_luu_ket_qua_hieu_chuan(" +
                 "@phien_id, @stt," +
                 "@gia_tri_dat, @gia_tri_chi_thi," +
-                "@vi_tri_1, @vi_tri_2, @vi_tri_3, @vi_tri_4, @vi_tri_5," +
-                "@vi_tri_6, @vi_tri_7, @vi_tri_8, @vi_tri_9," +
+                "@kenh_1, @kenh_2, @kenh_3, @kenh_4, @kenh_5," +
+                "@kenh_6, @kenh_7, @kenh_8, @kenh_9, @kenh_10," +
                 "@gia_tri_trung_binh, @so_hieu_chinh," +
                 "@do_on_dinh, @do_dong_deu, @do_khong_dam_bao," +
                 "@uch1, @uch2, @uch," +
@@ -97,13 +91,13 @@ namespace HM_19MB_Demo.Data
             cmd.Parameters.AddWithValue("@gia_tri_dat", row.GiaTriDat);
             cmd.Parameters.AddWithValue("@gia_tri_chi_thi", row.GiaTriChiThi);
 
-            // 9 vị trí — NaN → DBNull
-            for (int i = 0; i < 9; i++)
+            // 10 kênh — NaN → DBNull
+            for (int i = 0; i < 10; i++)
             {
-                object val = double.IsNaN(row.ViTri[i])
+                object val = double.IsNaN(row.Kenh[i])
                     ? DBNull.Value
-                    : (object)row.ViTri[i];
-                cmd.Parameters.AddWithValue($"@vi_tri_{i + 1}", val);
+                    : (object)row.Kenh[i];
+                cmd.Parameters.AddWithValue($"@kenh_{i + 1}", val);
             }
 
             cmd.Parameters.AddWithValue("@gia_tri_trung_binh", row.GiaTriTrungBinh);
@@ -129,8 +123,7 @@ namespace HM_19MB_Demo.Data
             return Convert.ToInt32(result);
         }
 
-        public static async Task<List<CalibrationResultRow>> LayKetQuaHieuChuanAsync(
-    int phienId)
+        public static async Task<List<CalibrationResultRow>> LayKetQuaHieuChuanAsync(int phienId)
         {
             await using var conn = new NpgsqlConnection(ConnectionString);
             await conn.OpenAsync();
@@ -146,32 +139,31 @@ namespace HM_19MB_Demo.Data
             {
                 var row = new CalibrationResultRow
                 {
-                    Id = rdr.GetInt32(0),   // id
-                    STT = rdr.GetInt32(1),   // stt
-                    GiaTriDat = ReadDouble(rdr, 2), // gia_tri_dat
-                    GiaTriChiThi = ReadDouble(rdr, 3), // gia_tri_chi_thi
-                    // vi_tri_1..9: cột 4..12
-                    GiaTriTrungBinh = ReadDouble(rdr, 13),
-                    SoHieuChinh = ReadDouble(rdr, 14),
-                    DoOnDinh = ReadDouble(rdr, 15),
-                    DoDongDeu = ReadDouble(rdr, 16),
-                    DoKhongDamBao = ReadDouble(rdr, 17),
-                    Uch1 = ReadDoubleNullable(rdr, 18),
-                    Uch2 = ReadDoubleNullable(rdr, 19),
-                    Uch = ReadDoubleNullable(rdr, 20),
-                    Ubk1 = ReadDoubleNullable(rdr, 21),
-                    Ubk2 = ReadDoubleNullable(rdr, 22),
-                    Ubk3 = ReadDoubleNullable(rdr, 23),
-                    Ubk4 = ReadDoubleNullable(rdr, 24),
-                    Ubk = ReadDoubleNullable(rdr, 25),
-                    SoKenh = rdr.IsDBNull(26) ? 0 : rdr.GetInt32(26),
-                    SoLanDo = rdr.IsDBNull(27) ? 0 : rdr.GetInt32(27),
-                    PhuongPhapB = rdr.IsDBNull(28) ? "U" : rdr.GetString(28),
+                    Id = rdr.GetInt32(0),   
+                    STT = rdr.GetInt32(1),   
+                    GiaTriDat = ReadDouble(rdr, 2), 
+                    GiaTriChiThi = ReadDouble(rdr, 3),
+                    GiaTriTrungBinh = ReadDouble(rdr, 14),
+                    SoHieuChinh = ReadDouble(rdr, 15),
+                    DoOnDinh = ReadDouble(rdr, 16),
+                    DoDongDeu = ReadDouble(rdr, 17),
+                    DoKhongDamBao = ReadDouble(rdr, 18),
+                    Uch1 = ReadDoubleNullable(rdr, 19),
+                    Uch2 = ReadDoubleNullable(rdr, 20),
+                    Uch = ReadDoubleNullable(rdr, 21),
+                    Ubk1 = ReadDoubleNullable(rdr, 22),
+                    Ubk2 = ReadDoubleNullable(rdr, 23),
+                    Ubk3 = ReadDoubleNullable(rdr, 24),
+                    Ubk4 = ReadDoubleNullable(rdr, 25),
+                    Ubk = ReadDoubleNullable(rdr, 26),
+                    SoKenh = rdr.IsDBNull(27) ? 0 : rdr.GetInt32(27),
+                    SoLanDo = rdr.IsDBNull(28) ? 0 : rdr.GetInt32(28),
+                    PhuongPhapB = rdr.IsDBNull(29) ? "U" : rdr.GetString(29),
                 };
 
-                // Đọc 9 vị trí (cột 4..12)
-                for (int i = 0; i < 9; i++)
-                    row.ViTri[i] = ReadDoubleNullable(rdr, 4 + i);
+                // Đọc 10 kênh (cột 4..13)
+                for (int i = 0; i < 10; i++)
+                    row.Kenh[i] = ReadDoubleNullable(rdr, 4 + i);
 
                 list.Add(row);
             }
@@ -190,6 +182,7 @@ namespace HM_19MB_Demo.Data
             cmd.Parameters.AddWithValue("@p_stt", stt);
             await cmd.ExecuteNonQueryAsync();
         }
+
         private static double ReadDouble(NpgsqlDataReader rdr, int ordinal)
             => rdr.IsDBNull(ordinal) ? 0.0 : Convert.ToDouble(rdr.GetValue(ordinal));
 

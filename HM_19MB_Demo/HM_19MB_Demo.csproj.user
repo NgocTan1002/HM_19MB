@@ -4,6 +4,9 @@
     <Compile Update="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="Form1_CalibrationResults.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="HealthDotPanel.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -17,6 +20,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="UncertaintyCalculationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="UncertaintyCalculationForm_Step0.cs">
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>

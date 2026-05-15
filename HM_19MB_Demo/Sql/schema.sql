@@ -92,15 +92,16 @@ ALTER TABLE ket_qua_do
 
 
 -- ================================================================
--- SCHEMA VERSION 4 — Bảng kết quả hiệu chuẩn tổng hợp
+-- SCHEMA VERSION 5 — Bảng kết quả hiệu chuẩn tổng hợp
+-- Thay đổi so với v4:
+--   • Đổi tên vi_tri_1..9  → kenh_1..10  (tăng max từ 9 lên 10)
+--   • Đổi tên cột so_vi_tri_hop_le → so_kenh_hop_le (không lưu DB,
+--     chỉ tính trong code)
 -- ================================================================
 
 -- ----------------------------------------------------------------
 -- Bảng ket_qua_hieu_chuan
 -- Mỗi dòng = 1 điểm kiểm tra (1 giá trị đặt) trong 1 phiên.
--- Tương ứng với 1 dòng trong:
---   • Bảng A.1 Biên bản hiệu chuẩn (Phụ lục A)
---   • Bảng kết quả Giấy chứng nhận hiệu chuẩn (Phụ lục B)
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ket_qua_hieu_chuan (
     id                  SERIAL          PRIMARY KEY,
@@ -117,21 +118,22 @@ CREATE TABLE IF NOT EXISTS ket_qua_hieu_chuan (
     -- Giá trị chỉ thị trung bình của tủ nhiệt (t̄_tn, CT3)
     gia_tri_chi_thi     FLOAT           NOT NULL,
 
-    -- ── Giá trị đọc trên chuẩn tại từng vị trí (t̄_j, CT2) ────
-    -- Tối đa 9 vị trí theo QTHC 1.013:2019
-    -- NULL nếu không dùng vị trí đó (tuỳ 3/5/9 đầu đo)
-    vi_tri_1            FLOAT           NULL,
-    vi_tri_2            FLOAT           NULL,
-    vi_tri_3            FLOAT           NULL,
-    vi_tri_4            FLOAT           NULL,
-    vi_tri_5            FLOAT           NULL,
-    vi_tri_6            FLOAT           NULL,
-    vi_tri_7            FLOAT           NULL,
-    vi_tri_8            FLOAT           NULL,
-    vi_tri_9            FLOAT           NULL,
+    -- ── Giá trị đọc trên chuẩn tại từng kênh (t̄_j, CT2) ────────
+    -- Tối đa 10 kênh (đổi từ vi_tri sang kenh, tăng từ 9 lên 10)
+    -- NULL nếu không dùng kênh đó (tuỳ 3/5/9/10 kênh)
+    kenh_1              FLOAT           NULL,
+    kenh_2              FLOAT           NULL,
+    kenh_3              FLOAT           NULL,
+    kenh_4              FLOAT           NULL,
+    kenh_5              FLOAT           NULL,
+    kenh_6              FLOAT           NULL,
+    kenh_7              FLOAT           NULL,
+    kenh_8              FLOAT           NULL,
+    kenh_9              FLOAT           NULL,
+    kenh_10             FLOAT           NULL,
 
     -- ── Kết quả tính toán tổng hợp ─────────────────────────────
-    -- t̄_ch: trung bình các vị trí chuẩn đã hiệu chính (CT1)
+    -- t̄_ch: trung bình các kênh chuẩn đã hiệu chính (CT1)
     gia_tri_trung_binh  FLOAT           NOT NULL,
 
     -- Δt = t̄_ch − t̄_tn (CT4) — số hiệu chính của tủ nhiệt
@@ -146,7 +148,7 @@ CREATE TABLE IF NOT EXISTS ket_qua_hieu_chuan (
     -- U: độ không đảm bảo đo mở rộng (CT19, k=2, P=95%)
     do_khong_dam_bao    FLOAT           NOT NULL,
 
-    -- ── Thành phần trung gian (để truy vết, tái hiện tính toán) 
+    -- ── Thành phần trung gian (để truy vết, tái hiện tính toán)
     uch1                FLOAT           NULL,   -- loại A (CT7)
     uch2                FLOAT           NULL,   -- loại B (CT10/CT11)
     uch                 FLOAT           NULL,   -- liên hợp chuẩn (CT12)
@@ -157,7 +159,7 @@ CREATE TABLE IF NOT EXISTS ket_qua_hieu_chuan (
     ubk                 FLOAT           NULL,   -- liên hợp tủ (CT18)
 
     -- ── Metadata tính toán ──────────────────────────────────────
-    so_kenh             INT             NULL,   -- j: số kênh chuẩn (3/5/9)
+    so_kenh             INT             NULL,   -- k: số kênh chuẩn (3/5/9/10)
     so_lan_do           INT             NULL,   -- n: số lần đọc
     phuong_phap_b       VARCHAR(10)     NULL,   -- 'U' hoặc 'Delta'
 
@@ -176,3 +178,19 @@ ALTER TABLE ket_qua_hieu_chuan
 
 ALTER TABLE ket_qua_hieu_chuan
     ADD CONSTRAINT uq_kqhc_phien_stt UNIQUE (phien_id, stt);
+
+-- ================================================================
+-- Migration: Nếu bảng cũ dùng vi_tri_1..9, thêm cột kenh_1..10
+-- (An toàn khi chạy lại — IF NOT EXISTS)
+-- ================================================================
+ALTER TABLE ket_qua_hieu_chuan
+    ADD COLUMN IF NOT EXISTS kenh_1  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_2  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_3  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_4  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_5  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_6  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_7  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_8  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_9  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_10 FLOAT NULL;

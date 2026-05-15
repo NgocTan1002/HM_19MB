@@ -4,6 +4,8 @@ using System.Windows.Forms;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
+using HM_19MB_Demo.Data;
 
 namespace HM_19MB_Demo
 {
@@ -11,6 +13,11 @@ namespace HM_19MB_Demo
     {
         private int _j = 3;
         private int _n = 10;
+        private int _phienId;
+        private readonly Func<CalibrationResultRow, Task>? _onResultAdded;
+
+        // Lưu kết quả tính toán gần nhất để dùng khi bấm "Thêm vào bảng"
+        private CalibrationResultRow? _lastCalculatedResult = null;
 
         // ── MathLabel thay thế các Label công thức ───────────────────────
         private MathLabel mlTchResult = null!;
@@ -30,12 +37,24 @@ namespace HM_19MB_Demo
         private MathLabel mlDeltaDd = null!;
         private MathLabel mlUFinal = null!;
 
+        // ── Constructor mặc định (tương thích cũ, dùng cho ShowDialog) ───
         public UncertaintyCalculationForm()
+            : this(0, null)
         {
+        }
+
+        // ── Constructor mới: nhận phienId và callback ────────────────────
+        public UncertaintyCalculationForm(int phienId, Func<CalibrationResultRow, Task>? onResultAdded)
+        {
+            _phienId = phienId;
+            _onResultAdded = onResultAdded;
+
             InitializeComponent();
-            ReplaceLabelWithMath();   // phải gọi TRƯỚC WireEvents
+            ReplaceLabelWithMath();
             WireEvents();
             ApplyConfiguration();
+
+            btnAddToTable.Enabled = false;
         }
 
         // ── Khởi tạo MathLabel ───────────────────────────────────────────
@@ -95,8 +114,10 @@ namespace HM_19MB_Demo
         private void WireEvents()
         {
             btnApplyConfig.Click += BtnApplyConfig_Click;
-            btnCalculate.Click += BtnCalculate_Click;
+            if (_onResultAdded == null)
+                btnCalculate.Click += BtnCalculate_Click;
             btnSaveToDb.Click += BtnSaveToDb_Click;
+            btnAddToTable.Click += BtnAddToTable_Click;
 
             gridMeasurements.CellValueChanged += GridMeasurements_CellValueChanged;
             gridStandards.CellValueChanged += GridStandards_CellValueChanged;
@@ -104,6 +125,8 @@ namespace HM_19MB_Demo
 
             rbUseU.CheckedChanged += (s, e) => RecalculateAll();
             rbUseDelta.CheckedChanged += (s, e) => RecalculateAll();
+            if (_onResultAdded != null)
+                WireCalculationSuccessHook();
         }
 
         private void BtnApplyConfig_Click(object? sender, EventArgs e)
@@ -111,6 +134,9 @@ namespace HM_19MB_Demo
             _j = (int)numChannels.Value;
             _n = (int)numMeasurements.Value;
             ApplyConfiguration();
+            // Reset kết quả khi thay đổi cấu hình
+            _lastCalculatedResult = null;
+            btnAddToTable.Enabled = false;
         }
 
         // ── ApplyConfiguration ───────────────────────────────────────────
@@ -140,6 +166,7 @@ namespace HM_19MB_Demo
             AddSummaryRow("Trung bình (t̄j)", Color.LightYellow);
             AddSummaryRow("Độ lệch chuẩn (Sj)", Color.LightCyan);
             AddSummaryRow("uch1,j", Color.LightGreen);
+            DisableGridSorting(gridMeasurements);
 
             // Bảng chuẩn
             gridStandards.Columns.Clear();
@@ -182,6 +209,7 @@ namespace HM_19MB_Demo
             rowCorrection.Cells[_j + 1].Value = "";
             rowCorrection.Cells[_j + 1].ReadOnly = true;
             gridStandards.Rows.Add(rowCorrection);
+            DisableGridSorting(gridStandards);
 
             // Bảng chỉ thị
             gridIndicator.Columns.Clear();
@@ -216,6 +244,7 @@ namespace HM_19MB_Demo
             rowTtnMean.DefaultCellStyle.BackColor = Color.LightYellow;
             rowTtnMean.ReadOnly = true;
             gridIndicator.Rows.Add(rowTtnMean);
+            DisableGridSorting(gridIndicator);
         }
 
         private void AddSummaryRow(string label, Color bgColor)
@@ -228,25 +257,35 @@ namespace HM_19MB_Demo
             gridMeasurements.Rows.Add(row);
         }
 
+        private static void DisableGridSorting(DataGridView grid)
+        {
+            foreach (DataGridViewColumn column in grid.Columns)
+                column.SortMode = DataGridViewColumnSortMode.NotSortable;
+        }
+
         // ── Cell change handlers ─────────────────────────────────────────
 
         private void GridMeasurements_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 1 || e.RowIndex >= _n) return;
-            RecalculateAll();
+            // Khi dữ liệu thay đổi, kết quả cũ không còn hợp lệ
+            _lastCalculatedResult = null;
+            btnAddToTable.Enabled = false;
         }
 
         private void GridStandards_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 1 || e.RowIndex >= 3) return;
             if (e.ColumnIndex == _j + 1) return;
-            RecalculateAll();
+            _lastCalculatedResult = null;
+            btnAddToTable.Enabled = false;
         }
 
         private void GridIndicator_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 1 || e.RowIndex >= 2) return;
-            RecalculateAll();
+            _lastCalculatedResult = null;
+            btnAddToTable.Enabled = false;
         }
 
         // ── RecalculateAll ───────────────────────────────────────────────
@@ -356,8 +395,7 @@ namespace HM_19MB_Demo
                 mlDeltaT.MathText =
                     $"_Delta_t = BAR{{t}}SUB{{ch}} - BAR{{t}}SUB{{tn}} = {deltaT:F4} °C";
 
-                // ── CT(13)(14): ubk1 — tính từ t_i = (t_tn1i + t_tn2i)/2 ─────
-                // ĐÚNG: dùng chỉ thị tủ nhiệt, KHÔNG dùng dữ liệu kênh chuẩn
+                // ── CT(13)(14): ubk1 ─────────────────────────────────────────
                 double[] ti = new double[_n];
                 for (int i = 0; i < _n; i++)
                     ti[i] = (ttn1[i] + ttn2[i]) / 2.0;
@@ -385,9 +423,45 @@ namespace HM_19MB_Demo
                 double U_final = UncertaintyCalculator.CalculateFinalExpandedUncertainty(uc, ubk);
                 mlUFinal.MathText =
                     $"U = 2 _cdot_ SQRT{{u SUB{{c}}SUP{{2}} + u SUB{{bk}}SUP{{2}}}} = _pm_{U_final:F4} °C  (k=2, P=95%)";
+
+                // ── Lưu kết quả vào _lastCalculatedResult ────────────────────
+                // GiaTriChiThi tự động lấy từ t̄_tn (CT3)
+                double giaTriDat = 0;
+                double.TryParse(txtGiaTriDat.Text, out giaTriDat);
+
+                var result = new CalibrationResultRow
+                {
+                    GiaTriDat = giaTriDat,
+                    GiaTriChiThi = ttn,          // tự động lấy từ t̄_tn
+                    GiaTriTrungBinh = tch,
+                    SoHieuChinh = deltaT,
+                    DoOnDinh = deltaOd,
+                    DoDongDeu = deltaDD,
+                    DoKhongDamBao = U_final,
+                    Uch1 = uch1,
+                    Uch2 = uch2,
+                    Uch = uc,
+                    Ubk1 = ubk1,
+                    Ubk2 = ubk2,
+                    Ubk3 = ubk3,
+                    Ubk4 = ubk4,
+                    Ubk = ubk,
+                    SoKenh = _j,
+                    SoLanDo = _n,
+                    PhuongPhapB = rbUseU.Checked ? "U" : "Delta",
+                };
+
+                // Gán giá trị từng vị trí chuẩn (t̄_j đã hiệu chỉnh)
+                for (int j = 0; j < _j && j < 9; j++)
+                    result.Kenh[j] = channelCorrectedMeans[j];
+
+                _lastCalculatedResult = result;
+                btnAddToTable.Enabled = true;
             }
             catch (Exception ex)
             {
+                _lastCalculatedResult = null;
+                btnAddToTable.Enabled = false;
                 MessageBox.Show($"Lỗi tính toán: {ex.Message}", "Lỗi",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -396,6 +470,32 @@ namespace HM_19MB_Demo
         // ── Button handlers ───────────────────────────────────────────────
 
         private void BtnCalculate_Click(object? sender, EventArgs e) => RecalculateAll();
+
+        private async void BtnAddToTable_Click(object? sender, EventArgs e)
+        {
+            if (_lastCalculatedResult == null)
+            {
+                MessageBox.Show("Vui lòng bấm 'Tính toán' trước.", "Thông báo",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_onResultAdded == null)
+            {
+                MessageBox.Show("Form không được mở với callback. Vui lòng mở lại từ màn hình chính.", "Thông báo",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Gọi callback để Form1 xử lý (thêm vào grid + lưu DB)
+            await _onResultAdded(_lastCalculatedResult);
+
+            ToastNotification.ShowSuccess($"Đã thêm điểm kiểm tra (đặt: {_lastCalculatedResult.GiaTriDat:F1}°C) vào bảng.");
+
+            // Disable nút để tránh thêm trùng — người dùng phải tính lại mới được thêm tiếp
+            btnAddToTable.Enabled = false;
+            _lastCalculatedResult = null;
+        }
 
         private void BtnImportCSV_Click(object? sender, EventArgs e)
         {
@@ -496,7 +596,6 @@ namespace HM_19MB_Demo
         {
             try
             {
-                // TODO: Implement database saving
                 MessageBox.Show("Chức năng lưu vào database đang được phát triển.", "Thông báo",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
