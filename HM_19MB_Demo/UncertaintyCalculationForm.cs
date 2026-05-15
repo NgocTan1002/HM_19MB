@@ -57,6 +57,18 @@ namespace HM_19MB_Demo
             btnAddToTable.Enabled = false;
         }
 
+        public UncertaintyCalculationForm(int kenhCount, int? phienId, Action<CalibrationResultRow>? onResultAdded)
+            : this(phienId ?? 0, row =>
+            {
+                onResultAdded?.Invoke(row);
+                return Task.CompletedTask;
+            })
+        {
+            _j = Math.Max(1, kenhCount);
+            numChannels.Value = Math.Min(numChannels.Maximum, Math.Max(numChannels.Minimum, _j));
+            ApplyConfiguration();
+        }
+
         // ── Khởi tạo MathLabel ───────────────────────────────────────────
 
         private void ReplaceLabelWithMath()
@@ -114,8 +126,7 @@ namespace HM_19MB_Demo
         private void WireEvents()
         {
             btnApplyConfig.Click += BtnApplyConfig_Click;
-            if (_onResultAdded == null)
-                btnCalculate.Click += BtnCalculate_Click;
+            btnCalculate.Click += BtnCalculate_Click;
             btnSaveToDb.Click += BtnSaveToDb_Click;
             btnAddToTable.Click += BtnAddToTable_Click;
 
@@ -125,8 +136,6 @@ namespace HM_19MB_Demo
 
             rbUseU.CheckedChanged += (s, e) => RecalculateAll();
             rbUseDelta.CheckedChanged += (s, e) => RecalculateAll();
-            if (_onResultAdded != null)
-                WireCalculationSuccessHook();
         }
 
         private void BtnApplyConfig_Click(object? sender, EventArgs e)

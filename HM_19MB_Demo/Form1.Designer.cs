@@ -20,11 +20,14 @@ namespace HM_19MB_Demo
 
         private void InitializeComponent()
         {
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
             ChartArea chartArea1 = new ChartArea();
             Legend legend1 = new Legend();
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             mainLayout = new TableLayoutPanel();
             metadataPanel = new Panel();
+            metadataLayout = new TableLayoutPanel();
+            metadataFieldsPanel = new Panel();
             lblDeviceName = new Label();
             txtDeviceName = new TextBox();
             lblDeviceCode = new Label();
@@ -57,6 +60,15 @@ namespace HM_19MB_Demo
             txtCalibMonth = new TextBox();
             lblYear = new Label();
             txtCalibYear = new TextBox();
+            _calibPanel = new Panel();
+            _gridCalibration = new DataGridView();
+            calibrationToolbar = new FlowLayoutPanel();
+            lblCalibrationTitle = new Label();
+            lblKenhCount = new Label();
+            numKenhCount = new NumericUpDown();
+            _btnAddCalibPoint = new Button();
+            _btnDeleteCalibPoint = new Button();
+            _lblCalibStatus = new Label();
             _split = new SplitContainer();
             _chart = new Chart();
             _chartToolbar = new Panel();
@@ -76,7 +88,13 @@ namespace HM_19MB_Demo
             _lblStatus = new Label();
             mainLayout.SuspendLayout();
             metadataPanel.SuspendLayout();
+            metadataLayout.SuspendLayout();
+            metadataFieldsPanel.SuspendLayout();
             calibDatePanel.SuspendLayout();
+            _calibPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)_gridCalibration).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numKenhCount).BeginInit();
+            calibrationToolbar.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)_split).BeginInit();
             _split.Panel1.SuspendLayout();
             _split.Panel2.SuspendLayout();
@@ -111,41 +129,66 @@ namespace HM_19MB_Demo
             // metadataPanel
             // 
             metadataPanel.AutoScroll = true;
-            metadataPanel.BackColor = Color.FromArgb(240, 248, 255);
-            metadataPanel.Controls.Add(lblDeviceName);
-            metadataPanel.Controls.Add(txtDeviceName);
-            metadataPanel.Controls.Add(lblDeviceCode);
-            metadataPanel.Controls.Add(txtDeviceCode);
-            metadataPanel.Controls.Add(lblDeviceNumber);
-            metadataPanel.Controls.Add(txtDeviceNumber);
-            metadataPanel.Controls.Add(lblSealNumber);
-            metadataPanel.Controls.Add(txtSealNumber);
-            metadataPanel.Controls.Add(lblManufacturer);
-            metadataPanel.Controls.Add(txtManufacturer);
-            metadataPanel.Controls.Add(lblManufactureYear);
-            metadataPanel.Controls.Add(txtManufactureYear);
-            metadataPanel.Controls.Add(lblUsingUnit);
-            metadataPanel.Controls.Add(txtUsingUnit);
-            metadataPanel.Controls.Add(lblMethod);
-            metadataPanel.Controls.Add(txtMethod);
-            metadataPanel.Controls.Add(lblCalibCondition);
-            metadataPanel.Controls.Add(lblEnvTemp);
-            metadataPanel.Controls.Add(txtEnvTemp);
-            metadataPanel.Controls.Add(lblEnvHumidity);
-            metadataPanel.Controls.Add(txtEnvHumidity);
-            metadataPanel.Controls.Add(lblTechnicalSpecs);
-            metadataPanel.Controls.Add(txtTechnicalSpecs);
-            metadataPanel.Controls.Add(lblMeasuringDevices);
-            metadataPanel.Controls.Add(txtMeasuringDevices);
-            metadataPanel.Controls.Add(lblCalibDate);
-            metadataPanel.Controls.Add(calibDatePanel);
+            metadataPanel.BackColor = Color.White;
+            metadataPanel.Controls.Add(metadataLayout);
             metadataPanel.Dock = DockStyle.Top;
             metadataPanel.Location = new Point(10, 12);
             metadataPanel.Margin = new Padding(3, 4, 3, 4);
             metadataPanel.Name = "metadataPanel";
             metadataPanel.Padding = new Padding(10);
-            metadataPanel.Size = new Size(1580, 305);
+            metadataPanel.Size = new Size(1580, 320);
             metadataPanel.TabIndex = 0;
+            // 
+            // metadataLayout
+            // 
+            metadataLayout.ColumnCount = 2;
+            metadataLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 840F));
+            metadataLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            metadataLayout.Controls.Add(metadataFieldsPanel, 0, 0);
+            metadataLayout.Controls.Add(_calibPanel, 1, 0);
+            metadataLayout.Dock = DockStyle.Fill;
+            metadataLayout.Location = new Point(10, 10);
+            metadataLayout.Name = "metadataLayout";
+            metadataLayout.RowCount = 1;
+            metadataLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            metadataLayout.Size = new Size(1560, 300);
+            metadataLayout.TabIndex = 27;
+            // 
+            // metadataFieldsPanel
+            // 
+            metadataFieldsPanel.BackColor = Color.White;
+            metadataFieldsPanel.Controls.Add(lblDeviceName);
+            metadataFieldsPanel.Controls.Add(txtDeviceName);
+            metadataFieldsPanel.Controls.Add(lblDeviceCode);
+            metadataFieldsPanel.Controls.Add(txtDeviceCode);
+            metadataFieldsPanel.Controls.Add(lblDeviceNumber);
+            metadataFieldsPanel.Controls.Add(txtDeviceNumber);
+            metadataFieldsPanel.Controls.Add(lblSealNumber);
+            metadataFieldsPanel.Controls.Add(txtSealNumber);
+            metadataFieldsPanel.Controls.Add(lblManufacturer);
+            metadataFieldsPanel.Controls.Add(txtManufacturer);
+            metadataFieldsPanel.Controls.Add(lblManufactureYear);
+            metadataFieldsPanel.Controls.Add(txtManufactureYear);
+            metadataFieldsPanel.Controls.Add(lblUsingUnit);
+            metadataFieldsPanel.Controls.Add(txtUsingUnit);
+            metadataFieldsPanel.Controls.Add(lblMethod);
+            metadataFieldsPanel.Controls.Add(txtMethod);
+            metadataFieldsPanel.Controls.Add(lblCalibCondition);
+            metadataFieldsPanel.Controls.Add(lblEnvTemp);
+            metadataFieldsPanel.Controls.Add(txtEnvTemp);
+            metadataFieldsPanel.Controls.Add(lblEnvHumidity);
+            metadataFieldsPanel.Controls.Add(txtEnvHumidity);
+            metadataFieldsPanel.Controls.Add(lblTechnicalSpecs);
+            metadataFieldsPanel.Controls.Add(txtTechnicalSpecs);
+            metadataFieldsPanel.Controls.Add(lblMeasuringDevices);
+            metadataFieldsPanel.Controls.Add(txtMeasuringDevices);
+            metadataFieldsPanel.Controls.Add(lblCalibDate);
+            metadataFieldsPanel.Controls.Add(calibDatePanel);
+            metadataFieldsPanel.Dock = DockStyle.Fill;
+            metadataFieldsPanel.Location = new Point(3, 3);
+            metadataFieldsPanel.Name = "metadataFieldsPanel";
+            metadataFieldsPanel.Size = new Size(834, 294);
+            metadataFieldsPanel.TabIndex = 0;
             // 
             // lblDeviceName
             // 
@@ -429,10 +472,173 @@ namespace HM_19MB_Demo
             txtCalibYear.Size = new Size(55, 27);
             txtCalibYear.TabIndex = 4;
             // 
+            // _calibPanel
+            // 
+            _calibPanel.BackColor = Color.White;
+            _calibPanel.Controls.Add(_gridCalibration);
+            _calibPanel.Controls.Add(calibrationToolbar);
+            _calibPanel.Dock = DockStyle.Fill;
+            _calibPanel.Location = new Point(843, 3);
+            _calibPanel.Name = "_calibPanel";
+            _calibPanel.Padding = new Padding(6, 4, 6, 4);
+            _calibPanel.Size = new Size(714, 294);
+            _calibPanel.TabIndex = 1;
+            // 
+            // _gridCalibration
+            // 
+            _gridCalibration.AllowUserToAddRows = false;
+            _gridCalibration.AllowUserToDeleteRows = false;
+
+            _gridCalibration.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            _gridCalibration.BackgroundColor = Color.White;
+            _gridCalibration.BorderStyle = BorderStyle.FixedSingle;
+
+            _gridCalibration.Dock = DockStyle.Fill;
+            _gridCalibration.EnableHeadersVisualStyles = true;
+
+            _gridCalibration.Font = new Font("Segoe UI", 9F);
+            _gridCalibration.Location = new Point(6, 40);
+            _gridCalibration.MultiSelect = false;
+            _gridCalibration.Name = "_gridCalibration";
+            _gridCalibration.ReadOnly = true;
+
+            _gridCalibration.RowHeadersVisible = false;
+            _gridCalibration.RowHeadersWidth = 51;
+
+            _gridCalibration.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            _gridCalibration.Size = new Size(702, 235);
+            _gridCalibration.TabIndex = 1;
+
+            // Header cơ bản
+            _gridCalibration.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
+            {
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
+                BackColor = SystemColors.Control,
+                ForeColor = SystemColors.ControlText,
+                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                SelectionBackColor = SystemColors.Control,
+                SelectionForeColor = SystemColors.ControlText,
+                WrapMode = DataGridViewTriState.True
+            };
+
+            _gridCalibration.ColumnHeadersHeightSizeMode =
+                DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+
+            // Dòng thường
+            _gridCalibration.DefaultCellStyle = new DataGridViewCellStyle
+            {
+                BackColor = Color.White,
+                ForeColor = Color.Black,
+                SelectionBackColor = SystemColors.Highlight,
+                SelectionForeColor = SystemColors.HighlightText
+            };
+
+            // Dòng xen kẽ
+            _gridCalibration.AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
+            {
+                BackColor = Color.White
+            };
+
+            // Màu lưới cơ bản
+            _gridCalibration.GridColor = SystemColors.ControlDark;
+            // 
+            // calibrationToolbar
+            // 
+            calibrationToolbar.BackColor = Color.White;
+            calibrationToolbar.Controls.Add(lblCalibrationTitle);
+            calibrationToolbar.Controls.Add(lblKenhCount);
+            calibrationToolbar.Controls.Add(numKenhCount);
+            calibrationToolbar.Controls.Add(_btnAddCalibPoint);
+            calibrationToolbar.Controls.Add(_btnDeleteCalibPoint);
+            calibrationToolbar.Controls.Add(_lblCalibStatus);
+            calibrationToolbar.Dock = DockStyle.Top;
+            calibrationToolbar.Location = new Point(6, 4);
+            calibrationToolbar.Name = "calibrationToolbar";
+            calibrationToolbar.Padding = new Padding(0, 2, 0, 2);
+            calibrationToolbar.Size = new Size(702, 36);
+            calibrationToolbar.TabIndex = 0;
+            calibrationToolbar.WrapContents = false;
+            // 
+            // lblCalibrationTitle
+            // 
+            lblCalibrationTitle.AutoSize = true;
+            lblCalibrationTitle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblCalibrationTitle.ForeColor = SystemColors.ActiveCaptionText;
+            lblCalibrationTitle.Location = new Point(4, 8);
+            lblCalibrationTitle.Margin = new Padding(4, 6, 12, 0);
+            lblCalibrationTitle.Name = "lblCalibrationTitle";
+            lblCalibrationTitle.Size = new Size(157, 21);
+            lblCalibrationTitle.TabIndex = 0;
+            lblCalibrationTitle.Text = "Kết quả hiệu chuẩn";
+            // 
+            // lblKenhCount
+            // 
+            lblKenhCount.AutoSize = true;
+            lblKenhCount.Location = new Point(173, 10);
+            lblKenhCount.Margin = new Padding(0, 8, 4, 0);
+            lblKenhCount.Name = "lblKenhCount";
+            lblKenhCount.Size = new Size(85, 20);
+            lblKenhCount.TabIndex = 1;
+            lblKenhCount.Text = "Số kênh (k):";
+            // 
+            // numKenhCount
+            // 
+            numKenhCount.Location = new Point(262, 6);
+            numKenhCount.Margin = new Padding(0, 4, 12, 0);
+            numKenhCount.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
+            numKenhCount.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            numKenhCount.Name = "numKenhCount";
+            numKenhCount.Size = new Size(60, 27);
+            numKenhCount.TabIndex = 2;
+            numKenhCount.Value = new decimal(new int[] { 3, 0, 0, 0 });
+            // 
+            // _btnAddCalibPoint
+            // 
+            _btnAddCalibPoint.BackColor = Color.White;
+            _btnAddCalibPoint.Cursor = Cursors.Hand;
+            _btnAddCalibPoint.FlatAppearance.BorderColor = Color.Silver;
+            _btnAddCalibPoint.FlatStyle = FlatStyle.Flat;
+            _btnAddCalibPoint.ForeColor = Color.Black;
+            _btnAddCalibPoint.Location = new Point(334, 5);
+            _btnAddCalibPoint.Margin = new Padding(0, 3, 6, 0);
+            _btnAddCalibPoint.Name = "_btnAddCalibPoint";
+            _btnAddCalibPoint.Size = new Size(160, 28);
+            _btnAddCalibPoint.TabIndex = 3;
+            _btnAddCalibPoint.Text = "Thêm điểm kiểm tra";
+            _btnAddCalibPoint.UseVisualStyleBackColor = false;
+            // 
+            // _btnDeleteCalibPoint
+            // 
+            _btnDeleteCalibPoint.BackColor = Color.White;
+            _btnDeleteCalibPoint.Cursor = Cursors.Hand;
+            _btnDeleteCalibPoint.Enabled = false;
+            _btnDeleteCalibPoint.FlatAppearance.BorderColor = Color.Silver;
+            _btnDeleteCalibPoint.FlatStyle = FlatStyle.Flat;
+            _btnDeleteCalibPoint.ForeColor = Color.Black;
+            _btnDeleteCalibPoint.Location = new Point(500, 5);
+            _btnDeleteCalibPoint.Margin = new Padding(0, 3, 6, 0);
+            _btnDeleteCalibPoint.Name = "_btnDeleteCalibPoint";
+            _btnDeleteCalibPoint.Size = new Size(100, 28);
+            _btnDeleteCalibPoint.TabIndex = 4;
+            _btnDeleteCalibPoint.Text = "Xóa dòng";
+            _btnDeleteCalibPoint.UseVisualStyleBackColor = false;
+            // 
+            // _lblCalibStatus
+            // 
+            _lblCalibStatus.AutoSize = true;
+            _lblCalibStatus.Font = new Font("Segoe UI", 8.5F, FontStyle.Italic);
+            _lblCalibStatus.ForeColor = Color.DimGray;
+            _lblCalibStatus.Location = new Point(614, 10);
+            _lblCalibStatus.Margin = new Padding(8, 8, 0, 0);
+            _lblCalibStatus.Name = "_lblCalibStatus";
+            _lblCalibStatus.Size = new Size(111, 20);
+            _lblCalibStatus.TabIndex = 5;
+            _lblCalibStatus.Text = "Chưa có dữ liệu";
+            // 
             // _split
             // 
             _split.Dock = DockStyle.Fill;
-            _split.Location = new Point(10, 325);
+            _split.Location = new Point(10, 340);
             _split.Margin = new Padding(3, 4, 3, 4);
             _split.Name = "_split";
             // 
@@ -444,7 +650,7 @@ namespace HM_19MB_Demo
             // _split.Panel2
             // 
             _split.Panel2.Controls.Add(gridLayout);
-            _split.Size = new Size(1580, 779);
+            _split.Size = new Size(1580, 764);
             _split.SplitterDistance = 790;
             _split.SplitterWidth = 5;
             _split.TabIndex = 1;
@@ -476,7 +682,7 @@ namespace HM_19MB_Demo
             _chart.Location = new Point(0, 38);
             _chart.Margin = new Padding(3, 4, 3, 4);
             _chart.Name = "_chart";
-            _chart.Size = new Size(790, 741);
+            _chart.Size = new Size(790, 726);
             _chart.TabIndex = 0;
             _chart.Text = "chart1";
             // 
@@ -546,14 +752,14 @@ namespace HM_19MB_Demo
             gridLayout.RowCount = 2;
             gridLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             gridLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 29F));
-            gridLayout.Size = new Size(785, 779);
+            gridLayout.Size = new Size(785, 764);
             gridLayout.TabIndex = 0;
             // 
             // _lblLastReceived
             // 
             _lblLastReceived.Font = new Font("Segoe UI", 8.5F, FontStyle.Italic);
             _lblLastReceived.ForeColor = Color.Gray;
-            _lblLastReceived.Location = new Point(3, 750);
+            _lblLastReceived.Location = new Point(3, 735);
             _lblLastReceived.Name = "_lblLastReceived";
             _lblLastReceived.Size = new Size(778, 29);
             _lblLastReceived.TabIndex = 1;
@@ -567,14 +773,14 @@ namespace HM_19MB_Demo
             _grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             _grid.BackgroundColor = Color.White;
             _grid.BorderStyle = BorderStyle.Fixed3D;
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = SystemColors.Control;
-            dataGridViewCellStyle1.Font = new Font("Segoe UI", 9F);
-            dataGridViewCellStyle1.ForeColor = SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
-            _grid.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle2.BackColor = SystemColors.Control;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle2.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            _grid.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             _grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             _grid.Dock = DockStyle.Fill;
             _grid.Location = new Point(3, 4);
@@ -584,12 +790,12 @@ namespace HM_19MB_Demo
             _grid.RowHeadersVisible = false;
             _grid.RowHeadersWidth = 51;
             _grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            _grid.Size = new Size(779, 742);
+            _grid.Size = new Size(779, 727);
             _grid.TabIndex = 0;
             // 
             // bottomBar
             // 
-            bottomBar.BackColor = Color.FromArgb(230, 235, 245);
+            bottomBar.BackColor = Color.White;
             bottomBar.Controls.Add(bottomFlow);
             bottomBar.Dock = DockStyle.Fill;
             bottomBar.Location = new Point(10, 1112);
@@ -601,6 +807,7 @@ namespace HM_19MB_Demo
             // 
             // bottomFlow
             // 
+            bottomFlow.BackColor = Color.White;
             bottomFlow.Controls.Add(_cmbPort);
             bottomFlow.Controls.Add(lblBaudRate);
             bottomFlow.Controls.Add(_btnConnect);
@@ -696,9 +903,16 @@ namespace HM_19MB_Demo
             WindowState = FormWindowState.Maximized;
             mainLayout.ResumeLayout(false);
             metadataPanel.ResumeLayout(false);
-            metadataPanel.PerformLayout();
+            metadataLayout.ResumeLayout(false);
+            metadataFieldsPanel.ResumeLayout(false);
+            metadataFieldsPanel.PerformLayout();
             calibDatePanel.ResumeLayout(false);
             calibDatePanel.PerformLayout();
+            _calibPanel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)_gridCalibration).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numKenhCount).EndInit();
+            calibrationToolbar.ResumeLayout(false);
+            calibrationToolbar.PerformLayout();
             _split.Panel1.ResumeLayout(false);
             _split.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)_split).EndInit();
@@ -836,6 +1050,8 @@ namespace HM_19MB_Demo
         // ── Control field declarations ────────────────────────────────────
         private TableLayoutPanel mainLayout;
         private Panel metadataPanel;
+        private TableLayoutPanel metadataLayout;
+        private Panel metadataFieldsPanel;
         private Panel bottomBar;
         private FlowLayoutPanel bottomFlow;
         private Label lblBaudRate;
@@ -865,6 +1081,16 @@ namespace HM_19MB_Demo
         private TextBox txtManufacturer, txtManufactureYear, txtUsingUnit, txtMethod;
         private TextBox txtEnvTemp, txtEnvHumidity, txtTechnicalSpecs, txtMeasuringDevices;
         private TextBox txtCalibDay, txtCalibMonth, txtCalibYear;
+
+        private Panel _calibPanel;
+        private FlowLayoutPanel calibrationToolbar;
+        private Label lblCalibrationTitle;
+        private Label lblKenhCount;
+        private NumericUpDown numKenhCount;
+        private Button _btnAddCalibPoint;
+        private Button _btnDeleteCalibPoint;
+        private Label _lblCalibStatus;
+        private DataGridView _gridCalibration;
 
         private Chart _chart;
         private DataGridView _grid;

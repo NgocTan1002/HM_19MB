@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <EmbeddedResource Remove="Form1_DataSaving.resx" />
+    <EmbeddedResource Remove="Form1_CalibrationResults.resx" />
   </ItemGroup>
 
 </Project>

@@ -34,12 +34,6 @@ namespace HM_19MB_Demo
         private const string ColXoa = "CalXoa";
 
         // ── State ─────────────────────────────────────────────────────────
-        private DataGridView _gridCalibration = null!;
-        private Button _btnAddCalibPoint = null!;
-        private Button _btnDeleteCalibPoint = null!;
-        private Label _lblCalibStatus = null!;
-        private Panel _calibPanel = null!;
-
         private UncertaintyCalculationForm? _uncertaintyForm;
         private int _currentKenhCount = 3; // k hiện tại (3/5/9/10)
 
@@ -51,134 +45,11 @@ namespace HM_19MB_Demo
         /// </summary>
         internal void InitializeCalibrationResultsPanel()
         {
-            // ── Panel bọc ngoài ───────────────────────────────────────────
-            _calibPanel = new Panel
+            numKenhCount.ValueChanged += (s, e) =>
             {
-                Dock = DockStyle.Bottom,
-                Height = 220,
-                Padding = new Padding(6, 4, 6, 4),
-                BackColor = Color.FromArgb(245, 255, 245),
-            };
-
-            // ── Toolbar ───────────────────────────────────────────────────
-            var toolbar = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Top,
-                Height = 36,
-                Padding = new Padding(0, 2, 0, 2),
-                WrapContents = false,
-                BackColor = Color.FromArgb(220, 240, 220),
-            };
-
-            var lblTitle = new Label
-            {
-                Text = "Kết quả hiệu chuẩn tổng hợp",
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                AutoSize = true,
-                Margin = new Padding(4, 6, 12, 0),
-                ForeColor = Color.DarkGreen,
-            };
-
-            var lblKenhCount = new Label
-            {
-                Text = "Số kênh (k):",
-                AutoSize = true,
-                Margin = new Padding(0, 8, 4, 0),
-            };
-
-            var cmbKenhCount = new ComboBox
-            {
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Width = 60,
-                Margin = new Padding(0, 4, 12, 0),
-            };
-            cmbKenhCount.Items.AddRange(new object[] { 3, 5, 9, 10 });
-            cmbKenhCount.SelectedIndex = 0; // mặc định k=3
-
-            _btnAddCalibPoint = new Button
-            {
-                Text = "➕ Thêm điểm kiểm tra",
-                Width = 160,
-                Height = 28,
-                Margin = new Padding(0, 3, 6, 0),
-                BackColor = Color.FromArgb(40, 167, 69),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Cursor = Cursors.Hand,
-            };
-            _btnAddCalibPoint.FlatAppearance.BorderSize = 0;
-
-            _btnDeleteCalibPoint = new Button
-            {
-                Text = "🗑 Xoá dòng",
-                Width = 100,
-                Height = 28,
-                Margin = new Padding(0, 3, 6, 0),
-                BackColor = Color.FromArgb(220, 53, 69),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Cursor = Cursors.Hand,
-                Enabled = false,
-            };
-            _btnDeleteCalibPoint.FlatAppearance.BorderSize = 0;
-
-            _lblCalibStatus = new Label
-            {
-                AutoSize = true,
-                Margin = new Padding(8, 8, 0, 0),
-                ForeColor = Color.DimGray,
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Italic),
-                Text = "Chưa có dữ liệu hiệu chuẩn",
-            };
-
-            toolbar.Controls.Add(lblTitle);
-            toolbar.Controls.Add(lblKenhCount);
-            toolbar.Controls.Add(cmbKenhCount);
-            toolbar.Controls.Add(_btnAddCalibPoint);
-            toolbar.Controls.Add(_btnDeleteCalibPoint);
-            toolbar.Controls.Add(_lblCalibStatus);
-
-            // ── DataGridView ──────────────────────────────────────────────
-            _gridCalibration = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                ReadOnly = true,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None,
-                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
-                Font = new Font("Segoe UI", 8.5F),
-            };
-
-            // Style header
-            _gridCalibration.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(40, 120, 40);
-            _gridCalibration.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            _gridCalibration.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
-            _gridCalibration.EnableHeadersVisualStyles = false;
-
-            // Style alternate rows
-            _gridCalibration.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(240, 255, 240);
-
-            _calibPanel.Controls.Add(_gridCalibration);
-            _calibPanel.Controls.Add(toolbar);
-
-            // Nhúng vào metadataPanel (dưới cùng)
-            metadataPanel.Controls.Add(_calibPanel);
-            metadataPanel.Height += 220;
-
-            // ── Sự kiện ───────────────────────────────────────────────────
-            cmbKenhCount.SelectedIndexChanged += (s, e) =>
-            {
-                if (cmbKenhCount.SelectedItem is int k)
-                {
-                    _currentKenhCount = k;
-                    RebuildCalibrationColumns(k);
-                }
+                int k = (int)numKenhCount.Value;
+                _currentKenhCount = k;
+                RebuildCalibrationColumns(k);
             };
 
             _btnAddCalibPoint.Click += BtnAddCalibPoint_Click;
@@ -193,8 +64,9 @@ namespace HM_19MB_Demo
                 _btnDeleteCalibPoint.Enabled = _gridCalibration.SelectedRows.Count > 0;
             };
 
-            // Xây cột ban đầu với k=3
-            RebuildCalibrationColumns(3);
+            // Xây cột ban đầu theo số kênh hiện tại
+            _currentKenhCount = (int)numKenhCount.Value;
+            RebuildCalibrationColumns(_currentKenhCount);
 
             // Load dữ liệu nếu đã có session
             _ = TryLoadCalibrationResultsAsync();
