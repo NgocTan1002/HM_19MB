@@ -116,7 +116,7 @@ RETURNS TABLE (
     thiet_bi_chuan          TEXT
 )
 LANGUAGE sql
-STABLE  -- không sửa dữ liệu, PostgreSQL có thể tối ưu cache
+STABLE
 AS $$
     SELECT
         ten_thiet_bi, ky_hieu, so_hieu, so_tem,
@@ -197,4 +197,227 @@ AS $$
     FROM ket_qua_do kq
     WHERE kq.phien_id = p_phien_id
     ORDER BY kq.thoi_gian_do, kq.id;
+$$;
+
+
+-- ================================================================
+-- FUNCTIONS VERSION 4 — ket_qua_hieu_chuan
+-- ================================================================
+
+-- ----------------------------------------------------------------
+-- fn_luu_ket_qua_hieu_chuan
+-- Lưu 1 dòng kết quả tổng hợp tại 1 điểm kiểm tra.
+-- Nếu đã tồn tại (phien_id, stt) thì cập nhật (upsert).
+-- Trả về id của dòng vừa lưu.
+-- ----------------------------------------------------------------
+DROP FUNCTION IF EXISTS fn_luu_ket_qua_hieu_chuan(
+    INT, INT, FLOAT, FLOAT,
+    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
+    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
+    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
+    INT, INT, VARCHAR
+);
+
+CREATE OR REPLACE FUNCTION fn_luu_ket_qua_hieu_chuan(
+    -- Khoá
+    p_phien_id              INT,
+    p_stt                   INT,
+
+    -- Người dùng nhập
+    p_gia_tri_dat           FLOAT,
+    p_gia_tri_chi_thi       FLOAT,
+
+    -- Giá trị từng vị trí chuẩn (NULL nếu không dùng)
+    p_vi_tri_1              FLOAT,
+    p_vi_tri_2              FLOAT,
+    p_vi_tri_3              FLOAT,
+    p_vi_tri_4              FLOAT,
+    p_vi_tri_5              FLOAT,
+    p_vi_tri_6              FLOAT,
+    p_vi_tri_7              FLOAT,
+    p_vi_tri_8              FLOAT,
+    p_vi_tri_9              FLOAT,
+
+    -- Kết quả tổng hợp
+    p_gia_tri_trung_binh    FLOAT,
+    p_so_hieu_chinh         FLOAT,
+    p_do_on_dinh            FLOAT,
+    p_do_dong_deu           FLOAT,
+    p_do_khong_dam_bao      FLOAT,
+
+    -- Thành phần trung gian
+    p_uch1                  FLOAT,
+    p_uch2                  FLOAT,
+    p_uch                   FLOAT,
+    p_ubk1                  FLOAT,
+    p_ubk2                  FLOAT,
+    p_ubk3                  FLOAT,
+    p_ubk4                  FLOAT,
+    p_ubk                   FLOAT,
+
+    -- Metadata tính toán
+    p_so_kenh               INT,
+    p_so_lan_do             INT,
+    p_phuong_phap_b         VARCHAR
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id INT;
+BEGIN
+    INSERT INTO ket_qua_hieu_chuan (
+        phien_id, stt,
+        gia_tri_dat, gia_tri_chi_thi,
+        vi_tri_1, vi_tri_2, vi_tri_3, vi_tri_4, vi_tri_5,
+        vi_tri_6, vi_tri_7, vi_tri_8, vi_tri_9,
+        gia_tri_trung_binh, so_hieu_chinh,
+        do_on_dinh, do_dong_deu, do_khong_dam_bao,
+        uch1, uch2, uch,
+        ubk1, ubk2, ubk3, ubk4, ubk,
+        so_kenh, so_lan_do, phuong_phap_b
+    )
+    VALUES (
+        p_phien_id, p_stt,
+        p_gia_tri_dat, p_gia_tri_chi_thi,
+        p_vi_tri_1, p_vi_tri_2, p_vi_tri_3, p_vi_tri_4, p_vi_tri_5,
+        p_vi_tri_6, p_vi_tri_7, p_vi_tri_8, p_vi_tri_9,
+        p_gia_tri_trung_binh, p_so_hieu_chinh,
+        p_do_on_dinh, p_do_dong_deu, p_do_khong_dam_bao,
+        p_uch1, p_uch2, p_uch,
+        p_ubk1, p_ubk2, p_ubk3, p_ubk4, p_ubk,
+        p_so_kenh, p_so_lan_do, p_phuong_phap_b
+    )
+    ON CONFLICT (phien_id, stt) DO UPDATE SET
+        gia_tri_dat          = EXCLUDED.gia_tri_dat,
+        gia_tri_chi_thi      = EXCLUDED.gia_tri_chi_thi,
+        vi_tri_1             = EXCLUDED.vi_tri_1,
+        vi_tri_2             = EXCLUDED.vi_tri_2,
+        vi_tri_3             = EXCLUDED.vi_tri_3,
+        vi_tri_4             = EXCLUDED.vi_tri_4,
+        vi_tri_5             = EXCLUDED.vi_tri_5,
+        vi_tri_6             = EXCLUDED.vi_tri_6,
+        vi_tri_7             = EXCLUDED.vi_tri_7,
+        vi_tri_8             = EXCLUDED.vi_tri_8,
+        vi_tri_9             = EXCLUDED.vi_tri_9,
+        gia_tri_trung_binh   = EXCLUDED.gia_tri_trung_binh,
+        so_hieu_chinh        = EXCLUDED.so_hieu_chinh,
+        do_on_dinh           = EXCLUDED.do_on_dinh,
+        do_dong_deu          = EXCLUDED.do_dong_deu,
+        do_khong_dam_bao     = EXCLUDED.do_khong_dam_bao,
+        uch1                 = EXCLUDED.uch1,
+        uch2                 = EXCLUDED.uch2,
+        uch                  = EXCLUDED.uch,
+        ubk1                 = EXCLUDED.ubk1,
+        ubk2                 = EXCLUDED.ubk2,
+        ubk3                 = EXCLUDED.ubk3,
+        ubk4                 = EXCLUDED.ubk4,
+        ubk                  = EXCLUDED.ubk,
+        so_kenh              = EXCLUDED.so_kenh,
+        so_lan_do            = EXCLUDED.so_lan_do,
+        phuong_phap_b        = EXCLUDED.phuong_phap_b,
+        ngay_tao             = NOW()
+    RETURNING id INTO v_id;
+
+    RETURN v_id;
+END;
+$$;
+
+
+-- ----------------------------------------------------------------
+-- fn_lay_ket_qua_hieu_chuan
+-- Lấy toàn bộ kết quả tổng hợp của 1 phiên, sắp xếp theo stt.
+-- ----------------------------------------------------------------
+DROP FUNCTION IF EXISTS fn_lay_ket_qua_hieu_chuan(INT);
+
+CREATE OR REPLACE FUNCTION fn_lay_ket_qua_hieu_chuan(p_phien_id INT)
+RETURNS TABLE (
+    id                  INT,
+    stt                 INT,
+    gia_tri_dat         FLOAT,
+    gia_tri_chi_thi     FLOAT,
+    vi_tri_1            FLOAT,
+    vi_tri_2            FLOAT,
+    vi_tri_3            FLOAT,
+    vi_tri_4            FLOAT,
+    vi_tri_5            FLOAT,
+    vi_tri_6            FLOAT,
+    vi_tri_7            FLOAT,
+    vi_tri_8            FLOAT,
+    vi_tri_9            FLOAT,
+    gia_tri_trung_binh  FLOAT,
+    so_hieu_chinh       FLOAT,
+    do_on_dinh          FLOAT,
+    do_dong_deu         FLOAT,
+    do_khong_dam_bao    FLOAT,
+    uch1                FLOAT,
+    uch2                FLOAT,
+    uch                 FLOAT,
+    ubk1                FLOAT,
+    ubk2                FLOAT,
+    ubk3                FLOAT,
+    ubk4                FLOAT,
+    ubk                 FLOAT,
+    so_kenh             INT,
+    so_lan_do           INT,
+    phuong_phap_b       VARCHAR
+)
+LANGUAGE sql
+STABLE
+AS $$
+    SELECT
+        id, stt,
+        gia_tri_dat, gia_tri_chi_thi,
+        vi_tri_1, vi_tri_2, vi_tri_3, vi_tri_4, vi_tri_5,
+        vi_tri_6, vi_tri_7, vi_tri_8, vi_tri_9,
+        gia_tri_trung_binh, so_hieu_chinh,
+        do_on_dinh, do_dong_deu, do_khong_dam_bao,
+        uch1, uch2, uch,
+        ubk1, ubk2, ubk3, ubk4, ubk,
+        so_kenh, so_lan_do, phuong_phap_b
+    FROM ket_qua_hieu_chuan
+    WHERE phien_id = p_phien_id
+    ORDER BY stt;
+$$;
+
+
+-- ----------------------------------------------------------------
+-- fn_xoa_ket_qua_hieu_chuan
+-- Xoá 1 dòng kết quả theo phien_id + stt.
+-- Sau khi xoá tự động cập nhật lại stt liên tục (1, 2, 3...).
+-- ----------------------------------------------------------------
+DROP FUNCTION IF EXISTS fn_xoa_ket_qua_hieu_chuan(INT, INT);
+
+CREATE OR REPLACE FUNCTION fn_xoa_ket_qua_hieu_chuan(
+    p_phien_id  INT,
+    p_stt       INT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM ket_qua_hieu_chuan
+    WHERE phien_id = p_phien_id AND stt = p_stt;
+
+    -- Cập nhật lại stt cho các dòng phía sau để liên tục
+    UPDATE ket_qua_hieu_chuan
+    SET stt = stt - 1
+    WHERE phien_id = p_phien_id AND stt > p_stt;
+END;
+$$;
+
+
+-- ----------------------------------------------------------------
+-- fn_lay_stt_tiep_theo
+-- Lấy STT tiếp theo cho phiên (dùng khi thêm dòng mới).
+-- ----------------------------------------------------------------
+DROP FUNCTION IF EXISTS fn_lay_stt_tiep_theo(INT);
+
+CREATE OR REPLACE FUNCTION fn_lay_stt_tiep_theo(p_phien_id INT)
+RETURNS INT
+LANGUAGE sql
+AS $$
+    SELECT COALESCE(MAX(stt), 0) + 1
+    FROM ket_qua_hieu_chuan
+    WHERE phien_id = p_phien_id;
 $$;

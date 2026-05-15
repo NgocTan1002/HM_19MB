@@ -25,7 +25,7 @@ namespace HM_19MB_Demo.Data
         public string DacTinhKyThuat { get; set; } = "";
         public string ThietBiChuan { get; set; } = "";
     }
-    public static class DatabaseService
+    public static partial class DatabaseService
     {
         private static string ConnectionString =>
             ConfigurationManager.AppSettings["PostgresConnectionString"]
@@ -33,7 +33,7 @@ namespace HM_19MB_Demo.Data
                 "Thiếu 'PostgresConnectionString' trong app.config.");
 
         // Tạo bảng và đăng ký function nếu chưa tồn tại
-        private const int SCHEMA_VERSION = 3;
+        private const int SCHEMA_VERSION = 4;
         public static async Task EnsureSchemaAsync()
         {
             await using var conn = new NpgsqlConnection(ConnectionString);

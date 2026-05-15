@@ -12,8 +12,8 @@ namespace HM_19MB_Demo
                 return 0;
             return values.Average();
         }
+
         // Tính độ lệch chuẩn Sj
-        // 
         public static double CalculateStandardDeviation(double[] values, double mean)
         {
             if (values == null || values.Length <= 1)
@@ -38,29 +38,29 @@ namespace HM_19MB_Demo
             if (typeAUncertainties == null || typeAUncertainties.Length == 0)
                 return 0;
 
-            int j = typeAUncertainties.Length;
             double sumSquares = typeAUncertainties.Sum(u => u * u);
             return Math.Sqrt(sumSquares);
         }
 
-        // Tính độ không đảm bảo loại B từ U
+        // Tính độ không đảm bảo loại B từ U — CT(10)
         public static double CalculateTypeBFromU(double uMax)
         {
             return uMax / 2.0;
         }
 
-        // Tính độ không đảm bảo loại B từ ∂
+        // Tính độ không đảm bảo loại B từ ∂ — CT(11)
         public static double CalculateTypeBFromDelta(double deltaMax)
         {
             return deltaMax / Math.Sqrt(3);
         }
 
-        // Tính độ không đảm bảo chuẩn liên hợp theo công thức (12)
+        // Tính độ không đảm bảo chuẩn liên hợp — CT(12)
         public static double CalculateCombinedUncertainty(double uch1, double uch2)
         {
             return Math.Sqrt(uch1 * uch1 + uch2 * uch2);
         }
-        /// Tính độ không đảm bảo mở rộng
+
+        // Tính độ không đảm bảo mở rộng
         public static double CalculateExpandedUncertainty(double uc, double k = 2.0)
         {
             return k * uc;
@@ -74,9 +74,7 @@ namespace HM_19MB_Demo
             return values.Max();
         }
 
-        /// <summary>
-        /// Tính t̄_j: trung bình của kênh j có tính số hiệu chính ∂t_j (Công thức 2)
-        /// </summary>
+        // Tính t̄_j: trung bình của kênh j có tính số hiệu chính ∂t_j — CT(2)
         public static double CalculateCorrectedMean(double[] measurements, double correction)
         {
             if (measurements == null || measurements.Length == 0)
@@ -85,16 +83,12 @@ namespace HM_19MB_Demo
             int n = measurements.Length;
             double sum = 0;
             for (int i = 0; i < n; i++)
-            {
                 sum += measurements[i] + correction;
-            }
             return sum / n;
         }
 
-        /// <summary>
-        /// Tính t̄_ch: trung bình tổng hợp từ k kênh đã hiệu chính (Công thức 1)
-        /// Trả về tuple (double Tch, double[] ChannelCorrectedMeans)
-        /// </summary>
+        /// Tính t̄_ch: trung bình tổng hợp từ k kênh đã hiệu chính — CT(1)
+        /// Trả về (Tch, ChannelCorrectedMeans)
         public static (double Tch, double[] ChannelCorrectedMeans) CalculateCorrectedTemperature(
             double[,] measurementData,
             double[] corrections)
@@ -110,9 +104,7 @@ namespace HM_19MB_Demo
             {
                 double[] channelData = new double[n];
                 for (int i = 0; i < n; i++)
-                {
                     channelData[i] = measurementData[i, j];
-                }
                 channelCorrectedMeans[j] = CalculateCorrectedMean(channelData, corrections[j]);
             }
 
@@ -121,7 +113,8 @@ namespace HM_19MB_Demo
         }
 
         /// <summary>
-        /// Công thức 5: δt_od = ±½(t_max,j − t_min,j), lấy max qua k kênh
+        /// CT(5): δt_odj = ±½(t_max,j − t_min,j), lấy max qua k kênh.
+        /// measurementData: dữ liệu thô t_{i,j} (n × k).
         /// </summary>
         public static double CalculateStability(double[,] measurementData)
         {
@@ -145,7 +138,8 @@ namespace HM_19MB_Demo
         }
 
         /// <summary>
-        /// Công thức 6: δt_dd = ±½(max(t̄j) − min(t̄j))
+        /// CT(6): δt_dd = ±½(max(t̄j) − min(t̄j)).
+        /// channelCorrectedMeans: mảng t̄_j đã hiệu chỉnh (CT2).
         /// </summary>
         public static double CalculateUniformity(double[] channelCorrectedMeans)
         {
@@ -155,7 +149,7 @@ namespace HM_19MB_Demo
         }
 
         /// <summary>
-        /// Công thức 3: t̄_tn = trung bình chỉ thị tủ từ 2 bộ chỉ thị
+        /// CT(3): t̄_tn = trung bình chỉ thị tủ từ 2 bộ chỉ thị qua n lần đo.
         /// </summary>
         public static double CalculateMeanIndicatorTemperature(double[] ttn1, double[] ttn2)
         {
@@ -169,7 +163,7 @@ namespace HM_19MB_Demo
         }
 
         /// <summary>
-        /// Công thức 4: Δt = t̄_ch − t̄_tn
+        /// CT(4): Δt = t̄_ch − t̄_tn
         /// </summary>
         public static double CalculateCorrection(double tch, double ttn)
         {
@@ -177,34 +171,29 @@ namespace HM_19MB_Demo
         }
 
         /// <summary>
-        /// Công thức 13-14: ubk1 = S/√n
-        /// tᵢ = trung bình k kênh tại lần đo i (từ measurementData)
-        /// t̄ = trung bình của tᵢ qua n lần đo
+        /// CT(13)–(14): ubk1 = S / √n
+        /// Trong đó S tính từ t_i = (t_tn1i + t_tn2i)/2 — chỉ thị tủ nhiệt tại lần đo i,
+        /// t̄ = t̄_tn = trung bình của t_i.
+        ///
+        /// THAY ĐỔI: nhận mảng t_i[] thay vì ma trận measurementData[,] kênh chuẩn
+        /// để tránh nhầm giữa dữ liệu chuẩn và dữ liệu chỉ thị tủ.
         /// </summary>
-        public static double CalculateIndicatorTypeA(double[,] measurementData)
+        /// <param name="ti">
+        /// Mảng n phần tử, mỗi phần tử là t_i = (t_tn1i + t_tn2i) / 2
+        /// </param>
+        public static double CalculateIndicatorTypeA(double[] ti)
         {
-            int n = measurementData.GetLength(0);
-            int k = measurementData.GetLength(1);
+            int n = ti.Length;
+            if (n <= 1) return 0;
 
-            if (n <= 1 || k == 0) return 0;
-
-            double[] ti = new double[n];
-            for (int i = 0; i < n; i++)
-            {
-                double sum = 0;
-                for (int j = 0; j < k; j++)
-                    sum += measurementData[i, j];
-                ti[i] = sum / k;
-            }
-
-            double tBar = ti.Average();
+            double tBar = ti.Average();                             // t̄_tn
             double sumSq = ti.Sum(t => Math.Pow(t - tBar, 2));
-            double S = Math.Sqrt(sumSq / (n - 1));
-            return S / Math.Sqrt(n);
+            double S = Math.Sqrt(sumSq / (n - 1));                 // CT(14)
+            return S / Math.Sqrt(n);                               // CT(13)
         }
 
         /// <summary>
-        /// Công thức 15: ubk2 = δt_od / √3
+        /// CT(15): ubk2 = δt_od / √3
         /// </summary>
         public static double CalculateUbk2(double deltaOd)
         {
@@ -212,7 +201,7 @@ namespace HM_19MB_Demo
         }
 
         /// <summary>
-        /// Công thức 16: ubk3 = δt_dd / √3
+        /// CT(16): ubk3 = δt_dd / √3
         /// </summary>
         public static double CalculateUbk3(double deltaDd)
         {
@@ -220,7 +209,7 @@ namespace HM_19MB_Demo
         }
 
         /// <summary>
-        /// Công thức 17: ubk4 = A×d / √3
+        /// CT(17): ubk4 = A × d / √3
         /// </summary>
         public static double CalculateUbk4(double A, double d)
         {
@@ -228,7 +217,7 @@ namespace HM_19MB_Demo
         }
 
         /// <summary>
-        /// Công thức 18: ubk = √(ubk1² + ubk2² + ubk3² + ubk4²)
+        /// CT(18): ubk = √(ubk1² + ubk2² + ubk3² + ubk4²)
         /// </summary>
         public static double CalculateCombinedUbk(double ubk1, double ubk2, double ubk3, double ubk4)
         {
@@ -236,7 +225,7 @@ namespace HM_19MB_Demo
         }
 
         /// <summary>
-        /// Công thức 19: U = 2 × √(uch² + ubk²)
+        /// CT(19): U = 2 × √(u_ch² + u_bk²)
         /// </summary>
         public static double CalculateFinalExpandedUncertainty(double uch, double ubk)
         {
@@ -273,19 +262,18 @@ namespace HM_19MB_Demo
             public DateTime CalculatedAt { get; set; }
         }
 
-        // Tính toán đầy đủ độ không đảm bảo đo
-        /// <param name="measurementData">Mảng dữ liệu đo n×j (hàng=lần đo, cột=kênh)</param>
-        /// <param name="uValues">Mảng U1...Uj</param>
-        /// <param name="deltaValues">Mảng ∂1...∂j</param>
-        /// <param name="useUMethod">true=dùng U, false=dùng ∂</param>
+        /// <summary>
+        /// Tính toán đầy đủ độ không đảm bảo đo (chỉ phần tổ hợp chuẩn u_ch).
+        /// Phần u_bk (chỉ thị tủ) cần dữ liệu t_tn riêng — xem CalculateIndicatorTypeA.
+        /// </summary>
         public static UncertaintyResult CalculateFull(
             double[,] measurementData,
             double[] uValues,
             double[] deltaValues,
             bool useUMethod)
         {
-            int n = measurementData.GetLength(0);  // Số lần đo
-            int j = measurementData.GetLength(1);  // Số kênh
+            int n = measurementData.GetLength(0);
+            int j = measurementData.GetLength(1);
 
             var result = new UncertaintyResult
             {
@@ -304,14 +292,10 @@ namespace HM_19MB_Demo
 
             for (int channelIdx = 0; channelIdx < j; channelIdx++)
             {
-                // Lấy dữ liệu của kênh này
                 double[] channelData = new double[n];
                 for (int i = 0; i < n; i++)
-                {
                     channelData[i] = measurementData[i, channelIdx];
-                }
 
-                // Tính t̄j, Sj, uch1,j
                 result.ChannelMeans[channelIdx] = CalculateMean(channelData);
                 result.ChannelStdDevs[channelIdx] = CalculateStandardDeviation(
                     channelData, result.ChannelMeans[channelIdx]);
@@ -319,10 +303,10 @@ namespace HM_19MB_Demo
                     result.ChannelStdDevs[channelIdx], n);
             }
 
-            // Bước 2: Tính uch1 (loại A tổng hợp)
+            // Bước 2: Tính uch1
             result.Uch1 = CalculateCombinedTypeA(result.ChannelTypeAUncertainties);
 
-            // Bước 3: Tính uch2 (loại B)
+            // Bước 3: Tính uch2
             result.UMax = FindMax(uValues);
             result.DeltaMax = FindMax(deltaValues);
             result.Uch2FromU = CalculateTypeBFromU(result.UMax);
@@ -339,7 +323,7 @@ namespace HM_19MB_Demo
                 result.CalculationMethod = "Delta";
             }
 
-            // Bước 4: Tính uc và U
+            // Bước 4: Tính uc và U (chỉ phần chuẩn)
             result.Uc = CalculateCombinedUncertainty(result.Uch1, result.Uch2);
             result.U = CalculateExpandedUncertainty(result.Uc);
 

@@ -40,10 +40,6 @@ namespace HM_19MB_Demo
 
         // ── Khởi tạo MathLabel ───────────────────────────────────────────
 
-        /// <summary>
-        /// Với mỗi Label kết quả công thức: tạo MathLabel cùng vị trí,
-        /// ẩn Label gốc — không cần sửa .Designer.cs.
-        /// </summary>
         private void ReplaceLabelWithMath()
         {
             // step2Panel
@@ -75,9 +71,6 @@ namespace HM_19MB_Demo
                 13f, Color.DarkRed);
         }
 
-        /// <summary>
-        /// Tạo MathLabel tại đúng vị trí/kích thước của Label gốc rồi ẩn nó.
-        /// </summary>
         private static MathLabel Swap(Control parent, Label original,
                                        string mathText, float fontSize, Color color)
         {
@@ -88,7 +81,6 @@ namespace HM_19MB_Demo
                 ForeColor = color,
                 BackColor = Color.Transparent,
                 Location = original.Location,
-                // Mở rộng chiều rộng để hiển thị đủ công thức
                 Size = new Size(original.Width + 80, Math.Max(original.Height + 8, 28)),
                 Anchor = original.Anchor,
             };
@@ -263,7 +255,7 @@ namespace HM_19MB_Demo
         {
             try
             {
-                // Tính từng kênh: t̄j, Sj, uch1,j
+                // ── Tính từng kênh: t̄j, Sj, uch1,j ─────────────────────────
                 for (int j = 0; j < _j; j++)
                 {
                     double[] values = new double[_n];
@@ -279,24 +271,24 @@ namespace HM_19MB_Demo
                     gridMeasurements.Rows[_n + 2].Cells[j + 1].Value = uch1j.ToString("F4");
                 }
 
-                // Đọc ∂t_j
+                // ── Đọc ∂t_j ─────────────────────────────────────────────────
                 double[] corrections = new double[_j];
                 for (int j = 0; j < _j; j++)
                     double.TryParse(gridStandards.Rows[2].Cells[j + 1].Value?.ToString(), out corrections[j]);
 
-                // Ma trận dữ liệu đo n×j
+                // ── Ma trận dữ liệu đo n×j ────────────────────────────────────
                 double[,] measurementData = new double[_n, _j];
                 for (int i = 0; i < _n; i++)
                     for (int j = 0; j < _j; j++)
                         double.TryParse(gridMeasurements.Rows[i].Cells[j + 1].Value?.ToString(), out measurementData[i, j]);
 
-                // Công thức 1 & 2: t̄_ch
+                // ── CT(1)(2): t̄_ch, t̄_j hiệu chỉnh ─────────────────────────
                 var (tch, channelCorrectedMeans) =
                     UncertaintyCalculator.CalculateCorrectedTemperature(measurementData, corrections);
 
                 mlTchResult.MathText = $"BAR{{t}}SUB{{ch}} = {tch:F4} °C";
 
-                // uch1 tổng hợp
+                // ── CT(7): uch1 tổng hợp ──────────────────────────────────────
                 double[] uch1jValues = new double[_j];
                 for (int j = 0; j < _j; j++)
                     double.TryParse(gridMeasurements.Rows[_n + 2].Cells[j + 1].Value?.ToString(), out uch1jValues[j]);
@@ -305,7 +297,7 @@ namespace HM_19MB_Demo
                 mlUch1Result.MathText = $"u SUB{{ch1}} = SQRT{{_sum_ u SUB{{ch1,j}}SUP{{2}}}} = {uch1:F4} °C";
                 mlUch1Final.MathText = $"u SUB{{ch1}} = {uch1:F4} °C";
 
-                // Max(U) và Max(∂)
+                // ── Max(U) và Max(∂) ──────────────────────────────────────────
                 double[] uValues = new double[_j];
                 double[] deltaValues = new double[_j];
                 for (int j = 0; j < _j; j++)
@@ -320,7 +312,7 @@ namespace HM_19MB_Demo
                 gridStandards.Rows[0].Cells[_j + 1].Value = uMax.ToString("F4");
                 gridStandards.Rows[1].Cells[_j + 1].Value = deltaMax.ToString("F4");
 
-                // uch2: hiển thị công thức tương ứng
+                // ── CT(10)/(11): uch2 ─────────────────────────────────────────
                 double uch2 = rbUseU.Checked
                     ? UncertaintyCalculator.CalculateTypeBFromU(uMax)
                     : UncertaintyCalculator.CalculateTypeBFromDelta(deltaMax);
@@ -330,20 +322,20 @@ namespace HM_19MB_Demo
                     : $"u SUB{{ch2}} = FRAC{{_delta_}}{{SQRT{{3}}}} = {uch2:F4} °C";
                 mlUch2Final.MathText = $"u SUB{{ch2}} = {uch2:F4} °C";
 
-                // Công thức 12: uc = √(uch1² + uch2²)
+                // ── CT(12): uc ────────────────────────────────────────────────
                 double uc = UncertaintyCalculator.CalculateCombinedUncertainty(uch1, uch2);
                 mlUcFinal.MathText =
                     $"u SUB{{c}} = SQRT{{u SUB{{ch1}}SUP{{2}} + u SUB{{ch2}}SUP{{2}}}} = {uc:F4} °C";
 
-                // Công thức 5: δt_od
+                // ── CT(5): δt_od ──────────────────────────────────────────────
                 double deltaOd = UncertaintyCalculator.CalculateStability(measurementData);
                 mlDeltaOd.MathText = $"_delta_t SUB{{od}} = _pm_{deltaOd:F4} °C";
 
-                // Công thức 6: δt_dd
+                // ── CT(6): δt_dd ──────────────────────────────────────────────
                 double deltaDD = UncertaintyCalculator.CalculateUniformity(channelCorrectedMeans);
                 mlDeltaDd.MathText = $"_delta_t SUB{{dd}} = _pm_{deltaDD:F4} °C";
 
-                // Công thức 3 & 4: t̄_tn, Δt
+                // ── CT(3): t̄_tn; CT(4): Δt ───────────────────────────────────
                 double[] ttn1 = new double[_n];
                 double[] ttn2 = new double[_n];
                 for (int i = 0; i < _n; i++)
@@ -353,6 +345,8 @@ namespace HM_19MB_Demo
                 }
 
                 double ttn = UncertaintyCalculator.CalculateMeanIndicatorTemperature(ttn1, ttn2);
+
+                // Cập nhật dòng t̄_tn trong grid
                 for (int i = 0; i < _n; i++)
                     gridIndicator.Rows[2].Cells[i + 1].Value = ((ttn1[i] + ttn2[i]) / 2.0).ToString("F4");
 
@@ -362,13 +356,22 @@ namespace HM_19MB_Demo
                 mlDeltaT.MathText =
                     $"_Delta_t = BAR{{t}}SUB{{ch}} - BAR{{t}}SUB{{tn}} = {deltaT:F4} °C";
 
-                // Công thức 13–18: ubk1..ubk4, ubk
-                double ubk1 = UncertaintyCalculator.CalculateIndicatorTypeA(measurementData);
+                // ── CT(13)(14): ubk1 — tính từ t_i = (t_tn1i + t_tn2i)/2 ─────
+                // ĐÚNG: dùng chỉ thị tủ nhiệt, KHÔNG dùng dữ liệu kênh chuẩn
+                double[] ti = new double[_n];
+                for (int i = 0; i < _n; i++)
+                    ti[i] = (ttn1[i] + ttn2[i]) / 2.0;
+
+                double ubk1 = UncertaintyCalculator.CalculateIndicatorTypeA(ti);
+
+                // ── CT(15)(16)(17): ubk2, ubk3, ubk4 ─────────────────────────
                 double ubk2 = UncertaintyCalculator.CalculateUbk2(deltaOd);
                 double ubk3 = UncertaintyCalculator.CalculateUbk3(deltaDD);
                 double A = (double)numResolutionA.Value;
                 double d = (double)numResolutionD.Value;
                 double ubk4 = UncertaintyCalculator.CalculateUbk4(A, d);
+
+                // ── CT(18): ubk ───────────────────────────────────────────────
                 double ubk = UncertaintyCalculator.CalculateCombinedUbk(ubk1, ubk2, ubk3, ubk4);
 
                 mlUbk1.MathText = $"u SUB{{bk1}} = FRAC{{S}}{{SQRT{{n}}}} = {ubk1:F4} °C";
@@ -378,7 +381,7 @@ namespace HM_19MB_Demo
                 mlUbkResult.MathText =
                     $"u SUB{{bk}} = SQRT{{u SUB{{bk1}}SUP{{2}} + ... + u SUB{{bk4}}SUP{{2}}}} = {ubk:F4} °C";
 
-                // Công thức 19: U = 2√(uc² + ubk²)
+                // ── CT(19): U = 2√(uc² + ubk²) ───────────────────────────────
                 double U_final = UncertaintyCalculator.CalculateFinalExpandedUncertainty(uc, ubk);
                 mlUFinal.MathText =
                     $"U = 2 _cdot_ SQRT{{u SUB{{c}}SUP{{2}} + u SUB{{bk}}SUP{{2}}}} = _pm_{U_final:F4} °C  (k=2, P=95%)";
@@ -479,7 +482,6 @@ namespace HM_19MB_Demo
                 sb.AppendLine();
             }
 
-            // Dùng MathText của MathLabel để export kết quả
             sb.AppendLine();
             sb.AppendLine("Kết quả tính toán:");
             sb.AppendLine($"uch1,{mlUch1Final.MathText}");
