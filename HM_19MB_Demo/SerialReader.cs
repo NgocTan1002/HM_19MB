@@ -106,6 +106,7 @@ namespace HM_19MB_Demo
             }
             catch (Exception ex)
             {
+                AppLogger.Warning("SerialReader", $"Serial read error: {ex.Message}", ex);
                 ErrorOccurred?.Invoke(this, $"Serial read error: {ex.Message}");
             }
         }
@@ -141,6 +142,7 @@ namespace HM_19MB_Demo
             }
             else
             {
+                AppLogger.Warning("SerialReader", $"Du lieu khong dung dinh dang: {TrimForDisplay(blockData)}");
                 ErrorOccurred?.Invoke(this, $"Du lieu khong dung dinh dang: {TrimForDisplay(blockData)}");
             }
         }

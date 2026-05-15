@@ -7,6 +7,23 @@ using System.Windows.Forms;
 
 namespace HM_19MB_Demo
 {
+    /// <summary>
+    /// Wrapper class cho MeasurementBlock với thông tin retry
+    /// </summary>
+    internal class PendingRecord
+    {
+        public MeasurementBlock Block { get; set; }
+        public int RetryCount { get; set; }
+        public DateTime FirstQueued { get; set; }
+
+        public PendingRecord(MeasurementBlock block)
+        {
+            Block = block;
+            RetryCount = 0;
+            FirstQueued = DateTime.Now;
+        }
+    }
+
     // Partial class chứa logic lưu dữ liệu cải tiến
     public partial class Form1
     {
@@ -14,9 +31,15 @@ namespace HM_19MB_Demo
         private bool _autoSaveEnabled = true; // Mặc định BẬT tự động lưu
         private int _autoSaveIntervalSeconds = 5; // Lưu mỗi 5 giây
         private DateTime _lastAutoSave = DateTime.MinValue;
-        private readonly List<MeasurementBlock> _pendingRecords = new List<MeasurementBlock>();
+        private readonly List<PendingRecord> _pendingRecords = new List<PendingRecord>();
+        private readonly List<PendingRecord> _deadLetterQueue = new List<PendingRecord>();
         private System.Threading.Timer? _autoSaveTimer;
         private readonly object _pendingLock = new object();
+
+        /// <summary>
+        /// Số lượng bản ghi đã thất bại vĩnh viễn (vượt quá 3 lần retry)
+        /// </summary>
+        public int DeadLetterCount => _deadLetterQueue.Count;
 
         // ── Cấu hình lưu dữ liệu ─────────────────────────────────────────────
         
@@ -61,7 +84,7 @@ namespace HM_19MB_Demo
             catch (Exception ex)
             {
                 // Log lỗi nhưng không hiển thị MessageBox (vì đang chạy background)
-                Console.WriteLine($"Auto-save error: {ex.Message}");
+                AppLogger.Error("DataSaving", $"Auto-save error: {ex.Message}", ex);
             }
         }
 
@@ -70,7 +93,7 @@ namespace HM_19MB_Demo
         /// </summary>
         private async Task SavePendingRecordsAsync()
         {
-            List<MeasurementBlock> recordsToSave;
+            List<PendingRecord> recordsToSave;
             
             lock (_pendingLock)
             {
@@ -106,29 +129,62 @@ namespace HM_19MB_Demo
                 int savedCount = 0;
                 foreach (var record in recordsToSave)
                 {
-                    await DatabaseService.LuuKetQuaDoAsync(_currentSessionId.Value, record);
+                    await DatabaseService.LuuKetQuaDoAsync(_currentSessionId.Value, record.Block);
                     savedCount++;
                 }
 
                 _lastAutoSave = DateTime.Now;
 
-                // Cập nhật UI
-                if (InvokeRequired)
-                {
-                    Invoke(new Action(() =>
-                    {
-                        _lblStatus.Text = $"Đã lưu {savedCount} bản ghi vào DB (Session: {_currentSessionId})";
-                        _lblStatus.ForeColor = System.Drawing.Color.DarkGreen;
-                    }));
-                }
             }
             catch (Exception ex)
             {
-                // Đưa các bản ghi trở lại queue nếu lưu thất bại
+                // Xử lý retry logic: chỉ đưa lại những record có RetryCount < 3
+                List<PendingRecord> toRetry = new List<PendingRecord>();
+                List<PendingRecord> toDeadLetter = new List<PendingRecord>();
+
+                foreach (var record in recordsToSave)
+                {
+                    record.RetryCount++;
+
+                    if (record.RetryCount < 3)
+                    {
+                        toRetry.Add(record);
+                    }
+                    else
+                    {
+                        // Vượt quá 3 lần retry → chuyển vào dead letter queue
+                        toDeadLetter.Add(record);
+                        AppLogger.Error("DataSaving", 
+                            $"Record failed after {record.RetryCount} retries. " +
+                            $"Device: {record.Block.DeviceId}, " +
+                            $"Timestamp: {record.Block.Timestamp:yyyy-MM-dd HH:mm:ss}, " +
+                            $"FirstQueued: {record.FirstQueued:yyyy-MM-dd HH:mm:ss}", 
+                            ex);
+                    }
+                }
+
                 lock (_pendingLock)
                 {
-                    _pendingRecords.InsertRange(0, recordsToSave);
+                    // Đưa các record còn retry được trở lại queue
+                    _pendingRecords.InsertRange(0, toRetry);
+
+                    // Thêm các record thất bại vĩnh viễn vào dead letter queue
+                    _deadLetterQueue.AddRange(toDeadLetter);
                 }
+
+                // Cập nhật UI nếu có record bị dead letter
+                if (_deadLetterQueue.Count > 0)
+                {
+                    if (InvokeRequired)
+                    {
+                        Invoke(new Action(() =>
+                        {
+                            _lblStatus.Text = $"CẢNH BÁO: {_deadLetterQueue.Count} bản ghi lưu thất bại vĩnh viễn!";
+                            _lblStatus.ForeColor = System.Drawing.Color.DarkRed;
+                        }));
+                    }
+                }
+
                 throw;
             }
         }
@@ -140,7 +196,7 @@ namespace HM_19MB_Demo
         {
             lock (_pendingLock)
             {
-                _pendingRecords.Add(block);
+                _pendingRecords.Add(new PendingRecord(block));
             }
 
             // Lưu ngay lập tức nếu auto-save bật
@@ -155,7 +211,7 @@ namespace HM_19MB_Demo
                     catch (Exception ex)
                     {
                         // Log lỗi
-                        Console.WriteLine($"Auto-save error: {ex.Message}");
+                        AppLogger.Error("DataSaving", $"Auto-save error: {ex.Message}", ex);
                         
                         // Hiển thị thông báo lỗi trên UI thread
                         if (InvokeRequired)
@@ -174,13 +230,13 @@ namespace HM_19MB_Demo
         /// <summary>
         /// Lưu ngay lập tức bản ghi hiện tại (nút "Lưu dữ liệu")
         /// </summary>
-        private async Task SaveCurrentRecordAsync()
+        private async Task<bool> SaveCurrentRecordAsync()
         {
             if (_lastBlock == null)
             {
                 MessageBox.Show("Chưa có dữ liệu để lưu.", "Thông báo",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                return false;
             }
 
             try
@@ -193,14 +249,13 @@ namespace HM_19MB_Demo
 
                 await DatabaseService.LuuKetQuaDoAsync(_currentSessionId.Value, _lastBlock);
 
-
-                MessageBox.Show("Lưu dữ liệu thành công!", "Thông báo",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return true;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Lỗi khi lưu dữ liệu:\n{ex.Message}", "Lỗi",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
 
@@ -232,8 +287,7 @@ namespace HM_19MB_Demo
                     try
                     {
                         await SavePendingRecordsAsync();
-                        MessageBox.Show("Đã lưu tất cả dữ liệu thành công!", "Thông báo",
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        ToastNotification.ShowSuccess("Đã lưu tất cả dữ liệu thành công!");
                     }
                     catch (Exception ex)
                     {

@@ -32,7 +32,6 @@ namespace HM_19MB_Demo
             lblStep2Title = new Label();
             gridMeasurements = new DataGridView();
             lblUch1Result = new Label();
-            lblTchResult = new Label();
             splitStep3 = new TableLayoutPanel();
             pnlStandards = new Panel();
             lblStep3Title = new Label();
@@ -51,6 +50,7 @@ namespace HM_19MB_Demo
             lblUch1Final = new Label();
             lblUch2Final = new Label();
             lblUcFinal = new Label();
+            lblTchResult = new Label();
             lblUbk1 = new Label();
             lblUbk2 = new Label();
             lblUbk3 = new Label();
@@ -98,9 +98,9 @@ namespace HM_19MB_Demo
             mainLayout.Padding = new Padding(10);
             mainLayout.RowCount = 5;
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 40F));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 30F));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 160F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 220F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 220F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
             mainLayout.Size = new Size(1400, 1100);
             mainLayout.TabIndex = 0;
@@ -186,14 +186,14 @@ namespace HM_19MB_Demo
             step2Panel.Dock = DockStyle.Fill;
             step2Panel.Location = new Point(13, 113);
             step2Panel.Name = "step2Panel";
-            step2Panel.Size = new Size(1374, 428);
+            step2Panel.Size = new Size(1374, 474);
             step2Panel.TabIndex = 1;
             // 
             // lblStep2Title
             // 
             lblStep2Title.AutoSize = true;
             lblStep2Title.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblStep2Title.Location = new Point(10, 10);
+            lblStep2Title.Location = new Point(10, 8);
             lblStep2Title.Name = "lblStep2Title";
             lblStep2Title.Size = new Size(401, 23);
             lblStep2Title.TabIndex = 0;
@@ -206,35 +206,23 @@ namespace HM_19MB_Demo
             gridMeasurements.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             gridMeasurements.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             gridMeasurements.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            gridMeasurements.Location = new Point(10, 40);
+            gridMeasurements.Location = new Point(10, 35);
             gridMeasurements.Name = "gridMeasurements";
             gridMeasurements.RowHeadersWidth = 51;
-            gridMeasurements.Size = new Size(1352, 344);
+            gridMeasurements.Size = new Size(1352, 402);
             gridMeasurements.TabIndex = 1;
             // 
             // lblUch1Result
             // 
             lblUch1Result.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             lblUch1Result.AutoSize = true;
-            lblUch1Result.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblUch1Result.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             lblUch1Result.ForeColor = Color.DarkBlue;
-            lblUch1Result.Location = new Point(10, 394);
+            lblUch1Result.Location = new Point(10, 440);
             lblUch1Result.Name = "lblUch1Result";
-            lblUch1Result.Size = new Size(157, 23);
+            lblUch1Result.Size = new Size(140, 20);
             lblUch1Result.TabIndex = 2;
             lblUch1Result.Text = "uch1 = (chưa tính)";
-            // 
-            // lblTchResult
-            // 
-            lblTchResult.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            lblTchResult.AutoSize = true;
-            lblTchResult.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblTchResult.ForeColor = Color.DarkMagenta;
-            lblTchResult.Location = new Point(29, 75);
-            lblTchResult.Name = "lblTchResult";
-            lblTchResult.Size = new Size(85, 23);
-            lblTchResult.TabIndex = 3;
-            lblTchResult.Text = "t̄_ch = ---";
             // 
             // splitStep3
             // 
@@ -244,11 +232,11 @@ namespace HM_19MB_Demo
             splitStep3.Controls.Add(pnlStandards, 0, 0);
             splitStep3.Controls.Add(pnlIndicator, 1, 0);
             splitStep3.Dock = DockStyle.Fill;
-            splitStep3.Location = new Point(13, 547);
+            splitStep3.Location = new Point(13, 593);
             splitStep3.Name = "splitStep3";
             splitStep3.RowCount = 1;
             splitStep3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            splitStep3.Size = new Size(1374, 319);
+            splitStep3.Size = new Size(1374, 214);
             splitStep3.TabIndex = 2;
             // 
             // pnlStandards
@@ -263,14 +251,14 @@ namespace HM_19MB_Demo
             pnlStandards.Dock = DockStyle.Fill;
             pnlStandards.Location = new Point(3, 3);
             pnlStandards.Name = "pnlStandards";
-            pnlStandards.Size = new Size(749, 313);
+            pnlStandards.Size = new Size(749, 208);
             pnlStandards.TabIndex = 0;
             // 
             // lblStep3Title
             // 
             lblStep3Title.AutoSize = true;
             lblStep3Title.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblStep3Title.Location = new Point(10, 10);
+            lblStep3Title.Location = new Point(10, 8);
             lblStep3Title.Name = "lblStep3Title";
             lblStep3Title.Size = new Size(375, 23);
             lblStep3Title.TabIndex = 0;
@@ -280,7 +268,7 @@ namespace HM_19MB_Demo
             // 
             rbUseU.AutoSize = true;
             rbUseU.Checked = true;
-            rbUseU.Location = new Point(10, 40);
+            rbUseU.Location = new Point(10, 36);
             rbUseU.Name = "rbUseU";
             rbUseU.Size = new Size(177, 24);
             rbUseU.TabIndex = 1;
@@ -291,7 +279,7 @@ namespace HM_19MB_Demo
             // rbUseDelta
             // 
             rbUseDelta.AutoSize = true;
-            rbUseDelta.Location = new Point(200, 40);
+            rbUseDelta.Location = new Point(200, 36);
             rbUseDelta.Name = "rbUseDelta";
             rbUseDelta.Size = new Size(183, 24);
             rbUseDelta.TabIndex = 2;
@@ -302,24 +290,23 @@ namespace HM_19MB_Demo
             // 
             gridStandards.AllowUserToAddRows = false;
             gridStandards.AllowUserToDeleteRows = false;
-            gridStandards.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            gridStandards.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gridStandards.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             gridStandards.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            gridStandards.Location = new Point(10, 63);
+            gridStandards.Location = new Point(10, 62);
             gridStandards.Name = "gridStandards";
             gridStandards.RowHeadersWidth = 51;
-            gridStandards.Size = new Size(727, 201);
+            gridStandards.Size = new Size(727, 114);
             gridStandards.TabIndex = 3;
             // 
             // lblUch2Result
             // 
-            lblUch2Result.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             lblUch2Result.AutoSize = true;
-            lblUch2Result.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblUch2Result.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             lblUch2Result.ForeColor = Color.DarkGreen;
-            lblUch2Result.Location = new Point(10, 279);
+            lblUch2Result.Location = new Point(10, 180);
             lblUch2Result.Name = "lblUch2Result";
-            lblUch2Result.Size = new Size(157, 23);
+            lblUch2Result.Size = new Size(140, 20);
             lblUch2Result.TabIndex = 4;
             lblUch2Result.Text = "uch2 = (chưa tính)";
             // 
@@ -336,14 +323,14 @@ namespace HM_19MB_Demo
             pnlIndicator.Dock = DockStyle.Fill;
             pnlIndicator.Location = new Point(758, 3);
             pnlIndicator.Name = "pnlIndicator";
-            pnlIndicator.Size = new Size(613, 313);
+            pnlIndicator.Size = new Size(613, 208);
             pnlIndicator.TabIndex = 1;
             // 
             // lblStep3bTitle
             // 
             lblStep3bTitle.AutoSize = true;
             lblStep3bTitle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblStep3bTitle.Location = new Point(10, 10);
+            lblStep3bTitle.Location = new Point(10, 6);
             lblStep3bTitle.Name = "lblStep3bTitle";
             lblStep3bTitle.Size = new Size(398, 23);
             lblStep3bTitle.TabIndex = 0;
@@ -353,20 +340,19 @@ namespace HM_19MB_Demo
             // 
             gridIndicator.AllowUserToAddRows = false;
             gridIndicator.AllowUserToDeleteRows = false;
-            gridIndicator.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            gridIndicator.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             gridIndicator.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             gridIndicator.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            gridIndicator.Location = new Point(10, 40);
+            gridIndicator.Location = new Point(10, 33);
             gridIndicator.Name = "gridIndicator";
             gridIndicator.RowHeadersWidth = 51;
-            gridIndicator.Size = new Size(591, 196);
+            gridIndicator.Size = new Size(591, 137);
             gridIndicator.TabIndex = 1;
             // 
             // lblResA
             // 
-            lblResA.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             lblResA.AutoSize = true;
-            lblResA.Location = new Point(10, 244);
+            lblResA.Location = new Point(12, 178);
             lblResA.Name = "lblResA";
             lblResA.Size = new Size(149, 20);
             lblResA.TabIndex = 2;
@@ -374,10 +360,9 @@ namespace HM_19MB_Demo
             // 
             // numResolutionA
             // 
-            numResolutionA.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             numResolutionA.DecimalPlaces = 2;
             numResolutionA.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
-            numResolutionA.Location = new Point(165, 242);
+            numResolutionA.Location = new Point(167, 176);
             numResolutionA.Name = "numResolutionA";
             numResolutionA.Size = new Size(80, 27);
             numResolutionA.TabIndex = 3;
@@ -385,9 +370,8 @@ namespace HM_19MB_Demo
             // 
             // lblResD
             // 
-            lblResD.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             lblResD.AutoSize = true;
-            lblResD.Location = new Point(270, 244);
+            lblResD.Location = new Point(272, 178);
             lblResD.Name = "lblResD";
             lblResD.Size = new Size(109, 20);
             lblResD.TabIndex = 4;
@@ -395,10 +379,9 @@ namespace HM_19MB_Demo
             // 
             // numResolutionD
             // 
-            numResolutionD.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             numResolutionD.DecimalPlaces = 2;
             numResolutionD.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
-            numResolutionD.Location = new Point(385, 242);
+            numResolutionD.Location = new Point(387, 176);
             numResolutionD.Maximum = new decimal(new int[] { 5, 0, 0, 65536 });
             numResolutionD.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
             numResolutionD.Name = "numResolutionD";
@@ -425,9 +408,9 @@ namespace HM_19MB_Demo
             resultPanel.Controls.Add(lblDeltaDd);
             resultPanel.Controls.Add(lblUFinal);
             resultPanel.Dock = DockStyle.Fill;
-            resultPanel.Location = new Point(13, 872);
+            resultPanel.Location = new Point(13, 813);
             resultPanel.Name = "resultPanel";
-            resultPanel.Size = new Size(1374, 154);
+            resultPanel.Size = new Size(1374, 214);
             resultPanel.TabIndex = 4;
             // 
             // lblUch1Final
@@ -454,12 +437,24 @@ namespace HM_19MB_Demo
             // 
             lblUcFinal.AutoSize = true;
             lblUcFinal.Font = new Font("Segoe UI", 9F);
-            lblUcFinal.ForeColor = Color.DarkBlue;
+            lblUcFinal.ForeColor = Color.Black;
             lblUcFinal.Location = new Point(504, 114);
             lblUcFinal.Name = "lblUcFinal";
             lblUcFinal.Size = new Size(60, 20);
             lblUcFinal.TabIndex = 3;
             lblUcFinal.Text = "uc = ---";
+            // 
+            // lblTchResult
+            // 
+            lblTchResult.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            lblTchResult.AutoSize = true;
+            lblTchResult.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblTchResult.ForeColor = Color.Black;
+            lblTchResult.Location = new Point(29, 75);
+            lblTchResult.Name = "lblTchResult";
+            lblTchResult.Size = new Size(71, 20);
+            lblTchResult.TabIndex = 3;
+            lblTchResult.Text = "t̄_ch = ---";
             // 
             // lblUbk1
             // 
@@ -505,7 +500,7 @@ namespace HM_19MB_Demo
             // 
             lblUbkResult.AutoSize = true;
             lblUbkResult.Font = new Font("Segoe UI", 9F);
-            lblUbkResult.ForeColor = Color.DarkOrange;
+            lblUbkResult.ForeColor = Color.Black;
             lblUbkResult.Location = new Point(1089, 75);
             lblUbkResult.Name = "lblUbkResult";
             lblUbkResult.Size = new Size(69, 20);
@@ -555,8 +550,8 @@ namespace HM_19MB_Demo
             // lblUFinal
             // 
             lblUFinal.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            lblUFinal.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
-            lblUFinal.ForeColor = Color.DarkRed;
+            lblUFinal.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            lblUFinal.ForeColor = Color.Black;
             lblUFinal.Location = new Point(1089, 103);
             lblUFinal.Name = "lblUFinal";
             lblUFinal.Size = new Size(263, 36);
@@ -569,9 +564,9 @@ namespace HM_19MB_Demo
             bottomPanel.Controls.Add(btnCalculate);
             bottomPanel.Controls.Add(btnSaveToDb);
             bottomPanel.Dock = DockStyle.Fill;
-            bottomPanel.Location = new Point(13, 1032);
+            bottomPanel.Location = new Point(13, 1033);
             bottomPanel.Name = "bottomPanel";
-            bottomPanel.Size = new Size(1374, 55);
+            bottomPanel.Size = new Size(1374, 54);
             bottomPanel.TabIndex = 4;
             // 
             // btnCalculate

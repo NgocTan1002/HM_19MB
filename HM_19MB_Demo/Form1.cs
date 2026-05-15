@@ -13,8 +13,13 @@ namespace HM_19MB_Demo
     {
         // ── Serial ───────────────────────────────────────────────────────────
         private readonly SerialReader _serialReader = new SerialReader();
-        private readonly FakeDataGenerator _fakeDataGenerator = new FakeDataGenerator();
         private MeasurementBlock? _lastBlock;
+        private DateTime _lastDataReceivedTime = DateTime.MinValue;
+
+        // ── Connection Health Indicator ──────────────────────────────────────
+        private HealthDotPanel? _pnlHealthDot;
+        private Label? _lblLastDataAge;
+        private System.Windows.Forms.Timer? _healthTimer;
 
         // ── Chart history ────────────────────────────────────────────────────
         private const int MaxChartPoints = 720;
@@ -83,16 +88,15 @@ namespace HM_19MB_Demo
             _serialReader.BlockReceived += SerialReader_BlockReceived;
             _serialReader.ErrorOccurred += SerialReader_ErrorOccurred;
 
-            _fakeDataGenerator.BlockReceived += SerialReader_BlockReceived;
-            _fakeDataGenerator.ErrorOccurred += SerialReader_ErrorOccurred;
-
             _btnConnect.Click += BtnConnect_Click;
-            _btnSave.Click += BtnSave_Click;
             _btnExport.Click += BtnExport_Click;
             _btnUncertainty.Click += BtnUncertainty_Click;
 
             // Điều chỉnh lại chiều cao các dòng khi resize
             _grid.SizeChanged += (s, e) => AdjustRowHeights();
+
+            // ── Initialize Connection Health Indicator ───────────────────────
+            InitializeHealthIndicator();
 
             this.Load += Form1_Load;
             this.FormClosing += async (_, e) =>
@@ -103,17 +107,92 @@ namespace HM_19MB_Demo
                     e.Cancel = true;
                     await SaveAllPendingBeforeCloseAsync();
                     _autoSaveTimer?.Dispose();
+                    _healthTimer?.Dispose();
                     _serialReader.Dispose();
-                    _fakeDataGenerator.Dispose();
                     Application.Exit();
                 }
                 else
                 {
                     _autoSaveTimer?.Dispose();
+                    _healthTimer?.Dispose();
                     _serialReader.Dispose();
-                    _fakeDataGenerator.Dispose();
                 }
             };
+        }
+
+        // ── Connection Health Indicator ──────────────────────────────────────
+        private void InitializeHealthIndicator()
+        {
+            // Tạo health dot panel
+            _pnlHealthDot = new HealthDotPanel
+            {
+                Width = 16,
+                Height = 16,
+                DotColor = Color.Red,
+                Margin = new Padding(18, 12, 8, 0)
+            };
+
+            // Tạo label hiển thị thời gian nhận dữ liệu cuối
+            _lblLastDataAge = new Label
+            {
+                AutoSize = true,
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
+                ForeColor = Color.Gray,
+                Text = "Không có dữ liệu",
+                Margin = new Padding(0, 13, 0, 0),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            // Thêm vào bottomFlow (sau _lblStatus)
+            int statusIndex = bottomFlow.Controls.IndexOf(_lblStatus);
+            if (statusIndex >= 0)
+            {
+                bottomFlow.Controls.Add(_pnlHealthDot);
+                bottomFlow.Controls.Add(_lblLastDataAge);
+                bottomFlow.Controls.SetChildIndex(_pnlHealthDot, statusIndex + 1);
+                bottomFlow.Controls.SetChildIndex(_lblLastDataAge, statusIndex + 2);
+            }
+
+            // Tạo timer để cập nhật health status
+            _healthTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 5000 // 5 giây
+            };
+            _healthTimer.Tick += HealthTimer_Tick;
+        }
+
+        private void HealthTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_lastBlock == null || _lastDataReceivedTime == DateTime.MinValue)
+            {
+                // Chưa có dữ liệu
+                if (_pnlHealthDot != null) _pnlHealthDot.DotColor = Color.Red;
+                if (_lblLastDataAge != null) _lblLastDataAge.Text = "Không có dữ liệu";
+                return;
+            }
+
+            // Tính khoảng cách thời gian từ lần nhận cuối (dùng thời gian máy tính, không phải thiết bị)
+            var timeSinceLastData = DateTime.Now - _lastDataReceivedTime;
+            int secondsAgo = (int)timeSinceLastData.TotalSeconds;
+
+            if (secondsAgo < 10)
+            {
+                // < 10s → xanh lá, "Nhận: vừa xong"
+                if (_pnlHealthDot != null) _pnlHealthDot.DotColor = Color.LimeGreen;
+                if (_lblLastDataAge != null) _lblLastDataAge.Text = "Nhận: vừa xong";
+            }
+            else if (secondsAgo <= 60)
+            {
+                // 10s-60s → vàng, "Nhận: Ns trước"
+                if (_pnlHealthDot != null) _pnlHealthDot.DotColor = Color.Gold;
+                if (_lblLastDataAge != null) _lblLastDataAge.Text = $"Nhận: {secondsAgo}s trước";
+            }
+            else
+            {
+                // > 60s → đỏ, "Không có dữ liệu"
+                if (_pnlHealthDot != null) _pnlHealthDot.DotColor = Color.Red;
+                if (_lblLastDataAge != null) _lblLastDataAge.Text = "Không có dữ liệu";
+            }
         }
 
         // ── Serial events ─────────────────────────────────────────────────────
@@ -122,7 +201,7 @@ namespace HM_19MB_Demo
             if (InvokeRequired) { Invoke(new Action(() => SerialReader_BlockReceived(sender, block))); return; }
 
             _lastBlock = block;
-            _btnSave.Enabled = true;
+            _lastDataReceivedTime = DateTime.Now; // Lưu thời gian nhận dữ liệu thực tế
 
             // Thêm vào hàng đợi để lưu tự động (nếu bật)
             if (_autoSaveEnabled)
@@ -133,7 +212,7 @@ namespace HM_19MB_Demo
             UpdateGrid(block);
             UpdateChart(block);
             _lblLastReceived.Text = $"Lần nhận cuối: {block.Timestamp:HH:mm dd/MM/yyyy}  |  Thiết bị: {block.DeviceId}";
-            _lblStatus.Text = $"Đang kết nối — nhận lúc {DateTime.Now:HH:mm}";
+            _lblStatus.Text = $"Đã kết nối — nhận lúc {DateTime.Now:HH:mm}";
         }
 
         private void SerialReader_ErrorOccurred(object? sender, string msg)
@@ -148,10 +227,20 @@ namespace HM_19MB_Demo
         {
             if (_serialReader.IsConnected)
             {
-                try { _serialReader.Disconnect(); } catch { }
+                try { _serialReader.Disconnect(); } 
+                catch (Exception ex) 
+                { 
+                    AppLogger.Warning("Form1", "Error disconnecting serial port", ex);
+                }
                 _btnConnect.Text = "Kết nối";
                 _lblStatus.Text = "Đã ngắt kết nối";
                 _lblStatus.ForeColor = Color.DarkRed;
+                
+                // Dừng health timer khi ngắt kết nối
+                _healthTimer?.Stop();
+                _lastDataReceivedTime = DateTime.MinValue;
+                if (_pnlHealthDot != null) _pnlHealthDot.DotColor = Color.Red;
+                if (_lblLastDataAge != null) _lblLastDataAge.Text = "Không có dữ liệu";
             }
             else
             {
@@ -167,6 +256,9 @@ namespace HM_19MB_Demo
                     _btnConnect.Text = "Ngắt kết nối";
                     _lblStatus.Text = $"Đã kết nối {portName} @ 9600";
                     _lblStatus.ForeColor = Color.DarkGreen;
+                    
+                    // Bắt đầu health timer khi kết nối
+                    _healthTimer?.Start();
                 }
                 catch (Exception ex)
                 {
@@ -177,19 +269,6 @@ namespace HM_19MB_Demo
         }
 
 
-        private async void BtnSave_Click(object? sender, EventArgs e)
-        {
-            _btnSave.Enabled = false;
-            try
-            {
-                await SaveCurrentRecordAsync();
-            }
-            finally
-            {
-                _btnSave.Enabled = _lastBlock != null;
-            }
-        }
-
         private async void BtnExport_Click(object? sender, EventArgs e)
         {
             // Kiểm tra có session không
@@ -197,7 +276,7 @@ namespace HM_19MB_Demo
             {
                 MessageBox.Show(
                     "Chưa có dữ liệu để xuất báo cáo.\n" +
-                    "Vui lòng kết nối thiết bị hoặc bật Fake Data để bắt đầu đo.",
+                    "Vui lòng kết nối thiết bị để bắt đầu đo.",
                     "Thông báo",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);

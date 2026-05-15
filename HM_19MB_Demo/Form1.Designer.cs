@@ -70,10 +70,9 @@ namespace HM_19MB_Demo
             bottomFlow = new FlowLayoutPanel();
             _cmbPort = new ComboBox();
             lblBaudRate = new Label();
-            this._btnConnect = new Button();
-            this._btnSave = new Button();
-            this._btnExport = new Button();
-            this._btnUncertainty = new Button();
+            _btnConnect = new Button();
+            _btnExport = new Button();
+            _btnUncertainty = new Button();
             _lblStatus = new Label();
             mainLayout.SuspendLayout();
             metadataPanel.SuspendLayout();
@@ -512,11 +511,11 @@ namespace HM_19MB_Demo
             _chkHumidity.Cursor = Cursors.Hand;
             _chkHumidity.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             _chkHumidity.ForeColor = Color.Black;
-            _chkHumidity.Location = new Point(145, 8);
+            _chkHumidity.Location = new Point(182, 8);
             _chkHumidity.Name = "_chkHumidity";
-            _chkHumidity.Size = new Size(77, 24);
+            _chkHumidity.Size = new Size(172, 24);
             _chkHumidity.TabIndex = 2;
-            _chkHumidity.Text = "Độ ẩm";
+            _chkHumidity.Text = "Thiết bị đo nhiệt ẩm";
             _chkHumidity.CheckedChanged += _chkDisplayFilter_CheckedChanged;
             // 
             // _chkTemperature
@@ -529,9 +528,9 @@ namespace HM_19MB_Demo
             _chkTemperature.ForeColor = Color.Black;
             _chkTemperature.Location = new Point(8, 8);
             _chkTemperature.Name = "_chkTemperature";
-            _chkTemperature.Size = new Size(92, 24);
+            _chkTemperature.Size = new Size(168, 24);
             _chkTemperature.TabIndex = 0;
-            _chkTemperature.Text = "Nhiệt độ";
+            _chkTemperature.Text = "Thiết bị đo nhiệt độ";
             _chkTemperature.CheckedChanged += _chkDisplayFilter_CheckedChanged;
             // 
             // gridLayout
@@ -604,10 +603,9 @@ namespace HM_19MB_Demo
             // 
             bottomFlow.Controls.Add(_cmbPort);
             bottomFlow.Controls.Add(lblBaudRate);
-            bottomFlow.Controls.Add(this._btnConnect);
-            bottomFlow.Controls.Add(this._btnSave);
-            bottomFlow.Controls.Add(this._btnExport);
-            bottomFlow.Controls.Add(this._btnUncertainty);
+            bottomFlow.Controls.Add(_btnConnect);
+            bottomFlow.Controls.Add(_btnExport);
+            bottomFlow.Controls.Add(_btnUncertainty);
             bottomFlow.Controls.Add(_lblStatus);
             bottomFlow.Dock = DockStyle.Fill;
             bottomFlow.Location = new Point(5, 5);
@@ -641,52 +639,41 @@ namespace HM_19MB_Demo
             // 
             // _btnConnect
             // 
-            this._btnConnect.Location = new Point(293, 4);
-            this._btnConnect.Margin = new Padding(3, 4, 3, 4);
-            this._btnConnect.Name = "_btnConnect";
-            this._btnConnect.Size = new Size(126, 40);
-            this._btnConnect.TabIndex = 2;
-            this._btnConnect.Text = "Kết nối";
-            this._btnConnect.UseVisualStyleBackColor = true;
-            // 
-            // _btnSave
-            // 
-            this._btnSave.Enabled = false;
-            this._btnSave.Location = new Point(425, 4);
-            this._btnSave.Margin = new Padding(3, 4, 3, 4);
-            this._btnSave.Name = "_btnSave";
-            this._btnSave.Size = new Size(126, 40);
-            this._btnSave.TabIndex = 3;
-            this._btnSave.Text = "Lưu dữ liệu";
-            this._btnSave.UseVisualStyleBackColor = true;
+            _btnConnect.Location = new Point(293, 4);
+            _btnConnect.Margin = new Padding(3, 4, 3, 4);
+            _btnConnect.Name = "_btnConnect";
+            _btnConnect.Size = new Size(130, 37);
+            _btnConnect.TabIndex = 2;
+            _btnConnect.Text = "Kết nối";
+            _btnConnect.UseVisualStyleBackColor = true;
             // 
             // _btnExport
             // 
-            this._btnExport.Location = new Point(557, 4);
-            this._btnExport.Margin = new Padding(3, 4, 3, 4);
-            this._btnExport.Name = "_btnExport";
-            this._btnExport.Size = new Size(137, 40);
-            this._btnExport.TabIndex = 4;
-            this._btnExport.Text = "Xuất báo cáo";
-            this._btnExport.UseVisualStyleBackColor = true;
+            _btnExport.Location = new Point(429, 4);
+            _btnExport.Margin = new Padding(3, 4, 3, 4);
+            _btnExport.Name = "_btnExport";
+            _btnExport.Size = new Size(193, 37);
+            _btnExport.TabIndex = 4;
+            _btnExport.Text = "Xuất biên bản hiệu chuẩn";
+            _btnExport.UseVisualStyleBackColor = true;
             // 
             // _btnUncertainty
             // 
-            this._btnUncertainty.BackColor = Color.FromArgb(230, 240, 255);
-            this._btnUncertainty.Location = new Point(700, 4);
-            this._btnUncertainty.Margin = new Padding(3, 4, 3, 4);
-            this._btnUncertainty.Name = "_btnUncertainty";
-            this._btnUncertainty.Size = new Size(315, 40);
-            this._btnUncertainty.TabIndex = 6;
-            this._btnUncertainty.Text = "Tính số hiệu chính và độ không đảm bảo đo";
-            this._btnUncertainty.UseVisualStyleBackColor = false;
+            _btnUncertainty.BackColor = Color.White;
+            _btnUncertainty.Location = new Point(628, 4);
+            _btnUncertainty.Margin = new Padding(3, 4, 3, 4);
+            _btnUncertainty.Name = "_btnUncertainty";
+            _btnUncertainty.Size = new Size(315, 37);
+            _btnUncertainty.TabIndex = 6;
+            _btnUncertainty.Text = "Tính số hiệu chính và độ không đảm bảo đo";
+            _btnUncertainty.UseVisualStyleBackColor = false;
             // 
             // _lblStatus
             // 
             _lblStatus.AutoSize = true;
             _lblStatus.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             _lblStatus.ForeColor = Color.DarkRed;
-            _lblStatus.Location = new Point(1036, 11);
+            _lblStatus.Location = new Point(964, 11);
             _lblStatus.Margin = new Padding(18, 11, 0, 0);
             _lblStatus.Name = "_lblStatus";
             _lblStatus.Size = new Size(97, 20);
@@ -886,7 +873,6 @@ namespace HM_19MB_Demo
         private SplitContainer _split;
         private ComboBox _cmbPort;
         private Button _btnConnect;
-        private Button _btnSave;
         private Button _btnExport;
         private Button _btnUncertainty;
         private Label _lblStatus;

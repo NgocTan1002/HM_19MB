@@ -28,13 +28,6 @@ namespace HM_19MB_Demo
             btnApplyConfig.Click += BtnApplyConfig_Click;
             btnCalculate.Click += BtnCalculate_Click;
             btnSaveToDb.Click += BtnSaveToDb_Click;
-            
-            gridMeasurements.CellValueChanged += GridMeasurements_CellValueChanged;
-            gridStandards.CellValueChanged += GridStandards_CellValueChanged;
-            gridIndicator.CellValueChanged += GridIndicator_CellValueChanged;
-            
-            rbUseU.CheckedChanged += (s, e) => RecalculateAll();
-            rbUseDelta.CheckedChanged += (s, e) => RecalculateAll();
         }
 
         private void BtnApplyConfig_Click(object? sender, EventArgs e)
@@ -132,7 +125,6 @@ namespace HM_19MB_Demo
             rowCorrection.Cells[_j + 1].ReadOnly = true;
             gridStandards.Rows.Add(rowCorrection);
 
-
             // --- Khởi tạo gridIndicator ---
             gridIndicator.Columns.Clear();
             gridIndicator.Rows.Clear();
@@ -183,7 +175,6 @@ namespace HM_19MB_Demo
             if (e.RowIndex < 0 || e.ColumnIndex < 1) return;
             if (e.RowIndex >= _n) return; // Không tính cho hàng tổng kết
 
-            RecalculateAll();
         }
 
         private void GridStandards_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
@@ -191,15 +182,12 @@ namespace HM_19MB_Demo
             if (e.RowIndex < 0 || e.ColumnIndex < 1) return;
             if (e.RowIndex >= 3) return; // Chỉ cho sửa 3 dòng đầu (U, ∂, ∂t_j)
             if (e.ColumnIndex == _j + 1) return; // Không cho sửa cột Max
-
-            RecalculateAll();
         }
 
         private void GridIndicator_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 1) return;
             if (e.RowIndex >= 2) return; // dòng 2 (t̄_tn) readonly
-            RecalculateAll();
         }
 
         private void RecalculateAll()
@@ -281,9 +269,6 @@ namespace HM_19MB_Demo
                 gridStandards.Rows[0].Cells[_j + 1].Value = uMax.ToString("F4"); // Max của U
                 gridStandards.Rows[1].Cells[_j + 1].Value = deltaMax.ToString("F4"); // Max của ∂
 
-                // Cập nhật dòng Max (dòng 3)
-                gridStandards.Rows[3].Cells[_j + 1].Value = Math.Max(uMax, deltaMax).ToString("F4");
-
                 // Tính uch2
                 double uch2 = rbUseU.Checked
                     ? UncertaintyCalculator.CalculateTypeBFromU(uMax)
@@ -349,8 +334,6 @@ namespace HM_19MB_Demo
         private void BtnCalculate_Click(object? sender, EventArgs e)
         {
             RecalculateAll();
-            MessageBox.Show("Đã tính toán xong!", "Thông báo",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void BtnImportCSV_Click(object? sender, EventArgs e)
@@ -403,7 +386,6 @@ namespace HM_19MB_Demo
                 }
             }
 
-            RecalculateAll();
         }
 
         private void BtnExportCSV_Click(object? sender, EventArgs e)
