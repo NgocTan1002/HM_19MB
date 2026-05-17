@@ -273,25 +273,22 @@ namespace HM_19MB_Demo
 
         private async void BtnExport_Click(object? sender, EventArgs e)
         {
-            // Kiểm tra có session không
             if (_currentSessionId == null)
             {
                 MessageBox.Show(
                     "Chưa có dữ liệu để xuất báo cáo.\n" +
-                    "Vui lòng kết nối thiết bị để bắt đầu đo.",
+                    "Vui lòng kết nối thiết bị và thêm ít nhất 1 điểm kiểm tra.",
                     "Thông báo",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
                 return;
             }
 
-            // Lưu tất cả dữ liệu chưa lưu trước
+            // Lưu dữ liệu đo thô chưa lưu
             try
             {
                 if (_pendingRecords.Count > 0)
-                {
                     await SavePendingRecordsAsync();
-                }
             }
             catch (Exception ex)
             {
@@ -300,136 +297,65 @@ namespace HM_19MB_Demo
                 return;
             }
 
-            // Hỏi người dùng chọn định dạng
-            using var formatDialog = new Form
+            // Chọn thư mục lưu
+            using var folderDialog = new FolderBrowserDialog
             {
-                Text = "Chọn định dạng báo cáo",
-                Size = new Size(400, 200),
-                StartPosition = FormStartPosition.CenterParent,
-                FormBorderStyle = FormBorderStyle.FixedDialog,
-                MaximizeBox = false,
-                MinimizeBox = false
+                Description = "Chọn thư mục lưu báo cáo (sẽ tạo 2 file: Biên bản + Giấy chứng nhận)",
+                UseDescriptionForTitle = true
             };
 
-            var panel = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.TopDown,
-                Padding = new Padding(20)
-            };
-
-            var lblTitle = new Label
-            {
-                Text = "Chọn định dạng file báo cáo:",
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                AutoSize = true,
-                Margin = new Padding(0, 0, 0, 15)
-            };
-            panel.Controls.Add(lblTitle);
-
-            var btnWord = new Button
-            {
-                Text = "📄 Word (.docx) - Giấy chứng nhận hiệu chuẩn",
-                Width = 340,
-                Height = 40,
-                Tag = "word"
-            };
-            btnWord.Click += (s, ev) => { formatDialog.Tag = "word"; formatDialog.DialogResult = DialogResult.OK; };
-            panel.Controls.Add(btnWord);
-
-            var btnCsv = new Button
-            {
-                Text = "📊 CSV (.csv) - Dữ liệu chi tiết",
-                Width = 340,
-                Height = 40,
-                Tag = "csv",
-                Margin = new Padding(0, 10, 0, 0)
-            };
-            btnCsv.Click += (s, ev) => { formatDialog.Tag = "csv"; formatDialog.DialogResult = DialogResult.OK; };
-            panel.Controls.Add(btnCsv);
-
-            formatDialog.Controls.Add(panel);
-
-            if (formatDialog.ShowDialog() != DialogResult.OK)
+            if (folderDialog.ShowDialog() != DialogResult.OK)
                 return;
 
-            string format = formatDialog.Tag?.ToString() ?? "csv";
-
-            // Chọn nơi lưu file
-            using var saveDialog = new SaveFileDialog
+            try
             {
-                Title = "Lưu báo cáo hiệu chuẩn"
-            };
+                _btnExport.Enabled = false;
+                _lblStatus.Text = "Đang tạo báo cáo...";
+                _lblStatus.ForeColor = Color.DarkOrange;
 
-            if (format == "word")
-            {
-                saveDialog.Filter = "Word Documents (*.docx)|*.docx|All Files (*.*)|*.*";
-                saveDialog.DefaultExt = "docx";
-                saveDialog.FileName = $"GiayChungNhanHieuChuan_{DateTime.Now:yyyyMMdd_HHmmss}.docx";
+                var (pathBienBan, pathGiayChungNhan) = await WordReportGenerator.ExportBothAsync(
+                    _currentSessionId.Value,
+                    folderDialog.SelectedPath);
+
+                _lblStatus.Text = "Đã xuất báo cáo thành công!";
+                _lblStatus.ForeColor = Color.DarkGreen;
+
+                var result = MessageBox.Show(
+                    $"Đã xuất 2 file báo cáo thành công!\n\n" +
+                    $"📄 Biên bản hiệu chuẩn:\n{pathBienBan}\n\n" +
+                    $"📄 Giấy chứng nhận hiệu chuẩn:\n{pathGiayChungNhan}\n\n" +
+                    $"Bạn có muốn mở thư mục không?",
+                    "Thành công",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Information);
+
+                if (result == DialogResult.Yes)
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = folderDialog.SelectedPath,
+                        UseShellExecute = true
+                    });
+                }
             }
-            else
+            catch (InvalidOperationException ioex)
             {
-                saveDialog.Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
-                saveDialog.DefaultExt = "csv";
-                saveDialog.FileName = $"BaoCaoHieuChuan_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                // Ví dụ: chưa có điểm kiểm tra nào
+                MessageBox.Show(ioex.Message, "Thông báo",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _lblStatus.Text = ioex.Message;
+                _lblStatus.ForeColor = Color.DarkOrange;
             }
-
-            if (saveDialog.ShowDialog() == DialogResult.OK)
+            catch (Exception ex)
             {
-                try
-                {
-                    _btnExport.Enabled = false;
-                    _lblStatus.Text = "Đang tạo báo cáo...";
-                    _lblStatus.ForeColor = Color.DarkOrange;
-
-                    string outputPath;
-                    
-                    // Xuất báo cáo theo định dạng
-                    if (format == "word")
-                    {
-                        outputPath = await WordReportGenerator.ExportToWordAsync(
-                            _currentSessionId.Value,
-                            saveDialog.FileName);
-                    }
-                    else
-                    {
-                        outputPath = await ReportGenerator.ExportToExcelAsync(
-                            _currentSessionId.Value,
-                            saveDialog.FileName);
-                    }
-
-                    _lblStatus.Text = "Đã xuất báo cáo thành công!";
-                    _lblStatus.ForeColor = Color.DarkGreen;
-
-                    var result = MessageBox.Show(
-                        $"Đã xuất báo cáo thành công!\n\n" +
-                        $"File: {outputPath}\n\n" +
-                        $"Bạn có muốn mở file ngay không?",
-                        "Thành công",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Information);
-
-                    if (result == DialogResult.Yes)
-                    {
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = outputPath,
-                            UseShellExecute = true
-                        });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Lỗi khi xuất báo cáo:\n{ex.Message}", "Lỗi",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                    _lblStatus.Text = $"Lỗi xuất báo cáo: {ex.Message}";
-                    _lblStatus.ForeColor = Color.Red;
-                }
-                finally
-                {
-                    _btnExport.Enabled = true;
-                }
+                MessageBox.Show($"Lỗi khi xuất báo cáo:\n{ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _lblStatus.Text = $"Lỗi xuất báo cáo: {ex.Message}";
+                _lblStatus.ForeColor = Color.Red;
+            }
+            finally
+            {
+                _btnExport.Enabled = true;
             }
         }
 
@@ -454,7 +380,11 @@ namespace HM_19MB_Demo
             int phienId = _currentSessionId.Value;
             var uncertaintyForm = new UncertaintyCalculationForm(
                 phienId,
-                row => HandleCalibrationResultAdded(phienId, row));
+                row =>
+                {
+                    OnCalibrationResultAdded(row);
+                    return Task.CompletedTask;
+                });
             uncertaintyForm.Show(this);
         }
 
