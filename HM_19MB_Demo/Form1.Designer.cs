@@ -690,7 +690,7 @@ namespace HM_19MB_Demo
             // 
             // BtnShowGuide
             // 
-            BtnShowGuide.Location = new Point(603, 5);
+            BtnShowGuide.Location = new Point(745, 5);
             BtnShowGuide.Name = "BtnShowGuide";
             BtnShowGuide.Size = new Size(179, 29);
             BtnShowGuide.TabIndex = 1;
@@ -701,16 +701,14 @@ namespace HM_19MB_Demo
             // _chkHumidity
             // 
             _chkHumidity.AutoSize = true;
-            _chkHumidity.Checked = true;
-            _chkHumidity.CheckState = CheckState.Checked;
             _chkHumidity.Cursor = Cursors.Hand;
             _chkHumidity.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             _chkHumidity.ForeColor = Color.Black;
             _chkHumidity.Location = new Point(182, 8);
             _chkHumidity.Name = "_chkHumidity";
-            _chkHumidity.Size = new Size(172, 24);
+            _chkHumidity.Size = new Size(140, 24);
             _chkHumidity.TabIndex = 2;
-            _chkHumidity.Text = "Thiết bị đo nhiệt ẩm";
+            _chkHumidity.Text = "Đo thêm độ ẩm";
             _chkHumidity.CheckedChanged += _chkDisplayFilter_CheckedChanged;
             // 
             // _chkTemperature
@@ -719,13 +717,14 @@ namespace HM_19MB_Demo
             _chkTemperature.Checked = true;
             _chkTemperature.CheckState = CheckState.Checked;
             _chkTemperature.Cursor = Cursors.Hand;
+            _chkTemperature.Enabled = false;
             _chkTemperature.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             _chkTemperature.ForeColor = Color.Black;
             _chkTemperature.Location = new Point(8, 8);
             _chkTemperature.Name = "_chkTemperature";
-            _chkTemperature.Size = new Size(168, 24);
+            _chkTemperature.Size = new Size(113, 24);
             _chkTemperature.TabIndex = 0;
-            _chkTemperature.Text = "Thiết bị đo nhiệt độ";
+            _chkTemperature.Text = "Đo nhiệt độ";
             _chkTemperature.CheckedChanged += _chkDisplayFilter_CheckedChanged;
             // 
             // gridLayout

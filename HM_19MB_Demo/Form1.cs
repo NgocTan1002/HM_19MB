@@ -31,6 +31,7 @@ namespace HM_19MB_Demo
 
         // ── Session state ────────────────────────────────────────────────────
         private int? _currentSessionId = null;
+        private bool IsHumidityMeasurementEnabled => _chkHumidity.Checked;
 
         // ── Probe colors (referenced by Designer) ────────────────────────────
         private static readonly Color[] ProbeColors =
@@ -273,22 +274,21 @@ namespace HM_19MB_Demo
 
         private async void BtnExport_Click(object? sender, EventArgs e)
         {
-            if (_currentSessionId == null)
-            {
-                MessageBox.Show(
-                    "Chưa có dữ liệu để xuất báo cáo.\n" +
-                    "Vui lòng kết nối thiết bị và thêm ít nhất 1 điểm kiểm tra.",
-                    "Thông báo",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return;
-            }
-
             // Lưu dữ liệu đo thô chưa lưu
             try
             {
+                await DatabaseService.EnsureSchemaAsync();
+
+                if (_currentSessionId == null)
+                {
+                    _currentSessionId = await DatabaseService.TaoPhienMoiAsync(CollectMetadata());
+                    OnSessionIdAssigned();
+                }
+
                 if (_pendingRecords.Count > 0)
                     await SavePendingRecordsAsync();
+
+                await EnsureCalibrationGridSavedAsync();
             }
             catch (Exception ex)
             {
@@ -310,8 +310,12 @@ namespace HM_19MB_Demo
             try
             {
                 _btnExport.Enabled = false;
-                _lblStatus.Text = "Đang tạo báo cáo...";
+                _lblStatus.Text = "Đang cập nhật thông tin phiên...";
                 _lblStatus.ForeColor = Color.DarkOrange;
+
+                await DatabaseService.CapNhatPhienAsync(_currentSessionId.Value, CollectMetadata());
+
+                _lblStatus.Text = "Đang tạo báo cáo...";
 
                 var (pathBienBan, pathGiayChungNhan) = await WordReportGenerator.ExportBothAsync(
                     _currentSessionId.Value,
@@ -421,13 +425,13 @@ namespace HM_19MB_Demo
         {
             string t = block.Timestamp.ToString("HH:mm", CultureInfo.InvariantCulture);
 
-            bool showTemp = _chkTemperature.Checked;
-            bool showHum = _chkHumidity.Checked;
+            const bool showTemp = true;
+            bool showHum = IsHumidityMeasurementEnabled;
 
             for (int i = 0; i < 10; i++)
             {
                 bool hasTemp = i < block.ProbeCount && !float.IsNaN(block.ProbeTemperatures[i]);
-                bool hasHum = i < block.ProbeCount && !float.IsNaN(block.ProbeHumidities[i]);
+                bool hasHum = showHum && i < block.ProbeCount && !float.IsNaN(block.ProbeHumidities[i]);
                 _grid.Rows[i].Cells["NhietDo"].Value = showTemp
                     ? hasTemp ? block.ProbeTemperatures[i].ToString("F1", CultureInfo.InvariantCulture) : "---"
                     : "---";
@@ -461,6 +465,9 @@ namespace HM_19MB_Demo
             _timeLabels.Add(label);
             if (_timeLabels.Count > MaxChartPoints) _timeLabels.RemoveAt(0);
 
+            const bool showTemp = true;
+            bool showHum = IsHumidityMeasurementEnabled;
+
             // Lưu lịch sử
             for (int i = 0; i < 10; i++)
             {
@@ -470,7 +477,7 @@ namespace HM_19MB_Demo
                     if (_probeHistory[i].Count > MaxChartPoints) _probeHistory[i].RemoveAt(0);
                 }
 
-                if (i < block.ProbeCount && !float.IsNaN(block.ProbeHumidities[i]))
+                if (showHum && i < block.ProbeCount && !float.IsNaN(block.ProbeHumidities[i]))
                 {
                     _humidityHistory[i].Add(block.ProbeHumidities[i]);
                     if (_humidityHistory[i].Count > MaxChartPoints) _humidityHistory[i].RemoveAt(0);
@@ -479,11 +486,13 @@ namespace HM_19MB_Demo
             _avgHistory.Add(block.AvgTemperature);
             if (_avgHistory.Count > MaxChartPoints) _avgHistory.RemoveAt(0);
 
-            _avgHumidityHistory.Add(block.AvgHumidity);
-            if (_avgHumidityHistory.Count > MaxChartPoints) _avgHumidityHistory.RemoveAt(0);
+            if (showHum && !float.IsNaN(block.AvgHumidity))
+            {
+                _avgHumidityHistory.Add(block.AvgHumidity);
+                if (_avgHumidityHistory.Count > MaxChartPoints) _avgHumidityHistory.RemoveAt(0);
+            }
 
             // ── Vẽ series nhiệt độ (index 0–10) ─────────────────────────────────
-            bool showTemp = _chkTemperature.Checked;
             for (int i = 0; i < 10; i++)
             {
                 _chart.Series[i].Points.Clear();
@@ -504,7 +513,6 @@ namespace HM_19MB_Demo
             }
 
             // ── Vẽ series độ ẩm (index 11–21) ───────────────────────────────────
-            bool showHum = _chkHumidity.Checked;
             for (int i = 0; i < 10; i++)
             {
                 var s = _chart.Series[$"ĐA Đầu đo {i + 1}"];
@@ -530,8 +538,8 @@ namespace HM_19MB_Demo
 
         private void RedrawChart()
         {
-            bool showTemp = _chkTemperature.Checked;
-            bool showHum = _chkHumidity.Checked;
+            const bool showTemp = true;
+            bool showHum = IsHumidityMeasurementEnabled;
 
             // Vẽ lại series nhiệt độ
             for (int i = 0; i < 10; i++)
@@ -632,8 +640,11 @@ namespace HM_19MB_Demo
 
         private void _chkDisplayFilter_CheckedChanged(object sender, EventArgs e)
         {
-            bool showTemp = _chkTemperature.Checked;
-            bool showHum = _chkHumidity.Checked;
+            if (!_chkTemperature.Checked)
+                _chkTemperature.Checked = true;
+
+            const bool showTemp = true;
+            bool showHum = IsHumidityMeasurementEnabled;
 
             // ── Cập nhật cột trong bảng ─────────────────────────────────
             _grid.Columns["NhietDo"].Visible = showTemp;

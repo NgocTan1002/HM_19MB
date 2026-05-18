@@ -284,9 +284,6 @@ namespace HM_19MB_Demo
             // Tag dòng với Id DB để xoá sau này
             _gridCalibration.Rows[rowIdx].Tag = row;
 
-            // Highlight dòng vừa thêm
-            _gridCalibration.Rows[rowIdx].DefaultCellStyle.BackColor = Color.FromArgb(198, 239, 206);
-
             // Scroll to bottom
             _gridCalibration.FirstDisplayedScrollingRowIndex = rowIdx;
         }
@@ -385,6 +382,32 @@ namespace HM_19MB_Demo
             _lblCalibStatus.Text =
                 $"Đã tải {rows.Count} điểm kiểm tra từ database.";
             _lblCalibStatus.ForeColor = Color.DarkGreen;
+        }
+
+        internal async Task EnsureCalibrationGridSavedAsync()
+        {
+            if (!_currentSessionId.HasValue)
+                return;
+
+            await DatabaseService.EnsureSchemaAsync();
+
+            int savedCount = 0;
+            foreach (DataGridViewRow gridRow in _gridCalibration.Rows)
+            {
+                if (gridRow.Tag is not CalibrationResultRow row)
+                    continue;
+
+                row.STT = gridRow.Index + 1;
+                row.Id = await DatabaseService.LuuKetQuaHieuChuanAsync(_currentSessionId.Value, row);
+                savedCount++;
+            }
+
+            if (savedCount > 0)
+            {
+                _lblCalibStatus.Text =
+                    $"Đã đồng bộ {savedCount} điểm kiểm tra trước khi xuất báo cáo.";
+                _lblCalibStatus.ForeColor = Color.DarkGreen;
+            }
         }
 
         // ── Public helper cho Form1 gọi khi session thay đổi ─────────────

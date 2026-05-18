@@ -351,6 +351,7 @@ namespace HM_19MB_Demo
             try
             {
                 // ── Tính từng kênh: t̄j, Sj, uch1,j ─────────────────────────
+                double[] channelMeans = new double[_j];
                 for (int j = 0; j < _j; j++)
                 {
                     double[] values = new double[_n];
@@ -358,6 +359,7 @@ namespace HM_19MB_Demo
                         double.TryParse(gridMeasurements.Rows[i].Cells[j + 1].Value?.ToString(), out values[i]);
 
                     double mean = UncertaintyCalculator.CalculateMean(values);
+                    channelMeans[j] = mean;
                     double stdDev = UncertaintyCalculator.CalculateStandardDeviation(values, mean);
                     double uch1j = UncertaintyCalculator.CalculateTypeAUncertainty(stdDev, _n);
 
@@ -507,9 +509,10 @@ namespace HM_19MB_Demo
                     PhuongPhapB = rbUseU.Checked ? "U" : "Delta",
                 };
 
-                // Gán giá trị từng vị trí chuẩn (t̄_j đã hiệu chỉnh)
+                // Gán giá trị từng vị trí chuẩn: trung bình thô từng kênh, chưa cộng số hiệu chính.
+                // Các giá trị đã hiệu chỉnh vẫn dùng riêng cho tính t_ch, độ đồng đều và số hiệu chính.
                 for (int j = 0; j < _j && j < result.Kenh.Length; j++)
-                    result.Kenh[j] = channelCorrectedMeans[j];
+                    result.Kenh[j] = channelMeans[j];
 
                 _lastCalculatedResult = result;
                 btnAddToTable.Enabled = true;

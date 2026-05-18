@@ -114,8 +114,53 @@ namespace HM_19MB_Demo.Data
             return Convert.ToInt32(result);
         }
 
+        public static async Task CapNhatPhienAsync(int phienId, SessionMetadata meta)
+        {
+            await using var conn = new NpgsqlConnection(ConnectionString);
+            await conn.OpenAsync();
+
+            await using var cmd = new NpgsqlCommand(@"
+                UPDATE phien_hieu_chuan
+                SET ten_thiet_bi = @ten_thiet_bi,
+                    ky_hieu = @ky_hieu,
+                    so_hieu = @so_hieu,
+                    so_tem = @so_tem,
+                    noi_san_xuat = @noi_san_xuat,
+                    nam_san_xuat = @nam_san_xuat,
+                    don_vi_su_dung = @don_vi_su_dung,
+                    phuong_phap = @phuong_phap,
+                    ngay_hieu_chuan = @ngay_hieu_chuan,
+                    nhiet_do_moi_truong = @nhiet_do_moi_truong,
+                    do_am_tuong_doi = @do_am_tuong_doi,
+                    dac_tinh_ky_thuat = @dac_tinh_ky_thuat,
+                    thiet_bi_chuan = @thiet_bi_chuan
+                WHERE id = @id", conn);
+
+            cmd.Parameters.AddWithValue("@id", phienId);
+            cmd.Parameters.AddWithValue("@ten_thiet_bi", meta.TenThietBi);
+            cmd.Parameters.AddWithValue("@ky_hieu", meta.KyHieu);
+            cmd.Parameters.AddWithValue("@so_hieu", meta.SoHieu);
+            cmd.Parameters.AddWithValue("@so_tem", meta.SoTem);
+            cmd.Parameters.AddWithValue("@noi_san_xuat", meta.NoiSanXuat);
+            cmd.Parameters.AddWithValue("@nam_san_xuat", meta.NamSanXuat);
+            cmd.Parameters.AddWithValue("@don_vi_su_dung", meta.DonViSuDung);
+            cmd.Parameters.AddWithValue("@phuong_phap", meta.PhuongPhap);
+            cmd.Parameters.AddWithValue("@ngay_hieu_chuan", meta.NgayHieuChuan);
+            cmd.Parameters.AddWithValue("@nhiet_do_moi_truong", meta.NhietDoMoiTruong);
+            cmd.Parameters.AddWithValue("@do_am_tuong_doi", meta.DoAmTuongDoi);
+            cmd.Parameters.AddWithValue("@dac_tinh_ky_thuat", meta.DacTinhKyThuat);
+            cmd.Parameters.AddWithValue("@thiet_bi_chuan", meta.ThietBiChuan);
+
+            int affectedRows = await cmd.ExecuteNonQueryAsync();
+            if (affectedRows == 0)
+                throw new InvalidOperationException($"Không tìm thấy phiên hiệu chuẩn ID = {phienId} để cập nhật.");
+        }
+
         // Lưu 1 block đo
-        public static async Task<int> LuuKetQuaDoAsync(int phienId, MeasurementBlock block)
+        public static async Task<int> LuuKetQuaDoAsync(
+            int phienId,
+            MeasurementBlock block,
+            bool includeHumidity = true)
         {
             double?[] temps = new double?[10];
             double?[] hums = new double?[10];
@@ -124,13 +169,13 @@ namespace HM_19MB_Demo.Data
                 temps[i] = i < block.ProbeCount && !float.IsNaN(block.ProbeTemperatures[i])
                     ? block.ProbeTemperatures[i]
                     : null;
-                hums[i] = i < block.ProbeCount && !float.IsNaN(block.ProbeHumidities[i])
+                hums[i] = includeHumidity && i < block.ProbeCount && !float.IsNaN(block.ProbeHumidities[i])
                     ? block.ProbeHumidities[i]
                     : null;
             }
 
             object stabNhiet = TryParseFloat(block.StabilityTemperature, out float sn) ? sn : DBNull.Value;
-            object stabAm = TryParseFloat(block.StabilityHumidity, out float sa) ? sa : DBNull.Value;
+            object stabAm = includeHumidity && TryParseFloat(block.StabilityHumidity, out float sa) ? sa : DBNull.Value;
 
             await using var conn = new NpgsqlConnection(ConnectionString);
             await conn.OpenAsync();
@@ -145,9 +190,9 @@ namespace HM_19MB_Demo.Data
             cmd.Parameters.Add(new NpgsqlParameter("@nd", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Double) { Value = temps });
             cmd.Parameters.Add(new NpgsqlParameter("@da", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Double) { Value = hums });
             cmd.Parameters.AddWithValue("@ndtb", block.AvgTemperature);
-            cmd.Parameters.AddWithValue("@datb", float.IsNaN(block.AvgHumidity) ? (object)DBNull.Value : block.AvgHumidity);
+            cmd.Parameters.AddWithValue("@datb", includeHumidity && !float.IsNaN(block.AvgHumidity) ? block.AvgHumidity : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@ddnhiet", block.UniformityTemp);
-            cmd.Parameters.AddWithValue("@ddam", float.IsNaN(block.UniformityHumidity) ? (object)DBNull.Value : block.UniformityHumidity);
+            cmd.Parameters.AddWithValue("@ddam", includeHumidity && !float.IsNaN(block.UniformityHumidity) ? block.UniformityHumidity : (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@odnhiet", stabNhiet);
             cmd.Parameters.AddWithValue("@odam", stabAm);
 

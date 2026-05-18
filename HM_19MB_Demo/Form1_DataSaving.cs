@@ -13,12 +13,14 @@ namespace HM_19MB_Demo
     internal class PendingRecord
     {
         public MeasurementBlock Block { get; set; }
+        public bool IncludeHumidity { get; set; }
         public int RetryCount { get; set; }
         public DateTime FirstQueued { get; set; }
 
-        public PendingRecord(MeasurementBlock block)
+        public PendingRecord(MeasurementBlock block, bool includeHumidity)
         {
             Block = block;
+            IncludeHumidity = includeHumidity;
             RetryCount = 0;
             FirstQueued = DateTime.Now;
         }
@@ -134,7 +136,10 @@ namespace HM_19MB_Demo
                 int savedCount = 0;
                 foreach (var record in recordsToSave)
                 {
-                    await DatabaseService.LuuKetQuaDoAsync(_currentSessionId.Value, record.Block);
+                    await DatabaseService.LuuKetQuaDoAsync(
+                        _currentSessionId.Value,
+                        record.Block,
+                        record.IncludeHumidity);
                     savedCount++;
                 }
 
@@ -201,7 +206,7 @@ namespace HM_19MB_Demo
         {
             lock (_pendingLock)
             {
-                _pendingRecords.Add(new PendingRecord(block));
+                _pendingRecords.Add(new PendingRecord(block, IsHumidityMeasurementEnabled));
             }
 
             // Lưu ngay lập tức nếu auto-save bật
@@ -252,7 +257,10 @@ namespace HM_19MB_Demo
                 if (_currentSessionId == null)
                     _currentSessionId = await DatabaseService.TaoPhienMoiAsync(meta);
 
-                await DatabaseService.LuuKetQuaDoAsync(_currentSessionId.Value, _lastBlock);
+                await DatabaseService.LuuKetQuaDoAsync(
+                    _currentSessionId.Value,
+                    _lastBlock,
+                    IsHumidityMeasurementEnabled);
 
                 return true;
             }
