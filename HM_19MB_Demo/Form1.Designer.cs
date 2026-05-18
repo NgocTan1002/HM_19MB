@@ -66,6 +66,8 @@ namespace HM_19MB_Demo
             lblCalibrationTitle = new Label();
             lblKenhCount = new Label();
             numKenhCount = new NumericUpDown();
+            lblMeasurementCount = new Label();
+            numMeasurementCount = new NumericUpDown();
             _btnAddCalibPoint = new Button();
             _btnDeleteCalibPoint = new Button();
             _lblCalibStatus = new Label();
@@ -93,8 +95,9 @@ namespace HM_19MB_Demo
             calibDatePanel.SuspendLayout();
             _calibPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)_gridCalibration).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)numKenhCount).BeginInit();
             calibrationToolbar.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numKenhCount).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numMeasurementCount).BeginInit();
             ((System.ComponentModel.ISupportInitialize)_split).BeginInit();
             _split.Panel1.SuspendLayout();
             _split.Panel2.SuspendLayout();
@@ -123,8 +126,9 @@ namespace HM_19MB_Demo
             mainLayout.RowStyles.Add(new RowStyle());
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 59F));
-            mainLayout.Size = new Size(1600, 1175);
+            mainLayout.Size = new Size(1884, 1175);
             mainLayout.TabIndex = 0;
+            mainLayout.Paint += mainLayout_Paint;
             // 
             // metadataPanel
             // 
@@ -136,7 +140,7 @@ namespace HM_19MB_Demo
             metadataPanel.Margin = new Padding(3, 4, 3, 4);
             metadataPanel.Name = "metadataPanel";
             metadataPanel.Padding = new Padding(10);
-            metadataPanel.Size = new Size(1580, 320);
+            metadataPanel.Size = new Size(1864, 320);
             metadataPanel.TabIndex = 0;
             // 
             // metadataLayout
@@ -151,7 +155,7 @@ namespace HM_19MB_Demo
             metadataLayout.Name = "metadataLayout";
             metadataLayout.RowCount = 1;
             metadataLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            metadataLayout.Size = new Size(1560, 300);
+            metadataLayout.Size = new Size(1844, 300);
             metadataLayout.TabIndex = 27;
             // 
             // metadataFieldsPanel
@@ -481,66 +485,29 @@ namespace HM_19MB_Demo
             _calibPanel.Location = new Point(843, 3);
             _calibPanel.Name = "_calibPanel";
             _calibPanel.Padding = new Padding(6, 4, 6, 4);
-            _calibPanel.Size = new Size(714, 294);
+            _calibPanel.Size = new Size(998, 294);
             _calibPanel.TabIndex = 1;
             // 
             // _gridCalibration
             // 
             _gridCalibration.AllowUserToAddRows = false;
             _gridCalibration.AllowUserToDeleteRows = false;
-
             _gridCalibration.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             _gridCalibration.BackgroundColor = Color.White;
-            _gridCalibration.BorderStyle = BorderStyle.FixedSingle;
-
+            _gridCalibration.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            _gridCalibration.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             _gridCalibration.Dock = DockStyle.Fill;
-            _gridCalibration.EnableHeadersVisualStyles = true;
-
             _gridCalibration.Font = new Font("Segoe UI", 9F);
+            _gridCalibration.GridColor = SystemColors.ControlDark;
             _gridCalibration.Location = new Point(6, 40);
             _gridCalibration.MultiSelect = false;
             _gridCalibration.Name = "_gridCalibration";
             _gridCalibration.ReadOnly = true;
-
             _gridCalibration.RowHeadersVisible = false;
             _gridCalibration.RowHeadersWidth = 51;
-
             _gridCalibration.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            _gridCalibration.Size = new Size(702, 235);
+            _gridCalibration.Size = new Size(986, 250);
             _gridCalibration.TabIndex = 1;
-
-            // Header cơ bản
-            _gridCalibration.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
-            {
-                Alignment = DataGridViewContentAlignment.MiddleCenter,
-                BackColor = SystemColors.Control,
-                ForeColor = SystemColors.ControlText,
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
-                SelectionBackColor = SystemColors.Control,
-                SelectionForeColor = SystemColors.ControlText,
-                WrapMode = DataGridViewTriState.True
-            };
-
-            _gridCalibration.ColumnHeadersHeightSizeMode =
-                DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-
-            // Dòng thường
-            _gridCalibration.DefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = Color.White,
-                ForeColor = Color.Black,
-                SelectionBackColor = SystemColors.Highlight,
-                SelectionForeColor = SystemColors.HighlightText
-            };
-
-            // Dòng xen kẽ
-            _gridCalibration.AlternatingRowsDefaultCellStyle = new DataGridViewCellStyle
-            {
-                BackColor = Color.White
-            };
-
-            // Màu lưới cơ bản
-            _gridCalibration.GridColor = SystemColors.ControlDark;
             // 
             // calibrationToolbar
             // 
@@ -548,6 +515,8 @@ namespace HM_19MB_Demo
             calibrationToolbar.Controls.Add(lblCalibrationTitle);
             calibrationToolbar.Controls.Add(lblKenhCount);
             calibrationToolbar.Controls.Add(numKenhCount);
+            calibrationToolbar.Controls.Add(lblMeasurementCount);
+            calibrationToolbar.Controls.Add(numMeasurementCount);
             calibrationToolbar.Controls.Add(_btnAddCalibPoint);
             calibrationToolbar.Controls.Add(_btnDeleteCalibPoint);
             calibrationToolbar.Controls.Add(_lblCalibStatus);
@@ -555,7 +524,7 @@ namespace HM_19MB_Demo
             calibrationToolbar.Location = new Point(6, 4);
             calibrationToolbar.Name = "calibrationToolbar";
             calibrationToolbar.Padding = new Padding(0, 2, 0, 2);
-            calibrationToolbar.Size = new Size(702, 36);
+            calibrationToolbar.Size = new Size(986, 36);
             calibrationToolbar.TabIndex = 0;
             calibrationToolbar.WrapContents = false;
             // 
@@ -592,6 +561,26 @@ namespace HM_19MB_Demo
             numKenhCount.TabIndex = 2;
             numKenhCount.Value = new decimal(new int[] { 3, 0, 0, 0 });
             // 
+            // lblMeasurementCount
+            // 
+            lblMeasurementCount.AutoSize = true;
+            lblMeasurementCount.Location = new Point(334, 10);
+            lblMeasurementCount.Margin = new Padding(0, 8, 4, 0);
+            lblMeasurementCount.Name = "lblMeasurementCount";
+            lblMeasurementCount.Size = new Size(75, 20);
+            lblMeasurementCount.TabIndex = 3;
+            lblMeasurementCount.Text = "Số lần đo:";
+            // 
+            // numMeasurementCount
+            // 
+            numMeasurementCount.Location = new Point(413, 6);
+            numMeasurementCount.Margin = new Padding(0, 4, 12, 0);
+            numMeasurementCount.Minimum = new decimal(new int[] { 2, 0, 0, 0 });
+            numMeasurementCount.Name = "numMeasurementCount";
+            numMeasurementCount.Size = new Size(60, 27);
+            numMeasurementCount.TabIndex = 4;
+            numMeasurementCount.Value = new decimal(new int[] { 10, 0, 0, 0 });
+            // 
             // _btnAddCalibPoint
             // 
             _btnAddCalibPoint.BackColor = Color.White;
@@ -599,11 +588,11 @@ namespace HM_19MB_Demo
             _btnAddCalibPoint.FlatAppearance.BorderColor = Color.Silver;
             _btnAddCalibPoint.FlatStyle = FlatStyle.Flat;
             _btnAddCalibPoint.ForeColor = Color.Black;
-            _btnAddCalibPoint.Location = new Point(334, 5);
+            _btnAddCalibPoint.Location = new Point(485, 5);
             _btnAddCalibPoint.Margin = new Padding(0, 3, 6, 0);
             _btnAddCalibPoint.Name = "_btnAddCalibPoint";
             _btnAddCalibPoint.Size = new Size(160, 28);
-            _btnAddCalibPoint.TabIndex = 3;
+            _btnAddCalibPoint.TabIndex = 5;
             _btnAddCalibPoint.Text = "Thêm điểm kiểm tra";
             _btnAddCalibPoint.UseVisualStyleBackColor = false;
             // 
@@ -615,11 +604,11 @@ namespace HM_19MB_Demo
             _btnDeleteCalibPoint.FlatAppearance.BorderColor = Color.Silver;
             _btnDeleteCalibPoint.FlatStyle = FlatStyle.Flat;
             _btnDeleteCalibPoint.ForeColor = Color.Black;
-            _btnDeleteCalibPoint.Location = new Point(500, 5);
+            _btnDeleteCalibPoint.Location = new Point(651, 5);
             _btnDeleteCalibPoint.Margin = new Padding(0, 3, 6, 0);
             _btnDeleteCalibPoint.Name = "_btnDeleteCalibPoint";
             _btnDeleteCalibPoint.Size = new Size(100, 28);
-            _btnDeleteCalibPoint.TabIndex = 4;
+            _btnDeleteCalibPoint.TabIndex = 6;
             _btnDeleteCalibPoint.Text = "Xóa dòng";
             _btnDeleteCalibPoint.UseVisualStyleBackColor = false;
             // 
@@ -628,11 +617,11 @@ namespace HM_19MB_Demo
             _lblCalibStatus.AutoSize = true;
             _lblCalibStatus.Font = new Font("Segoe UI", 8.5F, FontStyle.Italic);
             _lblCalibStatus.ForeColor = Color.DimGray;
-            _lblCalibStatus.Location = new Point(614, 10);
+            _lblCalibStatus.Location = new Point(765, 10);
             _lblCalibStatus.Margin = new Padding(8, 8, 0, 0);
             _lblCalibStatus.Name = "_lblCalibStatus";
             _lblCalibStatus.Size = new Size(111, 20);
-            _lblCalibStatus.TabIndex = 5;
+            _lblCalibStatus.TabIndex = 7;
             _lblCalibStatus.Text = "Chưa có dữ liệu";
             // 
             // _split
@@ -650,8 +639,8 @@ namespace HM_19MB_Demo
             // _split.Panel2
             // 
             _split.Panel2.Controls.Add(gridLayout);
-            _split.Size = new Size(1580, 764);
-            _split.SplitterDistance = 790;
+            _split.Size = new Size(1864, 764);
+            _split.SplitterDistance = 932;
             _split.SplitterWidth = 5;
             _split.TabIndex = 1;
             // 
@@ -682,7 +671,7 @@ namespace HM_19MB_Demo
             _chart.Location = new Point(0, 38);
             _chart.Margin = new Padding(3, 4, 3, 4);
             _chart.Name = "_chart";
-            _chart.Size = new Size(790, 726);
+            _chart.Size = new Size(932, 726);
             _chart.TabIndex = 0;
             _chart.Text = "chart1";
             // 
@@ -696,7 +685,7 @@ namespace HM_19MB_Demo
             _chartToolbar.Location = new Point(0, 0);
             _chartToolbar.Name = "_chartToolbar";
             _chartToolbar.Padding = new Padding(5, 4, 5, 4);
-            _chartToolbar.Size = new Size(790, 38);
+            _chartToolbar.Size = new Size(932, 38);
             _chartToolbar.TabIndex = 1;
             // 
             // BtnShowGuide
@@ -752,7 +741,7 @@ namespace HM_19MB_Demo
             gridLayout.RowCount = 2;
             gridLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             gridLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 29F));
-            gridLayout.Size = new Size(785, 764);
+            gridLayout.Size = new Size(927, 764);
             gridLayout.TabIndex = 0;
             // 
             // _lblLastReceived
@@ -790,7 +779,7 @@ namespace HM_19MB_Demo
             _grid.RowHeadersVisible = false;
             _grid.RowHeadersWidth = 51;
             _grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            _grid.Size = new Size(779, 727);
+            _grid.Size = new Size(921, 727);
             _grid.TabIndex = 0;
             // 
             // bottomBar
@@ -802,7 +791,7 @@ namespace HM_19MB_Demo
             bottomBar.Margin = new Padding(3, 4, 3, 4);
             bottomBar.Name = "bottomBar";
             bottomBar.Padding = new Padding(5);
-            bottomBar.Size = new Size(1580, 51);
+            bottomBar.Size = new Size(1864, 51);
             bottomBar.TabIndex = 2;
             // 
             // bottomFlow
@@ -818,7 +807,7 @@ namespace HM_19MB_Demo
             bottomFlow.Location = new Point(5, 5);
             bottomFlow.Margin = new Padding(3, 4, 3, 4);
             bottomFlow.Name = "bottomFlow";
-            bottomFlow.Size = new Size(1570, 41);
+            bottomFlow.Size = new Size(1854, 41);
             bottomFlow.TabIndex = 0;
             bottomFlow.WrapContents = false;
             // 
@@ -892,7 +881,7 @@ namespace HM_19MB_Demo
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1600, 1175);
+            ClientSize = new Size(1884, 1175);
             Controls.Add(mainLayout);
             Font = new Font("Segoe UI", 9F);
             Margin = new Padding(3, 4, 3, 4);
@@ -910,9 +899,10 @@ namespace HM_19MB_Demo
             calibDatePanel.PerformLayout();
             _calibPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)_gridCalibration).EndInit();
-            ((System.ComponentModel.ISupportInitialize)numKenhCount).EndInit();
             calibrationToolbar.ResumeLayout(false);
             calibrationToolbar.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)numKenhCount).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numMeasurementCount).EndInit();
             _split.Panel1.ResumeLayout(false);
             _split.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)_split).EndInit();
@@ -1087,6 +1077,8 @@ namespace HM_19MB_Demo
         private Label lblCalibrationTitle;
         private Label lblKenhCount;
         private NumericUpDown numKenhCount;
+        private Label lblMeasurementCount;
+        private NumericUpDown numMeasurementCount;
         private Button _btnAddCalibPoint;
         private Button _btnDeleteCalibPoint;
         private Label _lblCalibStatus;

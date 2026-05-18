@@ -26,7 +26,6 @@ namespace HM_19MB_Demo
             lblGiaTriDat = new Label();
             txtGiaTriDat = new TextBox();
             lblGiaTriDatUnit = new Label();
-            step1Panel = new Panel();
             lblStep1Title = new Label();
             lblChannels = new Label();
             numChannels = new NumericUpDown();
@@ -71,10 +70,10 @@ namespace HM_19MB_Demo
             btnCalculate = new Button();
             btnAddToTable = new Button();
             btnSaveToDb = new Button();
+            step1Panel = new Panel();
             lblStep5Title = new Label();
             mainLayout.SuspendLayout();
             step0Panel.SuspendLayout();
-            step1Panel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numChannels).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numMeasurements).BeginInit();
             step2Panel.SuspendLayout();
@@ -95,18 +94,16 @@ namespace HM_19MB_Demo
             mainLayout.ColumnCount = 1;
             mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             mainLayout.Controls.Add(step0Panel, 0, 0);
-            mainLayout.Controls.Add(step1Panel, 0, 1);
-            mainLayout.Controls.Add(step2Panel, 0, 2);
-            mainLayout.Controls.Add(splitStep3, 0, 3);
-            mainLayout.Controls.Add(resultPanel, 0, 4);
-            mainLayout.Controls.Add(bottomPanel, 0, 5);
+            mainLayout.Controls.Add(step2Panel, 0, 1);
+            mainLayout.Controls.Add(splitStep3, 0, 2);
+            mainLayout.Controls.Add(resultPanel, 0, 3);
+            mainLayout.Controls.Add(bottomPanel, 0, 4);
             mainLayout.Dock = DockStyle.Fill;
             mainLayout.Location = new Point(0, 0);
             mainLayout.Name = "mainLayout";
             mainLayout.Padding = new Padding(10);
-            mainLayout.RowCount = 6;
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70F));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F));
+            mainLayout.RowCount = 5;
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 90F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 220F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 220F));
@@ -122,10 +119,16 @@ namespace HM_19MB_Demo
             step0Panel.Controls.Add(lblGiaTriDat);
             step0Panel.Controls.Add(txtGiaTriDat);
             step0Panel.Controls.Add(lblGiaTriDatUnit);
+            step0Panel.Controls.Add(lblStep1Title);
+            step0Panel.Controls.Add(lblChannels);
+            step0Panel.Controls.Add(numChannels);
+            step0Panel.Controls.Add(lblMeasurements);
+            step0Panel.Controls.Add(numMeasurements);
+            step0Panel.Controls.Add(btnApplyConfig);
             step0Panel.Dock = DockStyle.Fill;
             step0Panel.Location = new Point(13, 13);
             step0Panel.Name = "step0Panel";
-            step0Panel.Size = new Size(1374, 64);
+            step0Panel.Size = new Size(1374, 84);
             step0Panel.TabIndex = 0;
             // 
             // lblStep0Title
@@ -164,36 +167,20 @@ namespace HM_19MB_Demo
             lblGiaTriDatUnit.TabIndex = 3;
             lblGiaTriDatUnit.Text = "°C";
             // 
-            // step1Panel
-            // 
-            step1Panel.BackColor = Color.FromArgb(240, 248, 255);
-            step1Panel.BorderStyle = BorderStyle.FixedSingle;
-            step1Panel.Controls.Add(lblStep1Title);
-            step1Panel.Controls.Add(lblChannels);
-            step1Panel.Controls.Add(numChannels);
-            step1Panel.Controls.Add(lblMeasurements);
-            step1Panel.Controls.Add(numMeasurements);
-            step1Panel.Controls.Add(btnApplyConfig);
-            step1Panel.Dock = DockStyle.Fill;
-            step1Panel.Location = new Point(13, 83);
-            step1Panel.Name = "step1Panel";
-            step1Panel.Size = new Size(1374, 94);
-            step1Panel.TabIndex = 1;
-            // 
             // lblStep1Title
             // 
             lblStep1Title.AutoSize = true;
             lblStep1Title.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblStep1Title.Location = new Point(10, 10);
+            lblStep1Title.Location = new Point(799, 4);
             lblStep1Title.Name = "lblStep1Title";
-            lblStep1Title.Size = new Size(275, 25);
+            lblStep1Title.Size = new Size(119, 25);
             lblStep1Title.TabIndex = 0;
-            lblStep1Title.Text = "Cấu hình số kênh và số lần đo";
+            lblStep1Title.Text = "Cấu hình đo";
             // 
             // lblChannels
             // 
             lblChannels.AutoSize = true;
-            lblChannels.Location = new Point(10, 55);
+            lblChannels.Location = new Point(799, 38);
             lblChannels.Name = "lblChannels";
             lblChannels.Size = new Size(82, 20);
             lblChannels.TabIndex = 1;
@@ -201,7 +188,7 @@ namespace HM_19MB_Demo
             // 
             // numChannels
             // 
-            numChannels.Location = new Point(100, 53);
+            numChannels.Location = new Point(889, 36);
             numChannels.Maximum = new decimal(new int[] { 20, 0, 0, 0 });
             numChannels.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             numChannels.Name = "numChannels";
@@ -212,7 +199,7 @@ namespace HM_19MB_Demo
             // lblMeasurements
             // 
             lblMeasurements.AutoSize = true;
-            lblMeasurements.Location = new Point(220, 55);
+            lblMeasurements.Location = new Point(1009, 38);
             lblMeasurements.Name = "lblMeasurements";
             lblMeasurements.Size = new Size(97, 20);
             lblMeasurements.TabIndex = 3;
@@ -220,7 +207,7 @@ namespace HM_19MB_Demo
             // 
             // numMeasurements
             // 
-            numMeasurements.Location = new Point(330, 53);
+            numMeasurements.Location = new Point(1119, 36);
             numMeasurements.Minimum = new decimal(new int[] { 2, 0, 0, 0 });
             numMeasurements.Name = "numMeasurements";
             numMeasurements.Size = new Size(100, 27);
@@ -229,7 +216,7 @@ namespace HM_19MB_Demo
             // 
             // btnApplyConfig
             // 
-            btnApplyConfig.Location = new Point(450, 50);
+            btnApplyConfig.Location = new Point(1239, 33);
             btnApplyConfig.Name = "btnApplyConfig";
             btnApplyConfig.Size = new Size(100, 35);
             btnApplyConfig.TabIndex = 5;
@@ -243,9 +230,9 @@ namespace HM_19MB_Demo
             step2Panel.Controls.Add(gridMeasurements);
             step2Panel.Controls.Add(lblUch1Result);
             step2Panel.Dock = DockStyle.Fill;
-            step2Panel.Location = new Point(13, 183);
+            step2Panel.Location = new Point(13, 103);
             step2Panel.Name = "step2Panel";
-            step2Panel.Size = new Size(1374, 474);
+            step2Panel.Size = new Size(1374, 554);
             step2Panel.TabIndex = 2;
             // 
             // lblStep2Title
@@ -268,7 +255,7 @@ namespace HM_19MB_Demo
             gridMeasurements.Location = new Point(10, 35);
             gridMeasurements.Name = "gridMeasurements";
             gridMeasurements.RowHeadersWidth = 51;
-            gridMeasurements.Size = new Size(1352, 402);
+            gridMeasurements.Size = new Size(1352, 482);
             gridMeasurements.TabIndex = 1;
             // 
             // lblUch1Result
@@ -277,7 +264,7 @@ namespace HM_19MB_Demo
             lblUch1Result.AutoSize = true;
             lblUch1Result.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             lblUch1Result.ForeColor = Color.DarkBlue;
-            lblUch1Result.Location = new Point(10, 440);
+            lblUch1Result.Location = new Point(10, 520);
             lblUch1Result.Name = "lblUch1Result";
             lblUch1Result.Size = new Size(140, 20);
             lblUch1Result.TabIndex = 2;
@@ -688,6 +675,16 @@ namespace HM_19MB_Demo
             btnSaveToDb.Text = "Lưu vào DB";
             btnSaveToDb.UseVisualStyleBackColor = false;
             // 
+            // step1Panel
+            // 
+            step1Panel.BackColor = Color.FromArgb(240, 248, 255);
+            step1Panel.BorderStyle = BorderStyle.FixedSingle;
+            step1Panel.Dock = DockStyle.Fill;
+            step1Panel.Location = new Point(13, 83);
+            step1Panel.Name = "step1Panel";
+            step1Panel.Size = new Size(1374, 94);
+            step1Panel.TabIndex = 1;
+            // 
             // lblStep5Title
             // 
             lblStep5Title.AutoSize = true;
@@ -712,8 +709,6 @@ namespace HM_19MB_Demo
             mainLayout.ResumeLayout(false);
             step0Panel.ResumeLayout(false);
             step0Panel.PerformLayout();
-            step1Panel.ResumeLayout(false);
-            step1Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numChannels).EndInit();
             ((System.ComponentModel.ISupportInitialize)numMeasurements).EndInit();
             step2Panel.ResumeLayout(false);

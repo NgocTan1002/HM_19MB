@@ -15,6 +15,8 @@ namespace HM_19MB_Demo
         private int _n = 10;
         private int _phienId;
         private readonly Func<CalibrationResultRow, Task>? _onResultAdded;
+        private readonly Action<int, int>? _onConfigChanged;
+        private bool _updatingConfigFromOwner;
 
         // Lưu kết quả tính toán gần nhất để dùng khi bấm "Thêm vào bảng"
         private CalibrationResultRow? _lastCalculatedResult = null;
@@ -45,9 +47,18 @@ namespace HM_19MB_Demo
 
         // ── Constructor mới: nhận phienId và callback ────────────────────
         public UncertaintyCalculationForm(int phienId, Func<CalibrationResultRow, Task>? onResultAdded)
+            : this(phienId, onResultAdded, null)
+        {
+        }
+
+        public UncertaintyCalculationForm(
+            int phienId,
+            Func<CalibrationResultRow, Task>? onResultAdded,
+            Action<int, int>? onConfigChanged)
         {
             _phienId = phienId;
             _onResultAdded = onResultAdded;
+            _onConfigChanged = onConfigChanged;
 
             InitializeComponent();
             ReplaceLabelWithMath();
@@ -58,15 +69,56 @@ namespace HM_19MB_Demo
         }
 
         public UncertaintyCalculationForm(int kenhCount, int? phienId, Action<CalibrationResultRow>? onResultAdded)
+            : this(kenhCount, 10, phienId, onResultAdded, null)
+        {
+        }
+
+        public UncertaintyCalculationForm(
+            int kenhCount,
+            int measurementCount,
+            int? phienId,
+            Action<CalibrationResultRow>? onResultAdded,
+            Action<int, int>? onConfigChanged)
             : this(phienId ?? 0, row =>
             {
                 onResultAdded?.Invoke(row);
                 return Task.CompletedTask;
-            })
+            }, onConfigChanged)
         {
-            _j = Math.Max(1, kenhCount);
-            numChannels.Value = Math.Min(numChannels.Maximum, Math.Max(numChannels.Minimum, _j));
+            SetConfiguration(kenhCount, measurementCount, notifyOwner: false);
+        }
+
+        public void SetConfiguration(int kenhCount, int measurementCount)
+            => SetConfiguration(kenhCount, measurementCount, notifyOwner: false);
+
+        private void SetConfiguration(int kenhCount, int measurementCount, bool notifyOwner)
+        {
+            int newJ = Math.Max((int)numChannels.Minimum, Math.Min((int)numChannels.Maximum, kenhCount));
+            int newN = Math.Max((int)numMeasurements.Minimum, Math.Min((int)numMeasurements.Maximum, measurementCount));
+            bool changed = newJ != _j || newN != _n;
+
+            _j = newJ;
+            _n = newN;
+
+            _updatingConfigFromOwner = !notifyOwner;
+            try
+            {
+                numChannels.Value = newJ;
+                numMeasurements.Value = newN;
+            }
+            finally
+            {
+                _updatingConfigFromOwner = false;
+            }
+
+            if (!changed) return;
+
             ApplyConfiguration();
+            _lastCalculatedResult = null;
+            btnAddToTable.Enabled = false;
+
+            if (notifyOwner && !_updatingConfigFromOwner)
+                _onConfigChanged?.Invoke(_j, _n);
         }
 
         // ── Khởi tạo MathLabel ───────────────────────────────────────────
@@ -140,12 +192,7 @@ namespace HM_19MB_Demo
 
         private void BtnApplyConfig_Click(object? sender, EventArgs e)
         {
-            _j = (int)numChannels.Value;
-            _n = (int)numMeasurements.Value;
-            ApplyConfiguration();
-            // Reset kết quả khi thay đổi cấu hình
-            _lastCalculatedResult = null;
-            btnAddToTable.Enabled = false;
+            SetConfiguration((int)numChannels.Value, (int)numMeasurements.Value, notifyOwner: true);
         }
 
         // ── ApplyConfiguration ───────────────────────────────────────────
@@ -461,7 +508,7 @@ namespace HM_19MB_Demo
                 };
 
                 // Gán giá trị từng vị trí chuẩn (t̄_j đã hiệu chỉnh)
-                for (int j = 0; j < _j && j < 9; j++)
+                for (int j = 0; j < _j && j < result.Kenh.Length; j++)
                     result.Kenh[j] = channelCorrectedMeans[j];
 
                 _lastCalculatedResult = result;
@@ -535,11 +582,7 @@ namespace HM_19MB_Demo
             var config = lines[0].Split(',');
             if (config.Length >= 2)
             {
-                _j = int.Parse(config[0]);
-                _n = int.Parse(config[1]);
-                numChannels.Value = _j;
-                numMeasurements.Value = _n;
-                ApplyConfiguration();
+                SetConfiguration(int.Parse(config[0]), int.Parse(config[1]), notifyOwner: true);
             }
 
             for (int i = 1; i < lines.Length && i <= _n; i++)

@@ -53,7 +53,7 @@ namespace HM_19MB_Demo
             WireEvents();
             RefreshPorts();
             InitializeDefaultValues();
-            
+
             // Hiển thị trạng thái auto-save
             _lblStatus.Text = "Chưa kết nối";
             _lblStatus.ForeColor = Color.DarkBlue;
@@ -77,7 +77,7 @@ namespace HM_19MB_Demo
             int desired = _split.Width / 2;
             if (max > min)
                 _split.SplitterDistance = Math.Max(min, Math.Min(desired, max));
-            
+
             // Điều chỉnh chiều cao các dòng trong grid để fill toàn bộ
             AdjustRowHeights();
         }
@@ -229,15 +229,15 @@ namespace HM_19MB_Demo
         {
             if (_serialReader.IsConnected)
             {
-                try { _serialReader.Disconnect(); } 
-                catch (Exception ex) 
-                { 
+                try { _serialReader.Disconnect(); }
+                catch (Exception ex)
+                {
                     AppLogger.Warning("Form1", "Error disconnecting serial port", ex);
                 }
                 _btnConnect.Text = "Kết nối";
                 _lblStatus.Text = "Đã ngắt kết nối";
                 _lblStatus.ForeColor = Color.DarkRed;
-                
+
                 // Dừng health timer khi ngắt kết nối
                 _healthTimer?.Stop();
                 _lastDataReceivedTime = DateTime.MinValue;
@@ -258,7 +258,7 @@ namespace HM_19MB_Demo
                     _btnConnect.Text = "Ngắt kết nối";
                     _lblStatus.Text = $"Đã kết nối {portName} @ 9600";
                     _lblStatus.ForeColor = Color.DarkGreen;
-                    
+
                     // Bắt đầu health timer khi kết nối
                     _healthTimer?.Start();
                 }
@@ -378,14 +378,21 @@ namespace HM_19MB_Demo
             }
 
             int phienId = _currentSessionId.Value;
-            var uncertaintyForm = new UncertaintyCalculationForm(
-                phienId,
-                row =>
-                {
-                    OnCalibrationResultAdded(row);
-                    return Task.CompletedTask;
-                });
-            uncertaintyForm.Show(this);
+            if (_uncertaintyForm != null && !_uncertaintyForm.IsDisposed)
+            {
+                _uncertaintyForm.BringToFront();
+                _uncertaintyForm.Focus();
+                return;
+            }
+
+            _uncertaintyForm = new UncertaintyCalculationForm(
+                kenhCount: _currentKenhCount,
+                measurementCount: _currentMeasurementCount,
+                phienId: phienId,
+                onResultAdded: OnCalibrationResultAdded,
+                onConfigChanged: (k, n) => SetCalibrationConfig(k, n, clearRowsOnChannelChange: true));
+            _uncertaintyForm.FormClosed += (s, e) => _uncertaintyForm = null;
+            _uncertaintyForm.Show(this);
         }
 
         private async Task HandleCalibrationResultAdded(int phienId, CalibrationResultRow row)
@@ -685,7 +692,7 @@ namespace HM_19MB_Demo
         {
             // Cho user chọn số đầu đo
             int probeCount = GetProbeCount();
-            
+
             if (probeCount > 0)
             {
                 using var guide = new ProbeGuideForm(probeCount);
@@ -779,6 +786,11 @@ namespace HM_19MB_Demo
             selectForm.Controls.Add(mainPanel);
 
             return selectForm.ShowDialog() == DialogResult.OK ? selectedCount : 0;
+        }
+
+        private void mainLayout_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }

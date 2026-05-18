@@ -36,6 +36,8 @@ namespace HM_19MB_Demo
         // ── State ─────────────────────────────────────────────────────────
         private UncertaintyCalculationForm? _uncertaintyForm;
         private int _currentKenhCount = 3; // k hiện tại (3/5/9/10)
+        private int _currentMeasurementCount = 10; // n hiện tại
+        private bool _updatingCalibrationConfig;
 
         // ── Khởi tạo UI bảng kết quả ─────────────────────────────────────
 
@@ -47,9 +49,12 @@ namespace HM_19MB_Demo
         {
             numKenhCount.ValueChanged += (s, e) =>
             {
-                int k = (int)numKenhCount.Value;
-                _currentKenhCount = k;
-                RebuildCalibrationColumns(k);
+                SetCalibrationConfig((int)numKenhCount.Value, _currentMeasurementCount, clearRowsOnChannelChange: true);
+            };
+
+            numMeasurementCount.ValueChanged += (s, e) =>
+            {
+                SetCalibrationConfig(_currentKenhCount, (int)numMeasurementCount.Value, clearRowsOnChannelChange: false);
             };
 
             _btnAddCalibPoint.Click += BtnAddCalibPoint_Click;
@@ -66,10 +71,51 @@ namespace HM_19MB_Demo
 
             // Xây cột ban đầu theo số kênh hiện tại
             _currentKenhCount = (int)numKenhCount.Value;
+            _currentMeasurementCount = (int)numMeasurementCount.Value;
             RebuildCalibrationColumns(_currentKenhCount);
 
             // Load dữ liệu nếu đã có session
             _ = TryLoadCalibrationResultsAsync();
+        }
+
+        private void SetCalibrationConfig(int kenhCount, int measurementCount, bool clearRowsOnChannelChange)
+        {
+            kenhCount = Math.Max((int)numKenhCount.Minimum, Math.Min((int)numKenhCount.Maximum, kenhCount));
+            measurementCount = Math.Max((int)numMeasurementCount.Minimum, Math.Min((int)numMeasurementCount.Maximum, measurementCount));
+
+            bool channelChanged = kenhCount != _currentKenhCount;
+            bool measurementChanged = measurementCount != _currentMeasurementCount;
+            if (!channelChanged && !measurementChanged) return;
+
+            _currentKenhCount = kenhCount;
+            _currentMeasurementCount = measurementCount;
+
+            _updatingCalibrationConfig = true;
+            try
+            {
+                numKenhCount.Value = kenhCount;
+                numMeasurementCount.Value = measurementCount;
+            }
+            finally
+            {
+                _updatingCalibrationConfig = false;
+            }
+
+            if (channelChanged)
+            {
+                RebuildCalibrationColumns(kenhCount);
+                if (clearRowsOnChannelChange)
+                {
+                    _gridCalibration.Rows.Clear();
+                    _lblCalibStatus.Text = "Đã đổi số kênh - dữ liệu hiển thị cũ đã được làm mới.";
+                    _lblCalibStatus.ForeColor = Color.DarkOrange;
+                }
+            }
+
+            if (!_updatingCalibrationConfig && _uncertaintyForm != null && !_uncertaintyForm.IsDisposed)
+            {
+                _uncertaintyForm.SetConfiguration(kenhCount, measurementCount);
+            }
         }
 
         // ── Xây dựng cột động ─────────────────────────────────────────────
@@ -119,8 +165,7 @@ namespace HM_19MB_Demo
             AddCol(ColDKDB, "ĐKĐB mở rộng\n(°C)\nk=2, P=95%", 90, DataGridViewContentAlignment.MiddleCenter,
                    Color.FromArgb(255, 245, 235));
 
-            // Giữ lại các dòng dữ liệu cũ nếu có (reload)
-            _ = TryLoadCalibrationResultsAsync();
+            _gridCalibration.Rows.Clear();
         }
 
         // ── Thêm điểm kiểm tra ────────────────────────────────────────────
@@ -138,8 +183,10 @@ namespace HM_19MB_Demo
 
             _uncertaintyForm = new UncertaintyCalculationForm(
                 kenhCount: _currentKenhCount,
+                measurementCount: _currentMeasurementCount,
                 phienId: _currentSessionId,
-                onResultAdded: OnCalibrationResultAdded
+                onResultAdded: OnCalibrationResultAdded,
+                onConfigChanged: (k, n) => SetCalibrationConfig(k, n, clearRowsOnChannelChange: true)
             );
 
             _uncertaintyForm.FormClosed += (s, e) => _uncertaintyForm = null;
@@ -325,6 +372,8 @@ namespace HM_19MB_Demo
             _gridCalibration.Rows.Clear();
             _currentKenhCount = k;
             RebuildCalibrationColumns(k);
+            if (numKenhCount.Value != k)
+                numKenhCount.Value = Math.Min(numKenhCount.Maximum, Math.Max(numKenhCount.Minimum, k));
 
             foreach (var row in rows)
                 AddRowToCalibrationGrid(row);
