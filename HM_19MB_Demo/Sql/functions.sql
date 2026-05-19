@@ -1,6 +1,3 @@
--- ----------------------------------------------------------------
--- fn_tao_phien: Tạo phiên hiệu chuẩn mới, trả về id vừa tạo.
--- ----------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_tao_phien(
     p_ten_thiet_bi          VARCHAR,
     p_ky_hieu               VARCHAR,
@@ -43,57 +40,157 @@ END;
 $$;
 
 
--- fn_luu_ket_qua_do: Lưu 1 block đo (tổng hợp + toàn bộ đầu đo)
-DROP FUNCTION IF EXISTS fn_luu_ket_qua_do(
-    INT, TIMESTAMP,
-    DOUBLE PRECISION, DOUBLE PRECISION,
-    DOUBLE PRECISION, DOUBLE PRECISION,
-    VARCHAR, JSONB
+-- Xoá signature cũ (v4/v5) nếu tồn tại
+DROP FUNCTION IF EXISTS fn_luu_ket_qua_hieu_chuan(
+    INT, INT, FLOAT, FLOAT,
+    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
+    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
+    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
+    INT, INT, VARCHAR
 );
-
-CREATE OR REPLACE FUNCTION fn_luu_ket_qua_do(
+ 
+CREATE OR REPLACE FUNCTION fn_luu_ket_qua_hieu_chuan(
+    -- Khoá
     p_phien_id              INT,
-    p_thoi_gian_do          TIMESTAMP,
-    p_nhiet_do              FLOAT[],   -- array 10 phần tử
-    p_do_am                 FLOAT[],   -- array 10 phần tử, NULL-able
-    p_nhiet_do_tb           FLOAT,
-    p_do_am_tb              FLOAT,
-    p_do_dong_deu_nhiet     FLOAT,
-    p_do_dong_deu_am        FLOAT,
-    p_do_on_dinh_nhiet      FLOAT,
-    p_do_on_dinh_am         FLOAT
+    p_stt                   INT,
+ 
+    -- Người dùng nhập
+    p_gia_tri_dat           FLOAT,
+    p_gia_tri_chi_thi       FLOAT,
+ 
+    -- Giá trị trung bình từng kênh chuẩn (NULL nếu không dùng)
+    p_kenh_1                FLOAT,
+    p_kenh_2                FLOAT,
+    p_kenh_3                FLOAT,
+    p_kenh_4                FLOAT,
+    p_kenh_5                FLOAT,
+    p_kenh_6                FLOAT,
+    p_kenh_7                FLOAT,
+    p_kenh_8                FLOAT,
+    p_kenh_9                FLOAT,
+    p_kenh_10               FLOAT,
+ 
+    -- Kết quả tổng hợp
+    p_gia_tri_trung_binh    FLOAT,
+    p_so_hieu_chinh         FLOAT,
+    p_do_on_dinh            FLOAT,
+    p_do_dong_deu           FLOAT,
+    p_do_khong_dam_bao      FLOAT,
+ 
+    -- Chỉ giữ giá trị TỔNG HỢP (bỏ ubk1..ubk4, uch1, uch2)
+    p_uch                   FLOAT,
+    p_ubk                   FLOAT,
+ 
+    -- Metadata tính toán
+    p_so_kenh               INT,
+    p_so_lan_do             INT,
+    p_phuong_phap_b         VARCHAR
 )
-RETURNS INT LANGUAGE plpgsql AS $$
-DECLARE v_id INT;
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id INT;
 BEGIN
-    INSERT INTO ket_qua_do (
-        phien_id, thoi_gian_do,
-        nhiet_do_1,  nhiet_do_2,  nhiet_do_3,  nhiet_do_4,  nhiet_do_5,
-        nhiet_do_6,  nhiet_do_7,  nhiet_do_8,  nhiet_do_9,  nhiet_do_10,
-        do_am_1,     do_am_2,     do_am_3,     do_am_4,     do_am_5,
-        do_am_6,     do_am_7,     do_am_8,     do_am_9,     do_am_10,
-        nhiet_do_tb, do_am_tb,
-        do_dong_deu_nhiet, do_dong_deu_am,
-        do_on_dinh_nhiet,  do_on_dinh_am
-    ) VALUES (
-        p_phien_id, p_thoi_gian_do,
-        p_nhiet_do[1],  p_nhiet_do[2],  p_nhiet_do[3],  p_nhiet_do[4],  p_nhiet_do[5],
-        p_nhiet_do[6],  p_nhiet_do[7],  p_nhiet_do[8],  p_nhiet_do[9],  p_nhiet_do[10],
-        p_do_am[1],     p_do_am[2],     p_do_am[3],     p_do_am[4],     p_do_am[5],
-        p_do_am[6],     p_do_am[7],     p_do_am[8],     p_do_am[9],     p_do_am[10],
-        p_nhiet_do_tb, p_do_am_tb,
-        p_do_dong_deu_nhiet, p_do_dong_deu_am,
-        p_do_on_dinh_nhiet,  p_do_on_dinh_am
+    INSERT INTO ket_qua_hieu_chuan (
+        phien_id, stt,
+        gia_tri_dat, gia_tri_chi_thi,
+        kenh_1, kenh_2, kenh_3, kenh_4, kenh_5,
+        kenh_6, kenh_7, kenh_8, kenh_9, kenh_10,
+        gia_tri_trung_binh, so_hieu_chinh,
+        do_on_dinh, do_dong_deu, do_khong_dam_bao,
+        uch, ubk,
+        so_kenh, so_lan_do, phuong_phap_b
     )
+    VALUES (
+        p_phien_id, p_stt,
+        p_gia_tri_dat, p_gia_tri_chi_thi,
+        p_kenh_1, p_kenh_2, p_kenh_3, p_kenh_4, p_kenh_5,
+        p_kenh_6, p_kenh_7, p_kenh_8, p_kenh_9, p_kenh_10,
+        p_gia_tri_trung_binh, p_so_hieu_chinh,
+        p_do_on_dinh, p_do_dong_deu, p_do_khong_dam_bao,
+        p_uch, p_ubk,
+        p_so_kenh, p_so_lan_do, p_phuong_phap_b
+    )
+    ON CONFLICT (phien_id, stt) DO UPDATE SET
+        gia_tri_dat          = EXCLUDED.gia_tri_dat,
+        gia_tri_chi_thi      = EXCLUDED.gia_tri_chi_thi,
+        kenh_1               = EXCLUDED.kenh_1,
+        kenh_2               = EXCLUDED.kenh_2,
+        kenh_3               = EXCLUDED.kenh_3,
+        kenh_4               = EXCLUDED.kenh_4,
+        kenh_5               = EXCLUDED.kenh_5,
+        kenh_6               = EXCLUDED.kenh_6,
+        kenh_7               = EXCLUDED.kenh_7,
+        kenh_8               = EXCLUDED.kenh_8,
+        kenh_9               = EXCLUDED.kenh_9,
+        kenh_10              = EXCLUDED.kenh_10,
+        gia_tri_trung_binh   = EXCLUDED.gia_tri_trung_binh,
+        so_hieu_chinh        = EXCLUDED.so_hieu_chinh,
+        do_on_dinh           = EXCLUDED.do_on_dinh,
+        do_dong_deu          = EXCLUDED.do_dong_deu,
+        do_khong_dam_bao     = EXCLUDED.do_khong_dam_bao,
+        uch                  = EXCLUDED.uch,
+        ubk                  = EXCLUDED.ubk,
+        so_kenh              = EXCLUDED.so_kenh,
+        so_lan_do            = EXCLUDED.so_lan_do,
+        phuong_phap_b        = EXCLUDED.phuong_phap_b,
+        ngay_tao             = NOW()
     RETURNING id INTO v_id;
+ 
     RETURN v_id;
 END;
 $$;
 
 
 -- ----------------------------------------------------------------
--- fn_lay_phien: Lấy metadata của 1 phiên theo id.
+-- fn_luu_ket_qua_do: Lưu 1 block đo (tổng hợp + toàn bộ đầu đo)
 -- ----------------------------------------------------------------
+CREATE OR REPLACE FUNCTION fn_luu_ket_qua_do(
+    p_phien_id          INT,
+    p_thoi_gian_do      TIMESTAMP,
+    p_nhiet_do          FLOAT[],
+    p_do_am             FLOAT[],
+    p_nhiet_do_tb       FLOAT,
+    p_do_am_tb          FLOAT,
+    p_do_dong_deu_nhiet FLOAT,
+    p_do_dong_deu_am    FLOAT,
+    p_do_on_dinh_nhiet  FLOAT,
+    p_do_on_dinh_am     FLOAT
+)
+RETURNS INT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id INT;
+BEGIN
+    INSERT INTO ket_qua_do (
+        phien_id, thoi_gian_do,
+        nhiet_do_1, nhiet_do_2, nhiet_do_3, nhiet_do_4, nhiet_do_5,
+        nhiet_do_6, nhiet_do_7, nhiet_do_8, nhiet_do_9, nhiet_do_10,
+        do_am_1, do_am_2, do_am_3, do_am_4, do_am_5,
+        do_am_6, do_am_7, do_am_8, do_am_9, do_am_10,
+        nhiet_do_tb, do_am_tb,
+        do_dong_deu_nhiet, do_dong_deu_am,
+        do_on_dinh_nhiet, do_on_dinh_am
+    )
+    VALUES (
+        p_phien_id, p_thoi_gian_do,
+        p_nhiet_do[1], p_nhiet_do[2], p_nhiet_do[3], p_nhiet_do[4], p_nhiet_do[5],
+        p_nhiet_do[6], p_nhiet_do[7], p_nhiet_do[8], p_nhiet_do[9], p_nhiet_do[10],
+        p_do_am[1], p_do_am[2], p_do_am[3], p_do_am[4], p_do_am[5],
+        p_do_am[6], p_do_am[7], p_do_am[8], p_do_am[9], p_do_am[10],
+        p_nhiet_do_tb, p_do_am_tb,
+        p_do_dong_deu_nhiet, p_do_dong_deu_am,
+        p_do_on_dinh_nhiet, p_do_on_dinh_am
+    )
+    RETURNING id INTO v_id;
+
+    RETURN v_id;
+END;
+$$;
+
+
 CREATE OR REPLACE FUNCTION fn_lay_phien(p_phien_id INT)
 RETURNS TABLE (
     ten_thiet_bi            VARCHAR,
@@ -195,144 +292,14 @@ AS $$
 $$;
 
 
--- ================================================================
--- FUNCTIONS VERSION 5 — ket_qua_hieu_chuan
--- Thay đổi: vi_tri_1..9 → kenh_1..10
--- ================================================================
 
--- ----------------------------------------------------------------
--- fn_luu_ket_qua_hieu_chuan
--- ----------------------------------------------------------------
-DROP FUNCTION IF EXISTS fn_luu_ket_qua_hieu_chuan(
-    INT, INT, FLOAT, FLOAT,
-    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
-    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
-    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
-    INT, INT, VARCHAR
-);
-
--- Xoá signature cũ (9 kênh) nếu tồn tại
-DROP FUNCTION IF EXISTS fn_luu_ket_qua_hieu_chuan(
-    INT, INT, FLOAT, FLOAT,
-    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
-    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
-    FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT, FLOAT,
-    INT, INT, VARCHAR
-);
-
-CREATE OR REPLACE FUNCTION fn_luu_ket_qua_hieu_chuan(
-    -- Khoá
-    p_phien_id              INT,
-    p_stt                   INT,
-
-    -- Người dùng nhập
-    p_gia_tri_dat           FLOAT,
-    p_gia_tri_chi_thi       FLOAT,
-
-    -- Giá trị từng kênh chuẩn (NULL nếu không dùng) — tối đa 10
-    p_kenh_1                FLOAT,
-    p_kenh_2                FLOAT,
-    p_kenh_3                FLOAT,
-    p_kenh_4                FLOAT,
-    p_kenh_5                FLOAT,
-    p_kenh_6                FLOAT,
-    p_kenh_7                FLOAT,
-    p_kenh_8                FLOAT,
-    p_kenh_9                FLOAT,
-    p_kenh_10               FLOAT,
-
-    -- Kết quả tổng hợp
-    p_gia_tri_trung_binh    FLOAT,
-    p_so_hieu_chinh         FLOAT,
-    p_do_on_dinh            FLOAT,
-    p_do_dong_deu           FLOAT,
-    p_do_khong_dam_bao      FLOAT,
-
-    -- Thành phần trung gian
-    p_uch1                  FLOAT,
-    p_uch2                  FLOAT,
-    p_uch                   FLOAT,
-    p_ubk1                  FLOAT,
-    p_ubk2                  FLOAT,
-    p_ubk3                  FLOAT,
-    p_ubk4                  FLOAT,
-    p_ubk                   FLOAT,
-
-    -- Metadata tính toán
-    p_so_kenh               INT,
-    p_so_lan_do             INT,
-    p_phuong_phap_b         VARCHAR
-)
-RETURNS INT
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_id INT;
-BEGIN
-    INSERT INTO ket_qua_hieu_chuan (
-        phien_id, stt,
-        gia_tri_dat, gia_tri_chi_thi,
-        kenh_1, kenh_2, kenh_3, kenh_4, kenh_5,
-        kenh_6, kenh_7, kenh_8, kenh_9, kenh_10,
-        gia_tri_trung_binh, so_hieu_chinh,
-        do_on_dinh, do_dong_deu, do_khong_dam_bao,
-        uch1, uch2, uch,
-        ubk1, ubk2, ubk3, ubk4, ubk,
-        so_kenh, so_lan_do, phuong_phap_b
-    )
-    VALUES (
-        p_phien_id, p_stt,
-        p_gia_tri_dat, p_gia_tri_chi_thi,
-        p_kenh_1, p_kenh_2, p_kenh_3, p_kenh_4, p_kenh_5,
-        p_kenh_6, p_kenh_7, p_kenh_8, p_kenh_9, p_kenh_10,
-        p_gia_tri_trung_binh, p_so_hieu_chinh,
-        p_do_on_dinh, p_do_dong_deu, p_do_khong_dam_bao,
-        p_uch1, p_uch2, p_uch,
-        p_ubk1, p_ubk2, p_ubk3, p_ubk4, p_ubk,
-        p_so_kenh, p_so_lan_do, p_phuong_phap_b
-    )
-    ON CONFLICT (phien_id, stt) DO UPDATE SET
-        gia_tri_dat          = EXCLUDED.gia_tri_dat,
-        gia_tri_chi_thi      = EXCLUDED.gia_tri_chi_thi,
-        kenh_1               = EXCLUDED.kenh_1,
-        kenh_2               = EXCLUDED.kenh_2,
-        kenh_3               = EXCLUDED.kenh_3,
-        kenh_4               = EXCLUDED.kenh_4,
-        kenh_5               = EXCLUDED.kenh_5,
-        kenh_6               = EXCLUDED.kenh_6,
-        kenh_7               = EXCLUDED.kenh_7,
-        kenh_8               = EXCLUDED.kenh_8,
-        kenh_9               = EXCLUDED.kenh_9,
-        kenh_10              = EXCLUDED.kenh_10,
-        gia_tri_trung_binh   = EXCLUDED.gia_tri_trung_binh,
-        so_hieu_chinh        = EXCLUDED.so_hieu_chinh,
-        do_on_dinh           = EXCLUDED.do_on_dinh,
-        do_dong_deu          = EXCLUDED.do_dong_deu,
-        do_khong_dam_bao     = EXCLUDED.do_khong_dam_bao,
-        uch1                 = EXCLUDED.uch1,
-        uch2                 = EXCLUDED.uch2,
-        uch                  = EXCLUDED.uch,
-        ubk1                 = EXCLUDED.ubk1,
-        ubk2                 = EXCLUDED.ubk2,
-        ubk3                 = EXCLUDED.ubk3,
-        ubk4                 = EXCLUDED.ubk4,
-        ubk                  = EXCLUDED.ubk,
-        so_kenh              = EXCLUDED.so_kenh,
-        so_lan_do            = EXCLUDED.so_lan_do,
-        phuong_phap_b        = EXCLUDED.phuong_phap_b,
-        ngay_tao             = NOW()
-    RETURNING id INTO v_id;
-
-    RETURN v_id;
-END;
-$$;
 
 
 -- ----------------------------------------------------------------
 -- fn_lay_ket_qua_hieu_chuan
 -- ----------------------------------------------------------------
 DROP FUNCTION IF EXISTS fn_lay_ket_qua_hieu_chuan(INT);
-
+ 
 CREATE OR REPLACE FUNCTION fn_lay_ket_qua_hieu_chuan(p_phien_id INT)
 RETURNS TABLE (
     id                  INT,
@@ -354,21 +321,13 @@ RETURNS TABLE (
     do_on_dinh          FLOAT,
     do_dong_deu         FLOAT,
     do_khong_dam_bao    FLOAT,
-    uch1                FLOAT,
-    uch2                FLOAT,
     uch                 FLOAT,
-    ubk1                FLOAT,
-    ubk2                FLOAT,
-    ubk3                FLOAT,
-    ubk4                FLOAT,
     ubk                 FLOAT,
     so_kenh             INT,
     so_lan_do           INT,
     phuong_phap_b       VARCHAR
 )
-LANGUAGE sql
-STABLE
-AS $$
+LANGUAGE sql STABLE AS $$
     SELECT
         id, stt,
         gia_tri_dat, gia_tri_chi_thi,
@@ -376,8 +335,7 @@ AS $$
         kenh_6, kenh_7, kenh_8, kenh_9, kenh_10,
         gia_tri_trung_binh, so_hieu_chinh,
         do_on_dinh, do_dong_deu, do_khong_dam_bao,
-        uch1, uch2, uch,
-        ubk1, ubk2, ubk3, ubk4, ubk,
+        uch, ubk,
         so_kenh, so_lan_do, phuong_phap_b
     FROM ket_qua_hieu_chuan
     WHERE phien_id = p_phien_id
@@ -421,4 +379,79 @@ AS $$
     SELECT COALESCE(MAX(stt), 0) + 1
     FROM ket_qua_hieu_chuan
     WHERE phien_id = p_phien_id;
+$$;
+
+
+-- Lưu 1 lần đo (upsert — 1 dòng = 1 lan_do với kenh_1..10)
+CREATE OR REPLACE FUNCTION fn_luu_chi_tiet_lan_do(
+    p_ket_qua_hc_id INT,
+    p_lan_do        SMALLINT,
+    p_chi_thi_uut   FLOAT,
+    p_kenh_1        FLOAT,
+    p_kenh_2        FLOAT,
+    p_kenh_3        FLOAT,
+    p_kenh_4        FLOAT,
+    p_kenh_5        FLOAT,
+    p_kenh_6        FLOAT,
+    p_kenh_7        FLOAT,
+    p_kenh_8        FLOAT,
+    p_kenh_9        FLOAT,
+    p_kenh_10       FLOAT
+)
+RETURNS VOID LANGUAGE plpgsql AS $$
+BEGIN
+    INSERT INTO chi_tiet_lan_do
+        (ket_qua_hc_id, lan_do, chi_thi_uut,
+         kenh_1, kenh_2, kenh_3, kenh_4, kenh_5,
+         kenh_6, kenh_7, kenh_8, kenh_9, kenh_10)
+    VALUES
+        (p_ket_qua_hc_id, p_lan_do, p_chi_thi_uut,
+         p_kenh_1, p_kenh_2, p_kenh_3, p_kenh_4, p_kenh_5,
+         p_kenh_6, p_kenh_7, p_kenh_8, p_kenh_9, p_kenh_10)
+    ON CONFLICT (ket_qua_hc_id, lan_do) DO UPDATE SET
+        chi_thi_uut  = EXCLUDED.chi_thi_uut,
+        kenh_1       = EXCLUDED.kenh_1,
+        kenh_2       = EXCLUDED.kenh_2,
+        kenh_3       = EXCLUDED.kenh_3,
+        kenh_4       = EXCLUDED.kenh_4,
+        kenh_5       = EXCLUDED.kenh_5,
+        kenh_6       = EXCLUDED.kenh_6,
+        kenh_7       = EXCLUDED.kenh_7,
+        kenh_8       = EXCLUDED.kenh_8,
+        kenh_9       = EXCLUDED.kenh_9,
+        kenh_10      = EXCLUDED.kenh_10;
+END;
+$$;
+ 
+-- Lấy chi tiết theo ket_qua_hc_id (1 dòng = 1 lần đo)
+CREATE OR REPLACE FUNCTION fn_lay_chi_tiet_lan_do(p_ket_qua_hc_id INT)
+RETURNS TABLE (
+    lan_do        SMALLINT,
+    chi_thi_uut   FLOAT,
+    kenh_1        FLOAT,
+    kenh_2        FLOAT,
+    kenh_3        FLOAT,
+    kenh_4        FLOAT,
+    kenh_5        FLOAT,
+    kenh_6        FLOAT,
+    kenh_7        FLOAT,
+    kenh_8        FLOAT,
+    kenh_9        FLOAT,
+    kenh_10       FLOAT
+)
+LANGUAGE sql STABLE AS $$
+    SELECT lan_do, chi_thi_uut,
+           kenh_1, kenh_2, kenh_3, kenh_4, kenh_5,
+           kenh_6, kenh_7, kenh_8, kenh_9, kenh_10
+    FROM chi_tiet_lan_do
+    WHERE ket_qua_hc_id = p_ket_qua_hc_id
+    ORDER BY lan_do;
+$$;
+
+
+CREATE OR REPLACE FUNCTION fn_xoa_chi_tiet_lan_do(p_ket_qua_hc_id INT)
+RETURNS VOID LANGUAGE plpgsql AS $$
+BEGIN
+    DELETE FROM chi_tiet_lan_do WHERE ket_qua_hc_id = p_ket_qua_hc_id;
+END;
 $$;

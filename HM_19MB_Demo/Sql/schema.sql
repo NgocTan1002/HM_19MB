@@ -91,18 +91,6 @@ ALTER TABLE ket_qua_do
     ADD COLUMN IF NOT EXISTS do_on_dinh_am FLOAT NULL;
 
 
--- ================================================================
--- SCHEMA VERSION 5 — Bảng kết quả hiệu chuẩn tổng hợp
--- Thay đổi so với v4:
---   • Đổi tên vi_tri_1..9  → kenh_1..10  (tăng max từ 9 lên 10)
---   • Đổi tên cột so_vi_tri_hop_le → so_kenh_hop_le (không lưu DB,
---     chỉ tính trong code)
--- ================================================================
-
--- ----------------------------------------------------------------
--- Bảng ket_qua_hieu_chuan
--- Mỗi dòng = 1 điểm kiểm tra (1 giá trị đặt) trong 1 phiên.
--- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ket_qua_hieu_chuan (
     id                  SERIAL          PRIMARY KEY,
     phien_id            INT             NOT NULL
@@ -111,16 +99,12 @@ CREATE TABLE IF NOT EXISTS ket_qua_hieu_chuan (
     -- Thứ tự điểm kiểm tra trong phiên (1, 2, 3, ...)
     stt                 INT             NOT NULL,
 
-    -- ── Người dùng nhập ────────────────────────────────────────
     -- Nhiệt độ cài đặt trên tủ
     gia_tri_dat         FLOAT           NOT NULL,
 
     -- Giá trị chỉ thị trung bình của tủ nhiệt (t̄_tn, CT3)
     gia_tri_chi_thi     FLOAT           NOT NULL,
 
-    -- ── Giá trị đọc trên chuẩn tại từng kênh (t̄_j, CT2) ────────
-    -- Tối đa 10 kênh (đổi từ vi_tri sang kenh, tăng từ 9 lên 10)
-    -- NULL nếu không dùng kênh đó (tuỳ 3/5/9/10 kênh)
     kenh_1              FLOAT           NULL,
     kenh_2              FLOAT           NULL,
     kenh_3              FLOAT           NULL,
@@ -149,13 +133,7 @@ CREATE TABLE IF NOT EXISTS ket_qua_hieu_chuan (
     do_khong_dam_bao    FLOAT           NOT NULL,
 
     -- ── Thành phần trung gian (để truy vết, tái hiện tính toán)
-    uch1                FLOAT           NULL,   -- loại A (CT7)
-    uch2                FLOAT           NULL,   -- loại B (CT10/CT11)
     uch                 FLOAT           NULL,   -- liên hợp chuẩn (CT12)
-    ubk1                FLOAT           NULL,   -- tản mát chỉ thị (CT13)
-    ubk2                FLOAT           NULL,   -- theo ổn định (CT15)
-    ubk3                FLOAT           NULL,   -- theo đồng đều (CT16)
-    ubk4                FLOAT           NULL,   -- theo phân giải (CT17)
     ubk                 FLOAT           NULL,   -- liên hợp tủ (CT18)
 
     -- ── Metadata tính toán ──────────────────────────────────────
@@ -166,23 +144,42 @@ CREATE TABLE IF NOT EXISTS ket_qua_hieu_chuan (
     ngay_tao            TIMESTAMP       NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS chi_tiet_lan_do (
+    id              SERIAL   PRIMARY KEY,
+    ket_qua_hc_id   INT      NOT NULL
+                        REFERENCES ket_qua_hieu_chuan(id) ON DELETE CASCADE,
+    lan_do          SMALLINT NOT NULL,   -- 1..n
+
+    -- Chỉ thị tủ nhiệt tại lần đo này
+    chi_thi_uut     FLOAT    NULL,       -- (t_tn1 + t_tn2) / 2
+
+    -- Giá trị từng kênh chuẩn (NULL nếu không dùng)
+    kenh_1          FLOAT    NULL,
+    kenh_2          FLOAT    NULL,
+    kenh_3          FLOAT    NULL,
+    kenh_4          FLOAT    NULL,
+    kenh_5          FLOAT    NULL,
+    kenh_6          FLOAT    NULL,
+    kenh_7          FLOAT    NULL,
+    kenh_8          FLOAT    NULL,
+    kenh_9          FLOAT    NULL,
+    kenh_10         FLOAT    NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_kqhc_phien
     ON ket_qua_hieu_chuan(phien_id);
 
 CREATE INDEX IF NOT EXISTS idx_kqhc_phien_stt
     ON ket_qua_hieu_chuan(phien_id, stt);
 
--- Không cho trùng STT trong cùng 1 phiên
+
 ALTER TABLE ket_qua_hieu_chuan
     DROP CONSTRAINT IF EXISTS uq_kqhc_phien_stt;
 
 ALTER TABLE ket_qua_hieu_chuan
     ADD CONSTRAINT uq_kqhc_phien_stt UNIQUE (phien_id, stt);
 
--- ================================================================
--- Migration: Nếu bảng cũ dùng vi_tri_1..9, thêm cột kenh_1..10
--- (An toàn khi chạy lại — IF NOT EXISTS)
--- ================================================================
+
 ALTER TABLE ket_qua_hieu_chuan
     ADD COLUMN IF NOT EXISTS kenh_1  FLOAT NULL,
     ADD COLUMN IF NOT EXISTS kenh_2  FLOAT NULL,
@@ -194,3 +191,55 @@ ALTER TABLE ket_qua_hieu_chuan
     ADD COLUMN IF NOT EXISTS kenh_8  FLOAT NULL,
     ADD COLUMN IF NOT EXISTS kenh_9  FLOAT NULL,
     ADD COLUMN IF NOT EXISTS kenh_10 FLOAT NULL;
+
+-- ── Migration v7: đảm bảo chi_tiet_lan_do denormalized (kenh_1..10) ──
+-- Nếu bảng cũ dùng cấu trúc normalized (kenh + gia_tri) thì tạo lại
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'chi_tiet_lan_do' AND column_name = 'gia_tri'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'chi_tiet_lan_do' AND column_name = 'kenh_1'
+    ) THEN
+        DROP TABLE chi_tiet_lan_do CASCADE;
+
+        CREATE TABLE chi_tiet_lan_do (
+            id              SERIAL   PRIMARY KEY,
+            ket_qua_hc_id   INT      NOT NULL
+                                REFERENCES ket_qua_hieu_chuan(id) ON DELETE CASCADE,
+            lan_do          SMALLINT NOT NULL,
+            chi_thi_uut     FLOAT    NULL,
+            kenh_1  FLOAT NULL, kenh_2  FLOAT NULL, kenh_3  FLOAT NULL,
+            kenh_4  FLOAT NULL, kenh_5  FLOAT NULL, kenh_6  FLOAT NULL,
+            kenh_7  FLOAT NULL, kenh_8  FLOAT NULL, kenh_9  FLOAT NULL,
+            kenh_10 FLOAT NULL
+        );
+
+        RAISE NOTICE 'Migrated chi_tiet_lan_do to denormalized (kenh_1..10)';
+    END IF;
+END;
+$$;
+
+-- Đảm bảo các cột kenh_1..10 tồn tại (cho DB cũ chưa có)
+ALTER TABLE chi_tiet_lan_do
+    ADD COLUMN IF NOT EXISTS chi_thi_uut FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_1  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_2  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_3  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_4  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_5  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_6  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_7  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_8  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_9  FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS kenh_10 FLOAT NULL;
+
+ALTER TABLE chi_tiet_lan_do
+    DROP CONSTRAINT IF EXISTS uq_ctld_hc_lan;
+
+ALTER TABLE chi_tiet_lan_do
+    ADD CONSTRAINT uq_ctld_hc_lan
+        UNIQUE (ket_qua_hc_id, lan_do);
+

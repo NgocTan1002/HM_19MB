@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
@@ -33,9 +33,18 @@ namespace HM_19MB_Demo.Data
                 "Thiếu 'PostgresConnectionString' trong app.config.");
 
         // Tạo bảng và đăng ký function nếu chưa tồn tại
-        private const int SCHEMA_VERSION = 5;
+        private const int SCHEMA_VERSION = 7;
+        private static bool _schemaEnsured = false;
+
+        /// <summary>
+        /// Reset flag để buộc chạy lại schema lần gọi kế tiếp (dùng khi cần migrate).
+        /// </summary>
+        public static void ResetSchemaFlag() => _schemaEnsured = false;
+
         public static async Task EnsureSchemaAsync()
         {
+            if (_schemaEnsured) return;
+
             await using var conn = new NpgsqlConnection(ConnectionString);
             await conn.OpenAsync();
 
@@ -80,6 +89,8 @@ namespace HM_19MB_Demo.Data
                 cmd.Parameters.AddWithValue("@v", SCHEMA_VERSION.ToString());
                 await cmd.ExecuteNonQueryAsync();
             }
+
+            _schemaEnsured = true;
         }
 
         // Tạo phiên hiệu chuẩn mới

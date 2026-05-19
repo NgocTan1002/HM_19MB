@@ -490,29 +490,27 @@ namespace HM_19MB_Demo
                 var result = new CalibrationResultRow
                 {
                     GiaTriDat = giaTriDat,
-                    GiaTriChiThi = ttn,          // tự động lấy từ t̄_tn
+                    GiaTriChiThi = ttn,
                     GiaTriTrungBinh = tch,
                     SoHieuChinh = deltaT,
                     DoOnDinh = deltaOd,
                     DoDongDeu = deltaDD,
                     DoKhongDamBao = U_final,
-                    Uch1 = uch1,
-                    Uch2 = uch2,
+
                     Uch = uc,
-                    Ubk1 = ubk1,
-                    Ubk2 = ubk2,
-                    Ubk3 = ubk3,
-                    Ubk4 = ubk4,
                     Ubk = ubk,
+
                     SoKenh = _j,
                     SoLanDo = _n,
                     PhuongPhapB = rbUseU.Checked ? "U" : "Delta",
                 };
 
-                // Gán giá trị từng vị trí chuẩn: trung bình thô từng kênh, chưa cộng số hiệu chính.
-                // Các giá trị đã hiệu chỉnh vẫn dùng riêng cho tính t_ch, độ đồng đều và số hiệu chính.
+                // Gán trung bình từng kênh
                 for (int j = 0; j < _j && j < result.Kenh.Length; j++)
                     result.Kenh[j] = channelMeans[j];
+
+                // Gán dữ liệu thô từng lần đo
+                result.ChiTietLanDos = ExtractChiTietLanDo();
 
                 _lastCalculatedResult = result;
                 btnAddToTable.Enabled = true;
@@ -524,6 +522,39 @@ namespace HM_19MB_Demo
                 MessageBox.Show($"Lỗi tính toán: {ex.Message}", "Lỗi",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private List<Data.ChiTietLanDo> ExtractChiTietLanDo()
+        {
+            var list = new List<Data.ChiTietLanDo>();
+
+            for (int i = 0; i < _n; i++)
+            {
+                double ttn1 = 0, ttn2 = 0;
+                double.TryParse(
+                    gridIndicator.Rows[0].Cells[i + 1].Value?.ToString(), out ttn1);
+                double.TryParse(
+                    gridIndicator.Rows[1].Cells[i + 1].Value?.ToString(), out ttn2);
+                double chiThi = (ttn1 + ttn2) / 2.0;
+
+                for (int j = 0; j < _j; j++)
+                {
+                    if (!double.TryParse(
+                            gridMeasurements.Rows[i].Cells[j + 1].Value?.ToString(),
+                            out double val))
+                        continue;
+
+                    list.Add(new Data.ChiTietLanDo
+                    {
+                        LanDo = i + 1,
+                        Kenh = j + 1,
+                        GiaTri = val,
+                        ChiThiUut = double.IsNaN(chiThi) ? null : chiThi,
+                    });
+                }
+            }
+
+            return list;
         }
 
         // ── Button handlers ───────────────────────────────────────────────

@@ -289,12 +289,13 @@ namespace HM_19MB_Demo
                     await SavePendingRecordsAsync();
 
                 await EnsureCalibrationGridSavedAsync();
+
+                // await ExcelExporter.ExportWithDialogAsync(_currentSessionId.Value, this);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi khi lưu dữ liệu: {ex.Message}", "Lỗi",
+                MessageBox.Show($"Lỗi: {ex.Message}", "Lỗi",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
             }
         }
 

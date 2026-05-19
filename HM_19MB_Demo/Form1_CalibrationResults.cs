@@ -7,15 +7,6 @@ using System.Windows.Forms;
 
 namespace HM_19MB_Demo
 {
-    /// <summary>
-    /// Partial class chứa logic bảng kết quả hiệu chuẩn tổng hợp (Bước 4).
-    ///
-    /// Bảng gộp cả thông tin Bảng A.1 và Bảng B của QTHC 1.013:2019:
-    ///   STT | Giá trị đặt | Giá trị chỉ thị | Kênh 1..k | Trung bình
-    ///       | Số hiệu chính | Độ ổn định | Độ đồng đều | ĐKĐB mở rộng
-    ///
-    /// Số cột "Kênh" động theo k (3 / 5 / 9 / 10).
-    /// </summary>
     public partial class Form1
     {
         // ── Constants ─────────────────────────────────────────────────────
@@ -203,13 +194,9 @@ namespace HM_19MB_Demo
                 return;
             }
 
-            // Gán STT
             row.STT = _gridCalibration.Rows.Count + 1;
-
-            // Thêm dòng vào grid ngay lập tức (không chờ DB)
             AddRowToCalibrationGrid(row);
 
-            // Lưu DB bất đồng bộ
             if (_currentSessionId.HasValue)
             {
                 Task.Run(async () =>
@@ -217,19 +204,27 @@ namespace HM_19MB_Demo
                     try
                     {
                         await DatabaseService.EnsureSchemaAsync();
-                        await DatabaseService.LuuKetQuaHieuChuanAsync(_currentSessionId.Value, row);
+
+                        // 1. Lưu kết quả tổng hợp
+                        row.Id = await DatabaseService.LuuKetQuaHieuChuanAsync(
+                            _currentSessionId.Value, row);
+
+                        // 2. Lưu chi tiết từng lần đo
+                        if (row.Id > 0 && row.ChiTietLanDos?.Count > 0)
+                            await DatabaseService.LuuChiTietLanDoAsync(
+                                row.Id, row.ChiTietLanDos);
 
                         Invoke(new Action(() =>
                         {
                             _lblCalibStatus.Text =
-                                $"Đã lưu {_gridCalibration.Rows.Count} điểm kiểm tra  |  " +
-                                $"Cập nhật: {DateTime.Now:HH:mm:ss}";
+                                $"Đã lưu {_gridCalibration.Rows.Count} điểm  |  " +
+                                $"{DateTime.Now:HH:mm:ss}";
                             _lblCalibStatus.ForeColor = Color.DarkGreen;
                         }));
                     }
                     catch (Exception ex)
                     {
-                        AppLogger.Error("CalibrationResults", "Lỗi lưu kết quả hiệu chuẩn", ex);
+                        AppLogger.Error("CalibrationResults", "Lỗi lưu", ex);
                         Invoke(new Action(() =>
                         {
                             _lblCalibStatus.Text = $"Lỗi lưu DB: {ex.Message}";
@@ -237,12 +232,6 @@ namespace HM_19MB_Demo
                         }));
                     }
                 });
-            }
-            else
-            {
-                _lblCalibStatus.Text =
-                    $"Đã thêm {_gridCalibration.Rows.Count} điểm (chưa có session — chưa lưu DB)";
-                _lblCalibStatus.ForeColor = Color.DarkOrange;
             }
         }
 
