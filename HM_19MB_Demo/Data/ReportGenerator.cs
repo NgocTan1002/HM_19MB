@@ -1,15 +1,47 @@
-﻿using HM_19MB_Demo.Data;
+using HM_19MB_Demo.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using System.Windows.Forms;
+
 namespace HM_19MB_Demo
 {
     // Tạo báo cáo hiệu chuẩn từ dữ liệu trong database.
     public static class ReportGenerator
     {
+        public static async Task ExportAsync(
+            int phienId,
+            int kenhCount,
+            IWin32Window owner)
+        {
+            await DatabaseService.EnsureSchemaAsync();
+            var meta = await DatabaseService.LayPhienAsync(phienId)
+                ?? throw new InvalidOperationException(
+                    "Không tìm thấy phiên hiệu chuẩn.");
+            var calibRows = await DatabaseService.LayKetQuaHieuChuanAsync(phienId);
+
+            if (calibRows.Count == 0)
+                throw new InvalidOperationException(
+                    "Chưa có điểm kiểm tra nào. " +
+                    "Vui lòng thêm ít nhất 1 điểm trước khi xuất báo cáo.");
+
+            // Load ChiTietLanDos cho từng row từ DB
+            foreach (var row in calibRows)
+            {
+                if (row.Id > 0)
+                    row.ChiTietLanDos =
+                        await DatabaseService.LayChiTietLanDoAsync(row.Id);
+            }
+
+            // Xuất Word — hỏi người dùng
+            await ExcelExporter.ExportWordAsync(meta, calibRows, owner);
+
+            // Xuất Excel — hỏi người dùng (dialog riêng)
+            await ExcelExporter.ExportExcelAsync(meta, calibRows, kenhCount, owner);
+        }
 
         public static async Task<string> ExportToExcelAsync(int phienId, string outputPath)
         {

@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace HM_19MB_Demo
@@ -20,6 +20,10 @@ namespace HM_19MB_Demo
 
         private void InitializeComponent()
         {
+            _tabMain = new TabControl();
+            _tabInput = new TabPage();
+            _tabResults = new TabPage();
+            _tabBudget = new TabPage();
             mainLayout = new TableLayoutPanel();
             step0Panel = new Panel();
             lblStep0Title = new Label();
@@ -87,6 +91,8 @@ namespace HM_19MB_Demo
             ((System.ComponentModel.ISupportInitialize)numResolutionD).BeginInit();
             resultPanel.SuspendLayout();
             bottomPanel.SuspendLayout();
+            _tabMain.SuspendLayout();
+            _tabInput.SuspendLayout();
             SuspendLayout();
             // 
             // mainLayout
@@ -694,13 +700,56 @@ namespace HM_19MB_Demo
             lblStep5Title.TabIndex = 0;
             lblStep5Title.Visible = false;
             // 
+            // _tabMain
+            // 
+            _tabMain.Controls.Add(_tabInput);
+            _tabMain.Controls.Add(_tabResults);
+            _tabMain.Controls.Add(_tabBudget);
+            _tabMain.Dock = DockStyle.Fill;
+            _tabMain.Location = new Point(0, 0);
+            _tabMain.Name = "_tabMain";
+            _tabMain.SelectedIndex = 0;
+            _tabMain.Size = new Size(1400, 1170);
+            _tabMain.TabIndex = 0;
+            // 
+            // _tabInput
+            // 
+            _tabInput.Controls.Add(mainLayout);
+            _tabInput.Location = new Point(4, 29);
+            _tabInput.Name = "_tabInput";
+            _tabInput.Padding = new Padding(3);
+            _tabInput.Size = new Size(1392, 1137);
+            _tabInput.TabIndex = 0;
+            _tabInput.Text = "① Nhập liệu";
+            _tabInput.UseVisualStyleBackColor = true;
+            // 
+            // _tabResults
+            // 
+            _tabResults.Location = new Point(4, 29);
+            _tabResults.Name = "_tabResults";
+            _tabResults.Padding = new Padding(3);
+            _tabResults.Size = new Size(1392, 1137);
+            _tabResults.TabIndex = 1;
+            _tabResults.Text = "② Kết quả tổng hợp";
+            _tabResults.UseVisualStyleBackColor = true;
+            // 
+            // _tabBudget
+            // 
+            _tabBudget.Location = new Point(4, 29);
+            _tabBudget.Name = "_tabBudget";
+            _tabBudget.Padding = new Padding(3);
+            _tabBudget.Size = new Size(1392, 1137);
+            _tabBudget.TabIndex = 2;
+            _tabBudget.Text = "③ Budget ĐKĐBĐ";
+            _tabBudget.UseVisualStyleBackColor = true;
+            // 
             // UncertaintyCalculationForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             AutoScroll = true;
             ClientSize = new Size(1400, 1170);
-            Controls.Add(mainLayout);
+            Controls.Add(_tabMain);
             MinimumSize = new Size(1200, 700);
             Name = "UncertaintyCalculationForm";
             StartPosition = FormStartPosition.CenterScreen;
@@ -726,6 +775,8 @@ namespace HM_19MB_Demo
             resultPanel.ResumeLayout(false);
             resultPanel.PerformLayout();
             bottomPanel.ResumeLayout(false);
+            _tabMain.ResumeLayout(false);
+            _tabInput.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -786,5 +837,11 @@ namespace HM_19MB_Demo
         private Button btnCalculate;
         private Button btnAddToTable;   // MỚI
         private Button btnSaveToDb;
+
+        // ── TabControl ───────────────────────────────────────────────────
+        private TabControl _tabMain;
+        private TabPage _tabInput;
+        private TabPage _tabResults;
+        private TabPage _tabBudget;
     }
 }
