@@ -867,7 +867,7 @@ namespace HM_19MB_Demo
             // 
             _lblStatus.AutoSize = true;
             _lblStatus.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            _lblStatus.ForeColor = Color.DarkRed;
+            _lblStatus.ForeColor = SystemColors.ActiveCaptionText;
             _lblStatus.Location = new Point(964, 11);
             _lblStatus.Margin = new Padding(18, 11, 0, 0);
             _lblStatus.Name = "_lblStatus";

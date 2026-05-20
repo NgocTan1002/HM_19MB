@@ -50,8 +50,8 @@
   <ItemGroup>
     <Compile Remove="test_template.cs" />
     <Compile Remove="TempReader\**\*.cs" />
-    <EmbeddedResource Remove="Form1_DataSaving.resx" />
     <EmbeddedResource Remove="Form1_CalibrationResults.resx" />
+    <EmbeddedResource Remove="Form1_DataSaving.resx" />
   </ItemGroup>
 
 </Project>

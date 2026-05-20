@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using HM_19MB_Demo.Data;
 using HM_19MB_Demo.Models;
 using HM_19MB_Demo.Services;
@@ -14,43 +15,27 @@ namespace HM_19MB_Demo
     public partial class UncertaintyCalculationForm : Form
     {
         private int _j = 3;
-        private int _n = 10;
+        private int _n = 5;
         private int _phienId;
         private readonly Func<CalibrationResultRow, Task>? _onResultAdded;
         private readonly Action<int, int>? _onConfigChanged;
         private bool _updatingConfigFromOwner;
+        private bool _suppressGridEvents;
+        private double[] _corrections = new double[3];
+        private readonly List<TextBox> _correctionBoxes = new();
 
-        // Lưu kết quả tính toán gần nhất để dùng khi bấm "Thêm vào bảng"
-        private CalibrationResultRow? _lastCalculatedResult = null;
+        private CalibrationResultRow? _lastCalculatedResult;
+        private UncertaintyFullResult? _lastFullResult;
+        private UncertaintyInput? _lastInput;
 
         private DataGridView _gridResults = null!;
         private DataGridView _gridBudget = null!;
 
-        // ── MathLabel thay thế các Label công thức ───────────────────────
-        private MathLabel mlTchResult = null!;
-        private MathLabel mlUch1Result = null!;
-        private MathLabel mlUch2Result = null!;
-        private MathLabel mlUch1Final = null!;
-        private MathLabel mlUch2Final = null!;
-        private MathLabel mlUcFinal = null!;
-        private MathLabel mlUbk1 = null!;
-        private MathLabel mlUbk2 = null!;
-        private MathLabel mlUbk3 = null!;
-        private MathLabel mlUbk4 = null!;
-        private MathLabel mlUbkResult = null!;
-        private MathLabel mlTtnResult = null!;
-        private MathLabel mlDeltaT = null!;
-        private MathLabel mlDeltaOd = null!;
-        private MathLabel mlDeltaDd = null!;
-        private MathLabel mlUFinal = null!;
-
-        // ── Constructor mặc định (tương thích cũ, dùng cho ShowDialog) ───
         public UncertaintyCalculationForm()
             : this(0, null)
         {
         }
 
-        // ── Constructor mới: nhận phienId và callback ────────────────────
         public UncertaintyCalculationForm(int phienId, Func<CalibrationResultRow, Task>? onResultAdded)
             : this(phienId, onResultAdded, null)
         {
@@ -66,9 +51,10 @@ namespace HM_19MB_Demo
             _onConfigChanged = onConfigChanged;
 
             InitializeComponent();
+            btnAddToTable = btnCalculateAndAdd;
             InitResultsGrid();
             InitBudgetGrid();
-            ReplaceLabelWithMath();
+            BuildResultCards();
             WireEvents();
             ApplyConfiguration();
 
@@ -76,7 +62,7 @@ namespace HM_19MB_Demo
         }
 
         public UncertaintyCalculationForm(int kenhCount, int? phienId, Action<CalibrationResultRow>? onResultAdded)
-            : this(kenhCount, 10, phienId, onResultAdded, null)
+            : this(kenhCount, 5, phienId, onResultAdded, null)
         {
         }
 
@@ -118,292 +104,336 @@ namespace HM_19MB_Demo
                 _updatingConfigFromOwner = false;
             }
 
-            if (!changed) return;
+            RebuildGridData();
 
-            ApplyConfiguration();
             _lastCalculatedResult = null;
-            btnAddToTable.Enabled = false;
+            _lastFullResult = null;
+            _lastInput = null;
+            btnCalculateAndAdd.Enabled = false;
+            lblStatus.Text = string.Empty;
 
             if (notifyOwner && !_updatingConfigFromOwner)
                 _onConfigChanged?.Invoke(_j, _n);
         }
 
-        // ── Khởi tạo MathLabel ───────────────────────────────────────────
-
-        private void ReplaceLabelWithMath()
-        {
-            // step2Panel
-            mlUch1Result = Swap(step2Panel, lblUch1Result, "u SUB{ch1} = (chưa tính)", 11f, Color.DarkBlue);
-
-            // pnlStandards
-            mlUch2Result = Swap(pnlStandards, lblUch2Result, "u SUB{ch2} = (chưa tính)", 11f, Color.DarkGreen);
-
-            // resultPanel — hàng 1
-            mlUch1Final = Swap(resultPanel, lblUch1Final, "u SUB{ch1} = ---", 11f, Color.Black);
-            mlUch2Final = Swap(resultPanel, lblUch2Final, "u SUB{ch2} = ---", 11f, Color.Black);
-            mlUcFinal = Swap(resultPanel, lblUcFinal, "u SUB{c} = ---", 11f, Color.DarkBlue);
-            mlUbk1 = Swap(resultPanel, lblUbk1, "u SUB{bk1} = ---", 11f, Color.Black);
-            mlUbk2 = Swap(resultPanel, lblUbk2, "u SUB{bk2} = ---", 11f, Color.Black);
-            mlUbk3 = Swap(resultPanel, lblUbk3, "u SUB{bk3} = ---", 11f, Color.Black);
-            mlUbk4 = Swap(resultPanel, lblUbk4, "u SUB{bk4} = ---", 11f, Color.Black);
-            mlUbkResult = Swap(resultPanel, lblUbkResult, "u SUB{bk} = ---", 11f, Color.DarkOrange);
-
-            // resultPanel — hàng 2
-            mlTchResult = Swap(resultPanel, lblTchResult, "BAR{t}SUB{ch} = ---", 11f, Color.DarkMagenta);
-            mlTtnResult = Swap(resultPanel, lblTtnResult, "BAR{t}SUB{tn} = ---", 11f, Color.Black);
-            mlDeltaT = Swap(resultPanel, lblDeltaT, "_Delta_t = ---", 11f, Color.Black);
-            mlDeltaOd = Swap(resultPanel, lblDeltaOd, "_delta_t SUB{od} = ---", 11f, Color.Black);
-            mlDeltaDd = Swap(resultPanel, lblDeltaDd, "_delta_t SUB{dd} = ---", 11f, Color.Black);
-
-            // resultPanel — kết quả cuối
-            mlUFinal = Swap(resultPanel, lblUFinal,
-                "U = --- °C  (k=2, P=95%)",
-                13f, Color.DarkRed);
-        }
-
-        private static MathLabel Swap(Control parent, Label original,
-                                       string mathText, float fontSize, Color color)
-        {
-            var ml = new MathLabel
-            {
-                MathText = mathText,
-                BaseFontSize = fontSize,
-                ForeColor = color,
-                BackColor = Color.Transparent,
-                Location = original.Location,
-                Size = new Size(original.Width + 80, Math.Max(original.Height + 8, 28)),
-                Anchor = original.Anchor,
-            };
-            original.Visible = false;
-            parent.Controls.Add(ml);
-            ml.BringToFront();
-            return ml;
-        }
-
-        // ── Event wiring ─────────────────────────────────────────────────
-
         private void WireEvents()
         {
             btnApplyConfig.Click += BtnApplyConfig_Click;
-            btnCalculate.Click += BtnCalculate_Click;
-            btnSaveToDb.Click += BtnSaveToDb_Click;
-            btnAddToTable.Click += BtnAddToTable_Click;
+            btnCalculateAndAdd.Click += BtnCalculateAndAdd_Click;
 
-            gridMeasurements.CellValueChanged += GridMeasurements_CellValueChanged;
-            gridStandards.CellValueChanged += GridStandards_CellValueChanged;
-            gridIndicator.CellValueChanged += GridIndicator_CellValueChanged;
+            gridData.CellValueChanged += GridData_CellValueChanged;
+            gridData.CellEndEdit += GridData_CellEndEdit;
+            gridData.CurrentCellDirtyStateChanged += GridData_CurrentCellDirtyStateChanged;
+            gridData.Resize += (s, e) => FitGridDataLayout();
 
-            rbUseU.CheckedChanged += (s, e) => RecalculateAll();
-            rbUseDelta.CheckedChanged += (s, e) => RecalculateAll();
+            rbUseU.CheckedChanged += InputValueChanged;
+            rbUseDelta.CheckedChanged += InputValueChanged;
+            txtGiaTriDat.TextChanged += InputValueChanged;
+            txtUMax.TextChanged += InputValueChanged;
+            txtDeltaMax.TextChanged += InputValueChanged;
+            txtResA.TextChanged += InputValueChanged;
+            txtResD.TextChanged += InputValueChanged;
         }
 
         private void BtnApplyConfig_Click(object? sender, EventArgs e)
         {
             SetConfiguration((int)numChannels.Value, (int)numMeasurements.Value, notifyOwner: true);
+            RebuildGridData();
         }
 
-        // ── ApplyConfiguration ───────────────────────────────────────────
+        private void InputValueChanged(object? sender, EventArgs e)
+        {
+            if (_suppressGridEvents) return;
+            RecalculateAll(showErrors: false);
+        }
 
         private void ApplyConfiguration()
         {
-            // Bảng đo
-            gridMeasurements.Columns.Clear();
-            gridMeasurements.Rows.Clear();
+            RebuildCorrectionStrip();
+            RebuildGridData();
+        }
 
-            gridMeasurements.Columns.Add("MeasurementNo", "Lần đo");
-            gridMeasurements.Columns[0].ReadOnly = true;
-            gridMeasurements.Columns[0].DefaultCellStyle.BackColor = Color.LightGray;
+        private void RebuildCorrectionStrip()
+        {
+            double[] previous = _corrections;
+            _corrections = new double[_j];
+            for (int i = 0; i < _j && i < previous.Length; i++)
+                _corrections[i] = previous[i];
 
-            for (int j = 1; j <= _j; j++)
-                gridMeasurements.Columns.Add($"Channel{j}", $"Kênh đo {j}");
+            while (correctionStrip.Controls.Count > 1)
+                correctionStrip.Controls.RemoveAt(1);
 
-            for (int i = 1; i <= _n; i++)
+            _correctionBoxes.Clear();
+            for (int j = 0; j < _j; j++)
             {
-                var row = new DataGridViewRow();
-                row.CreateCells(gridMeasurements);
-                row.Cells[0].Value = $"Lần {i}";
-                for (int j = 1; j <= _j; j++) row.Cells[j].Value = "0.0";
-                gridMeasurements.Rows.Add(row);
+                var label = new Label
+                {
+                    AutoSize = true,
+                    Margin = new Padding(j == 0 ? 0 : 10, 5, 4, 0),
+                    Text = $"Kênh {j + 1}:"
+                };
+
+                var textBox = new TextBox
+                {
+                    Margin = new Padding(0, 1, 0, 0),
+                    Size = new Size(55, 27),
+                    Text = _corrections[j].ToString("F2"),
+                    Tag = j
+                };
+                textBox.TextChanged += Correction_TextChanged;
+
+                correctionStrip.Controls.Add(label);
+                correctionStrip.Controls.Add(textBox);
+                _correctionBoxes.Add(textBox);
+            }
+        }
+
+        private void Correction_TextChanged(object? sender, EventArgs e)
+        {
+            ReadCorrections();
+            RecalculateAll(showErrors: false);
+        }
+
+        private void RebuildGridData()
+        {
+            _suppressGridEvents = true;
+            try
+            {
+                RebuildCorrectionStrip();
+                gridData.Columns.Clear();
+                gridData.Rows.Clear();
+
+                gridData.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+                gridData.SelectionMode = DataGridViewSelectionMode.CellSelect;
+                gridData.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
+
+                var measurementNoColumn = new DataGridViewTextBoxColumn
+                {
+                    Name = "MeasurementNo",
+                    HeaderText = "Lần đo",
+                    ReadOnly = true,
+                    Width = 55,
+                    FillWeight = 55,
+                    Frozen = true,
+                    SortMode = DataGridViewColumnSortMode.NotSortable
+                };
+                gridData.Columns.Add(measurementNoColumn);
+
+
+                for (int j = 1; j <= _j; j++)
+                {
+                    var channelColumn = new DataGridViewTextBoxColumn
+                    {
+                        Name = $"Channel{j}",
+                        HeaderText = $"Kênh {j} (°C)",
+                        Width = 70,
+                        FillWeight = 70,
+                        SortMode = DataGridViewColumnSortMode.NotSortable
+                    };
+                    channelColumn.DefaultCellStyle.BackColor = Color.AliceBlue;
+                    gridData.Columns.Add(channelColumn);
+                }
+
+                var ttn1Column = new DataGridViewTextBoxColumn
+                {
+                    Name = "Ttn1",
+                    HeaderText = "Tủ lần 1 ttn1i (°C)",
+                    Width = 75,
+                    FillWeight = 75,
+                    SortMode = DataGridViewColumnSortMode.NotSortable
+                };
+                ttn1Column.DefaultCellStyle.BackColor = Color.LightYellow;
+                gridData.Columns.Add(ttn1Column);
+
+                var ttn2Column = new DataGridViewTextBoxColumn
+                {
+                    Name = "Ttn2",
+                    HeaderText = "Tủ lần 2 ttn2i (°C)",
+                    Width = 75,
+                    FillWeight = 75,
+                    SortMode = DataGridViewColumnSortMode.NotSortable
+                };
+                ttn2Column.DefaultCellStyle.BackColor = Color.LightYellow;
+                gridData.Columns.Add(ttn2Column);
+
+                var ttnMeanColumn = new DataGridViewTextBoxColumn
+                {
+                    Name = "TtnMean",
+                    HeaderText = "t̄tn,i (°C)",
+                    ReadOnly = true,
+                    Width = 68,
+                    FillWeight = 68,
+                    SortMode = DataGridViewColumnSortMode.NotSortable
+                };
+                ttnMeanColumn.DefaultCellStyle.BackColor = SystemColors.Control;
+                gridData.Columns.Add(ttnMeanColumn);
+
+                for (int i = 0; i < _n; i++)
+                {
+                    int rowIndex = gridData.Rows.Add();
+                    var row = gridData.Rows[rowIndex];
+                    row.Cells[0].Value = $"Lần {i + 1}";
+                    for (int col = 1; col < gridData.Columns.Count; col++)
+                        row.Cells[col].Value = "0.00";
+                    row.Cells[_j + 3].ReadOnly = true;
+                    row.Cells[_j + 3].Style.BackColor = SystemColors.Control;
+                }
+
+                AddSummaryRow("t̄ⱼ (hiệu chính)", Color.LightBlue);
+                AddSummaryRow("Sⱼ (độ lệch chuẩn)", SystemColors.Control);
+                AddSummaryRow("uch1,j (loại A)", SystemColors.Control);
+                FitGridDataLayout();
+                ResetResultLabels();
+            }
+            finally
+            {
+                _suppressGridEvents = false;
+            }
+        }
+
+        private void AddSummaryRow(string label, Color backColor)
+        {
+            int rowIndex = gridData.Rows.Add();
+            var row = gridData.Rows[rowIndex];
+            row.ReadOnly = true;
+            row.DefaultCellStyle.BackColor = backColor;
+            row.Cells[0].Value = label;
+            for (int col = 1; col < gridData.Columns.Count; col++)
+                row.Cells[col].Value = "—";
+        }
+
+        private void FitGridDataLayout()
+        {
+            FitGridDataColumns();
+            FitGridDataRows();
+        }
+
+        private void FitGridDataColumns()
+        {
+            if (gridData.Columns.Count == 0) return;
+
+            int availableWidth = gridData.ClientSize.Width - 2;
+            if (gridData.Rows.Count > 0)
+                availableWidth -= SystemInformation.VerticalScrollBarWidth;
+            if (availableWidth <= 0) return;
+
+            int totalWeight = 55 + 75 + (_j * 70) + 75 + 68;
+            int usedWidth = 0;
+
+            int WidthFromWeight(int weight)
+                => Math.Max(45, (int)Math.Floor(availableWidth * (weight / (double)totalWeight)));
+
+            gridData.Columns[0].Width = WidthFromWeight(55);
+            usedWidth += gridData.Columns[0].Width;
+
+            gridData.Columns[1].Width = WidthFromWeight(75);
+            usedWidth += gridData.Columns[1].Width;
+
+            for (int j = 0; j < _j; j++)
+            {
+                gridData.Columns[j + 2].Width = WidthFromWeight(70);
+                usedWidth += gridData.Columns[j + 2].Width;
             }
 
-            AddSummaryRow("Trung bình (t̄j)", Color.LightYellow);
-            AddSummaryRow("Độ lệch chuẩn (Sj)", Color.LightCyan);
-            AddSummaryRow("uch1,j", Color.LightGreen);
-            DisableGridSorting(gridMeasurements);
+            gridData.Columns[_j + 2].Width = WidthFromWeight(75);
+            usedWidth += gridData.Columns[_j + 2].Width;
 
-            // Bảng chuẩn
-            gridStandards.Columns.Clear();
-            gridStandards.Rows.Clear();
-
-            gridStandards.Columns.Add("Parameter", "Thông số");
-            gridStandards.Columns[0].ReadOnly = true;
-            gridStandards.Columns[0].DefaultCellStyle.BackColor = Color.LightGray;
-            gridStandards.Columns[0].Width = 120;
-
-            for (int j = 1; j <= _j; j++)
-                gridStandards.Columns.Add($"Channel{j}", $"Kênh đo {j}");
-
-            gridStandards.Columns.Add("Max", "Max");
-            var maxColumn = gridStandards.Columns["Max"]!;
-            maxColumn.ReadOnly = true;
-            maxColumn.DefaultCellStyle.Font = new Font(gridStandards.Font, FontStyle.Bold);
-
-            // Dòng 0: U
-            var rowU = new DataGridViewRow();
-            rowU.CreateCells(gridStandards);
-            rowU.Cells[0].Value = "U (°C)";
-            for (int j = 1; j <= _j; j++) rowU.Cells[j].Value = "0.0";
-            rowU.Cells[_j + 1].Value = "0.0";
-            gridStandards.Rows.Add(rowU);
-
-            // Dòng 1: ∂
-            var rowDelta = new DataGridViewRow();
-            rowDelta.CreateCells(gridStandards);
-            rowDelta.Cells[0].Value = "∂ (°C)";
-            for (int j = 1; j <= _j; j++) rowDelta.Cells[j].Value = "0.0";
-            rowDelta.Cells[_j + 1].Value = "0.0";
-            gridStandards.Rows.Add(rowDelta);
-
-            // Dòng 2: ∂t_j (số hiệu chính)
-            var rowCorrection = new DataGridViewRow();
-            rowCorrection.CreateCells(gridStandards);
-            rowCorrection.Cells[0].Value = "∂t_j (°C)";
-            for (int j = 1; j <= _j; j++) rowCorrection.Cells[j].Value = "0.0";
-            rowCorrection.Cells[_j + 1].Value = "";
-            rowCorrection.Cells[_j + 1].ReadOnly = true;
-            gridStandards.Rows.Add(rowCorrection);
-            DisableGridSorting(gridStandards);
-
-            // Bảng chỉ thị
-            gridIndicator.Columns.Clear();
-            gridIndicator.Rows.Clear();
-
-            gridIndicator.Columns.Add("Parameter", "Thông số");
-            gridIndicator.Columns[0].ReadOnly = true;
-            gridIndicator.Columns[0].DefaultCellStyle.BackColor = Color.LightGray;
-            gridIndicator.Columns[0].Width = 130;
-
-            for (int i = 1; i <= _n; i++)
-                gridIndicator.Columns.Add($"Measure{i}", $"Lần {i}");
-
-            // Dòng 0: t_tn1i
-            var rowTtn1 = new DataGridViewRow();
-            rowTtn1.CreateCells(gridIndicator);
-            rowTtn1.Cells[0].Value = "t_tn1 (°C)";
-            for (int i = 1; i <= _n; i++) rowTtn1.Cells[i].Value = "0.0";
-            gridIndicator.Rows.Add(rowTtn1);
-
-            // Dòng 1: t_tn2i
-            var rowTtn2 = new DataGridViewRow();
-            rowTtn2.CreateCells(gridIndicator);
-            rowTtn2.Cells[0].Value = "t_tn2 (°C)";
-            for (int i = 1; i <= _n; i++) rowTtn2.Cells[i].Value = "0.0";
-            gridIndicator.Rows.Add(rowTtn2);
-
-            // Dòng 2: t̄_tn (readonly, tự tính)
-            var rowTtnMean = new DataGridViewRow();
-            rowTtnMean.CreateCells(gridIndicator);
-            rowTtnMean.Cells[0].Value = "t̄_tn (°C)";
-            rowTtnMean.DefaultCellStyle.BackColor = Color.LightYellow;
-            rowTtnMean.ReadOnly = true;
-            gridIndicator.Rows.Add(rowTtnMean);
-            DisableGridSorting(gridIndicator);
+            gridData.Columns[_j + 3].Width = Math.Max(45, availableWidth - usedWidth);
         }
 
-        private void AddSummaryRow(string label, Color bgColor)
+        private void FitGridDataRows()
         {
-            var row = new DataGridViewRow();
-            row.CreateCells(gridMeasurements);
-            row.Cells[0].Value = label;
-            row.DefaultCellStyle.BackColor = bgColor;
-            row.ReadOnly = true;
-            gridMeasurements.Rows.Add(row);
+            if (gridData.Rows.Count == 0) return;
+
+            int availableHeight = gridData.ClientSize.Height - gridData.ColumnHeadersHeight - 2;
+            if (availableHeight <= 0) return;
+
+            int rowHeight = Math.Max(24, availableHeight / gridData.Rows.Count);
+            foreach (DataGridViewRow row in gridData.Rows)
+                row.Height = rowHeight;
         }
 
-        private static void DisableGridSorting(DataGridView grid)
+        private void GridData_CurrentCellDirtyStateChanged(object? sender, EventArgs e)
         {
-            foreach (DataGridViewColumn column in grid.Columns)
-                column.SortMode = DataGridViewColumnSortMode.NotSortable;
+            if (gridData.IsCurrentCellDirty)
+                gridData.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
 
-        // ── Cell change handlers ─────────────────────────────────────────
-
-        private void GridMeasurements_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
+        private void GridData_CellEndEdit(object? sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0 || e.ColumnIndex < 1 || e.RowIndex >= _n) return;
-            // Khi dữ liệu thay đổi, kết quả cũ không còn hợp lệ
-            _lastCalculatedResult = null;
-            btnAddToTable.Enabled = false;
+            if (e.RowIndex < 0 || e.RowIndex >= _n) return;
+            RecalculateAll(showErrors: false);
         }
 
-        private void GridStandards_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
+        private void GridData_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0 || e.ColumnIndex < 1 || e.RowIndex >= 3) return;
-            if (e.ColumnIndex == _j + 1) return;
-            _lastCalculatedResult = null;
-            btnAddToTable.Enabled = false;
+            if (_suppressGridEvents || e.RowIndex < 0 || e.ColumnIndex < 1 || e.RowIndex >= _n)
+                return;
+
+            RecalculateAll(showErrors: false);
         }
 
-        private void GridIndicator_CellValueChanged(object? sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex < 0 || e.ColumnIndex < 1 || e.RowIndex >= 2) return;
-            _lastCalculatedResult = null;
-            btnAddToTable.Enabled = false;
-        }
-
-        // ── RecalculateAll ───────────────────────────────────────────────
-
-        private void RecalculateAll()
+        private bool RecalculateAll(bool showErrors = true)
         {
             try
             {
                 var input = ReadInputFromGrid();
                 var (isValid, error) = input.Validate();
-                if (!isValid) { MessageBox.Show($"Dữ liệu không hợp lệ: {error}", "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+                if (!isValid)
+                {
+                    InvalidateLastCalculation();
+                    if (showErrors)
+                        MessageBox.Show($"Dữ liệu không hợp lệ: {error}", "Lỗi",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
                 var result = UncertaintyService.Calculate(input);
                 UpdateUIFromResult(result);
+                _lastInput = input;
+                _lastFullResult = result;
                 _lastCalculatedResult = MapToCalibrationRow(result, input);
-                btnAddToTable.Enabled = true;
+                btnCalculateAndAdd.Enabled = true;
+                return true;
             }
             catch (Exception ex)
             {
-                _lastCalculatedResult = null;
-                btnAddToTable.Enabled = false;
-                MessageBox.Show($"Lỗi tính toán: {ex.Message}", "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                InvalidateLastCalculation();
+                if (showErrors)
+                    MessageBox.Show($"Lỗi tính toán: {ex.Message}", "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
 
-        // ── ReadInputFromGrid — đọc dữ liệu từ grid → UncertaintyInput ──
+        private void InvalidateLastCalculation()
+        {
+            _lastCalculatedResult = null;
+            _lastFullResult = null;
+            _lastInput = null;
+            btnCalculateAndAdd.Enabled = false;
+        }
 
         private UncertaintyInput ReadInputFromGrid()
         {
+            ReadCorrections();
+
             double[,] measurementData = new double[_n, _j];
-            for (int i = 0; i < _n; i++)
-                for (int j = 0; j < _j; j++)
-                    double.TryParse(gridMeasurements.Rows[i].Cells[j + 1].Value?.ToString(), out measurementData[i, j]);
-
-            double[] corrections = new double[_j];
-            for (int j = 0; j < _j; j++)
-                double.TryParse(gridStandards.Rows[2].Cells[j + 1].Value?.ToString(), out corrections[j]);
-
-            double[] uValues = new double[_j];
-            double[] deltaValues = new double[_j];
-            for (int j = 0; j < _j; j++)
-            {
-                double.TryParse(gridStandards.Rows[0].Cells[j + 1].Value?.ToString(), out uValues[j]);
-                double.TryParse(gridStandards.Rows[1].Cells[j + 1].Value?.ToString(), out deltaValues[j]);
-            }
-
             double[] ttn1 = new double[_n];
             double[] ttn2 = new double[_n];
+
             for (int i = 0; i < _n; i++)
             {
-                double.TryParse(gridIndicator.Rows[0].Cells[i + 1].Value?.ToString(), out ttn1[i]);
-                double.TryParse(gridIndicator.Rows[1].Cells[i + 1].Value?.ToString(), out ttn2[i]);
+                ttn1[i] = ReadGridDouble(i, 1);
+                for (int j = 0; j < _j; j++)
+                    measurementData[i, j] = ReadGridDouble(i, j + 2);
+                ttn2[i] = ReadGridDouble(i, _j + 2);
             }
 
+            double.TryParse(txtUMax.Text, out double uMax);
+            double.TryParse(txtDeltaMax.Text, out double deltaMax);
+            double.TryParse(txtResA.Text, out double resolutionA);
+            double.TryParse(txtResD.Text, out double resolutionD);
             double.TryParse(txtGiaTriDat.Text, out double giaTriDat);
 
             return new UncertaintyInput
@@ -411,85 +441,142 @@ namespace HM_19MB_Demo
                 J = _j,
                 N = _n,
                 MeasurementData = measurementData,
-                Corrections = corrections,
-                UValues = uValues,
-                DeltaValues = deltaValues,
+                Corrections = _corrections.ToArray(),
+                UValues = Enumerable.Repeat(uMax, _j).ToArray(),
+                DeltaValues = Enumerable.Repeat(deltaMax, _j).ToArray(),
                 Ttn1 = ttn1,
                 Ttn2 = ttn2,
-                ResolutionA = (double)numResolutionA.Value,
-                ResolutionD = (double)numResolutionD.Value,
+                ResolutionA = resolutionA,
+                ResolutionD = resolutionD,
                 UseUMethod = rbUseU.Checked,
-                GiaTriDat = giaTriDat,
+                GiaTriDat = giaTriDat
             };
         }
 
-        // ── UpdateUIFromResult — cập nhật MathLabel + grid từ kết quả ────
+        private double ReadGridDouble(int row, int column)
+        {
+            double.TryParse(gridData.Rows[row].Cells[column].Value?.ToString(), out double value);
+            return value;
+        }
+
+        private void ReadCorrections()
+        {
+            for (int j = 0; j < _j && j < _correctionBoxes.Count; j++)
+                double.TryParse(_correctionBoxes[j].Text, out _corrections[j]);
+        }
 
         private void UpdateUIFromResult(UncertaintyFullResult r)
         {
-            // ── gridMeasurements summary rows: t̄j, Sj, uch1,j ───────────
-            for (int j = 0; j < _j; j++)
+            _suppressGridEvents = true;
+            try
             {
-                gridMeasurements.Rows[_n].Cells[j + 1].Value = r.ChannelMeans[j].ToString("F4");
-                gridMeasurements.Rows[_n + 1].Cells[j + 1].Value = r.ChannelStdDevs[j].ToString("F4");
-                gridMeasurements.Rows[_n + 2].Cells[j + 1].Value = r.ChannelTypeAUncertainties[j].ToString("F4");
+                for (int i = 0; i < _n; i++)
+                {
+                    double ttn1 = ReadGridDouble(i, 1);
+                    double ttn2 = ReadGridDouble(i, _j + 2);
+                    gridData.Rows[i].Cells[_j + 3].Value = ((ttn1 + ttn2) / 2.0).ToString("F4");
+                }
+
+                int correctedMeanRow = _n;
+                int stdDevRow = _n + 1;
+                int typeARow = _n + 2;
+
+                gridData.Rows[correctedMeanRow].Cells[1].Value = "—";
+                gridData.Rows[correctedMeanRow].Cells[_j + 2].Value = "—";
+                gridData.Rows[correctedMeanRow].Cells[_j + 3].Value = r.Ttn.ToString("F4");
+                gridData.Rows[stdDevRow].Cells[1].Value = "—";
+                gridData.Rows[stdDevRow].Cells[_j + 2].Value = "—";
+                gridData.Rows[stdDevRow].Cells[_j + 3].Value = "—";
+                gridData.Rows[typeARow].Cells[1].Value = "—";
+                gridData.Rows[typeARow].Cells[_j + 2].Value = "—";
+                gridData.Rows[typeARow].Cells[_j + 3].Value = "—";
+
+                for (int j = 0; j < _j; j++)
+                {
+                    gridData.Rows[correctedMeanRow].Cells[j + 2].Value = r.ChannelCorrectedMeans[j].ToString("F4");
+                    gridData.Rows[stdDevRow].Cells[j + 2].Value = r.ChannelStdDevs[j].ToString("F4");
+                    gridData.Rows[typeARow].Cells[j + 2].Value = r.ChannelTypeAUncertainties[j].ToString("F4");
+                }
+
+                lblR_Dt.Text = $"Δt = {r.DeltaT:F4} °C";
+                lblR_Od.Text = $"±{r.DeltaOd:F3} °C";
+                lblR_Dd.Text = $"±{r.DeltaDd:F3} °C";
+                lblR_Uch1.Text = $"{r.Uch1:F4} °C";
+                lblR_Uch2.Text = $"{r.Uch2:F4} °C";
+                lblR_Uch.Text = $"{r.Uc:F4} °C";
+                lblR_Ubk.Text = $"{r.Ubk:F4} °C";
+                lblR_U.Text = $"±{r.UFinal:F3} °C";
             }
-
-            // ── gridStandards Max column ──────────────────────────────────
-            gridStandards.Rows[0].Cells[_j + 1].Value = r.StandardResult.UMax.ToString("F4");
-            gridStandards.Rows[1].Cells[_j + 1].Value = r.StandardResult.DeltaMax.ToString("F4");
-
-            // ── gridIndicator row [2]: t̄_tn per measurement ──────────────
-            for (int i = 0; i < _n; i++)
+            finally
             {
-                double.TryParse(gridIndicator.Rows[0].Cells[i + 1].Value?.ToString(), out double v1);
-                double.TryParse(gridIndicator.Rows[1].Cells[i + 1].Value?.ToString(), out double v2);
-                gridIndicator.Rows[2].Cells[i + 1].Value = ((v1 + v2) / 2.0).ToString("F4");
+                _suppressGridEvents = false;
             }
-
-            // ── MathLabel — CT(1)(2) ─────────────────────────────────────
-            mlTchResult.MathText = $"BAR{{t}}SUB{{ch}} = {r.Tch:F4} °C";
-
-            // ── MathLabel — CT(7) uch1 ───────────────────────────────────
-            mlUch1Result.MathText = $"u SUB{{ch1}} = SQRT{{_sum_ u SUB{{ch1,j}}SUP{{2}}}} = {r.Uch1:F4} °C";
-            mlUch1Final.MathText = $"u SUB{{ch1}} = {r.Uch1:F4} °C";
-
-            // ── MathLabel — CT(10)/(11) uch2 ─────────────────────────────
-            mlUch2Result.MathText = r.MethodUsed == "U"
-                ? $"u SUB{{ch2}} = FRAC{{U}}{{2}} = {r.Uch2:F4} °C"
-                : $"u SUB{{ch2}} = FRAC{{_delta_}}{{SQRT{{3}}}} = {r.Uch2:F4} °C";
-            mlUch2Final.MathText = $"u SUB{{ch2}} = {r.Uch2:F4} °C";
-
-            // ── MathLabel — CT(12) uc ────────────────────────────────────
-            mlUcFinal.MathText =
-                $"u SUB{{c}} = SQRT{{u SUB{{ch1}}SUP{{2}} + u SUB{{ch2}}SUP{{2}}}} = {r.Uc:F4} °C";
-
-            // ── MathLabel — CT(3)(4) ttn, ΔT ────────────────────────────
-            mlTtnResult.MathText = $"BAR{{t}}SUB{{tn}} = {r.Ttn:F4} °C";
-            mlDeltaT.MathText =
-                $"_Delta_t = BAR{{t}}SUB{{ch}} - BAR{{t}}SUB{{tn}} = {r.DeltaT:F4} °C";
-
-            // ── MathLabel — CT(5)(6) δt_od, δt_dd ───────────────────────
-            mlDeltaOd.MathText = $"_delta_t SUB{{od}} = _pm_{r.DeltaOd:F4} °C";
-            mlDeltaDd.MathText = $"_delta_t SUB{{dd}} = _pm_{r.DeltaDd:F4} °C";
-
-            // ── MathLabel — CT(13)–(18) ubk ─────────────────────────────
-            mlUbk1.MathText = $"u SUB{{bk1}} = FRAC{{S}}{{SQRT{{n}}}} = {r.Ubk1:F4} °C";
-            mlUbk2.MathText = $"u SUB{{bk2}} = FRAC{{_delta_t SUB{{od}}}}{{SQRT{{3}}}} = {r.Ubk2:F4} °C";
-            mlUbk3.MathText = $"u SUB{{bk3}} = FRAC{{_delta_t SUB{{dd}}}}{{SQRT{{3}}}} = {r.Ubk3:F4} °C";
-            mlUbk4.MathText = $"u SUB{{bk4}} = FRAC{{A _cdot_ d}}{{SQRT{{3}}}} = {r.Ubk4:F4} °C";
-            mlUbkResult.MathText =
-                $"u SUB{{bk}} = SQRT{{u SUB{{bk1}}SUP{{2}} + ... + u SUB{{bk4}}SUP{{2}}}} = {r.Ubk:F4} °C";
-
-            // ── MathLabel — CT(19) U final ───────────────────────────────
-            mlUFinal.MathText =
-                $"U = 2 _cdot_ SQRT{{u SUB{{c}}SUP{{2}} + u SUB{{bk}}SUP{{2}}}} = _pm_{r.UFinal:F4} °C  (k=2, P=95%)";
         }
 
-        // ── MapToCalibrationRow — chuyển kết quả → CalibrationResultRow ──
+        private void ResetResultLabels()
+        {
+            if (lblR_Dt == null) return;
+            lblR_Dt.Text = "—";
+            lblR_Od.Text = "—";
+            lblR_Dd.Text = "—";
+            lblR_Uch1.Text = "—";
+            lblR_Uch2.Text = "—";
+            lblR_Uch.Text = "—";
+            lblR_Ubk.Text = "—";
+            lblR_U.Text = "—";
+        }
 
-        private CalibrationResultRow MapToCalibrationRow(
-            UncertaintyFullResult r, UncertaintyInput input)
+        private void BuildResultCards()
+        {
+            resultCards.Controls.Clear();
+
+            lblR_Dt = AddResultCard(0, 0, "Số hiệu chính Δt (CT4)");
+            lblR_Od = AddResultCard(1, 0, "Độ ổn định δtod (CT5)");
+            lblR_Dd = AddResultCard(2, 0, "Độ đồng đều δtdd (CT6)");
+            lblR_Uch1 = AddResultCard(3, 0, "uch1 — loại A (CT7)");
+            lblR_Uch2 = AddResultCard(0, 1, "uch2 — loại B (CT10/11)");
+            lblR_Uch = AddResultCard(1, 1, "uch — liên hợp chuẩn (CT12)");
+            lblR_Ubk = AddResultCard(2, 1, "ubk — liên hợp tủ (CT18)");
+            lblR_U = AddResultCard(3, 1, "U mở rộng k=2 P=95% (CT19)");
+
+            ResetResultLabels();
+        }
+
+        private Label AddResultCard(int column, int row, string title)
+        {
+            var panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Margin = new Padding(3),
+                Padding = new Padding(8, 3, 8, 3),
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            var titleLabel = new Label
+            {
+                Dock = DockStyle.Top,
+                Font = new Font("Segoe UI", 10F),
+                Height = 22,
+                Text = title,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            var valueLabel = new Label
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
+                Text = "—",
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            panel.Controls.Add(valueLabel);
+            panel.Controls.Add(titleLabel);
+            resultCards.Controls.Add(panel, column, row);
+            return valueLabel;
+        }
+
+        private CalibrationResultRow MapToCalibrationRow(UncertaintyFullResult r, UncertaintyInput input)
         {
             var row = new CalibrationResultRow
             {
@@ -500,44 +587,36 @@ namespace HM_19MB_Demo
                 DoOnDinh = r.DeltaOd,
                 DoDongDeu = r.DeltaDd,
                 DoKhongDamBao = r.UFinal,
-
                 Uch = r.Uc,
                 Ubk = r.Ubk,
-
                 SoKenh = input.J,
                 SoLanDo = input.N,
                 PhuongPhapB = input.UseUMethod ? "U" : "Delta",
             };
 
             for (int j = 0; j < input.J && j < row.Kenh.Length; j++)
-                row.Kenh[j] = r.ChannelMeans[j];
+                row.Kenh[j] = r.ChannelCorrectedMeans[j];
 
             row.ChiTietLanDos = ExtractChiTietLanDo();
-
             return row;
         }
 
-        private List<Data.ChiTietLanDo> ExtractChiTietLanDo()
+        private List<ChiTietLanDo> ExtractChiTietLanDo()
         {
-            var list = new List<Data.ChiTietLanDo>();
+            var list = new List<ChiTietLanDo>();
 
             for (int i = 0; i < _n; i++)
             {
-                double ttn1 = 0, ttn2 = 0;
-                double.TryParse(
-                    gridIndicator.Rows[0].Cells[i + 1].Value?.ToString(), out ttn1);
-                double.TryParse(
-                    gridIndicator.Rows[1].Cells[i + 1].Value?.ToString(), out ttn2);
+                double ttn1 = ReadGridDouble(i, 1);
+                double ttn2 = ReadGridDouble(i, _j + 2);
                 double chiThi = (ttn1 + ttn2) / 2.0;
 
                 for (int j = 0; j < _j; j++)
                 {
-                    if (!double.TryParse(
-                            gridMeasurements.Rows[i].Cells[j + 1].Value?.ToString(),
-                            out double val))
+                    if (!double.TryParse(gridData.Rows[i].Cells[j + 2].Value?.ToString(), out double val))
                         continue;
 
-                    list.Add(new Data.ChiTietLanDo
+                    list.Add(new ChiTietLanDo
                     {
                         LanDo = i + 1,
                         Kenh = j + 1,
@@ -550,18 +629,10 @@ namespace HM_19MB_Demo
             return list;
         }
 
-        // ── Button handlers ───────────────────────────────────────────────
-
-        private void BtnCalculate_Click(object? sender, EventArgs e) => RecalculateAll();
-
-        private async void BtnAddToTable_Click(object? sender, EventArgs e)
+        private async void BtnCalculateAndAdd_Click(object? sender, EventArgs e)
         {
-            if (_lastCalculatedResult == null)
-            {
-                MessageBox.Show("Vui lòng bấm 'Tính toán' trước.", "Thông báo",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (!RecalculateAll(showErrors: true) || _lastFullResult == null || _lastInput == null || _lastCalculatedResult == null)
                 return;
-            }
 
             if (_onResultAdded == null)
             {
@@ -570,22 +641,41 @@ namespace HM_19MB_Demo
                 return;
             }
 
-            // Gọi callback để Form1 xử lý (thêm vào grid + lưu DB)
             await _onResultAdded(_lastCalculatedResult);
 
-            // Lấy lại input + result để cập nhật Tab 2 và Tab 3
-            var _input = ReadInputFromGrid();
-            var _result = UncertaintyService.Calculate(_input);
-            int _stt = _gridResults.Rows.Count + 1;
-            AppendResultRow(_result, _input, _stt);
-            BuildBudgetTable(_result);
-            _tabMain.SelectedTab = _tabResults;
+            int stt = _gridResults.Rows.Count + 1;
+            AppendResultRow(_lastFullResult, _lastInput, stt);
+            BuildBudgetTable(_lastFullResult);
+            lblStatus.Text = $"Đã thêm điểm {txtGiaTriDat.Text} °C";
 
-            ToastNotification.ShowSuccess($"Đã thêm điểm kiểm tra (đặt: {_lastCalculatedResult.GiaTriDat:F1}°C) vào bảng.");
+            ResetMeasurementCells();
+        }
 
-            // Disable nút để tránh thêm trùng — người dùng phải tính lại mới được thêm tiếp
-            btnAddToTable.Enabled = false;
-            _lastCalculatedResult = null;
+        private void ResetMeasurementCells()
+        {
+            _suppressGridEvents = true;
+            try
+            {
+                for (int i = 0; i < _n; i++)
+                {
+                    for (int col = 1; col < gridData.Columns.Count; col++)
+                        gridData.Rows[i].Cells[col].Value = "0.00";
+                }
+
+                for (int row = _n; row < _n + 3; row++)
+                    for (int col = 1; col < gridData.Columns.Count; col++)
+                        gridData.Rows[row].Cells[col].Value = "—";
+
+                _lastCalculatedResult = null;
+                _lastFullResult = null;
+                _lastInput = null;
+                btnCalculateAndAdd.Enabled = false;
+                ResetResultLabels();
+            }
+            finally
+            {
+                _suppressGridEvents = false;
+            }
         }
 
         private void BtnImportCSV_Click(object? sender, EventArgs e)
@@ -616,15 +706,13 @@ namespace HM_19MB_Demo
 
             var config = lines[0].Split(',');
             if (config.Length >= 2)
-            {
                 SetConfiguration(int.Parse(config[0]), int.Parse(config[1]), notifyOwner: true);
-            }
 
             for (int i = 1; i < lines.Length && i <= _n; i++)
             {
                 var values = lines[i].Split(',');
                 for (int j = 0; j < values.Length && j < _j; j++)
-                    gridMeasurements.Rows[i - 1].Cells[j + 1].Value = values[j];
+                    gridData.Rows[i - 1].Cells[j + 2].Value = values[j];
             }
 
             RecalculateAll();
@@ -657,43 +745,29 @@ namespace HM_19MB_Demo
             var sb = new StringBuilder();
 
             sb.AppendLine($"{_j},{_n}");
-            sb.Append("Lần đo");
+            sb.Append("Lần đo,t_tn1");
             for (int j = 1; j <= _j; j++) sb.Append($",Kênh {j}");
-            sb.AppendLine();
+            sb.AppendLine(",t_tn2,t_tn_mean");
 
             for (int i = 0; i < _n; i++)
             {
                 sb.Append($"Lần {i + 1}");
-                for (int j = 1; j <= _j; j++)
-                    sb.Append($",{gridMeasurements.Rows[i].Cells[j].Value}");
+                for (int col = 1; col < gridData.Columns.Count; col++)
+                    sb.Append($",{gridData.Rows[i].Cells[col].Value}");
                 sb.AppendLine();
             }
 
             sb.AppendLine();
             sb.AppendLine("Kết quả tính toán:");
-            sb.AppendLine($"uch1,{mlUch1Final.MathText}");
-            sb.AppendLine($"uch2,{mlUch2Final.MathText}");
-            sb.AppendLine($"uc,{mlUcFinal.MathText}");
-            sb.AppendLine($"U,{mlUFinal.MathText}");
+            sb.AppendLine($"DeltaT,{lblR_Dt.Text}");
+            sb.AppendLine($"Uch1,{lblR_Uch1.Text}");
+            sb.AppendLine($"Uch2,{lblR_Uch2.Text}");
+            sb.AppendLine($"Uch,{lblR_Uch.Text}");
+            sb.AppendLine($"Ubk,{lblR_Ubk.Text}");
+            sb.AppendLine($"U,{lblR_U.Text}");
 
             File.WriteAllText(filePath, sb.ToString());
         }
-
-        private async void BtnSaveToDb_Click(object? sender, EventArgs e)
-        {
-            try
-            {
-                MessageBox.Show("Chức năng lưu vào database đang được phát triển.", "Thông báo",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Lỗi lưu database: {ex.Message}", "Lỗi",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        // ── InitResultsGrid — Tab 2 ──────────────────────────────────────
 
         private void InitResultsGrid()
         {
@@ -738,8 +812,6 @@ namespace HM_19MB_Demo
             _tabResults.Controls.Add(_gridResults);
         }
 
-        // ── InitBudgetGrid — Tab 3 ───────────────────────────────────────
-
         private void InitBudgetGrid()
         {
             _gridBudget = new DataGridView
@@ -775,10 +847,7 @@ namespace HM_19MB_Demo
             _tabBudget.Controls.Add(_gridBudget);
         }
 
-        // ── AppendResultRow — thêm 1 dòng vào Tab 2 ─────────────────────
-
-        private void AppendResultRow(UncertaintyFullResult r,
-                                     UncertaintyInput input, int stt)
+        private void AppendResultRow(UncertaintyFullResult r, UncertaintyInput input, int stt)
         {
             int idx = _gridResults.Rows.Add(
                 stt,
@@ -805,15 +874,11 @@ namespace HM_19MB_Demo
             });
         }
 
-        // ── BuildBudgetTable — rebuild Tab 3 ─────────────────────────────
-
         private void BuildBudgetTable(UncertaintyFullResult r)
         {
             _gridBudget.Rows.Clear();
 
-            // Helper local function
-            void AddRow(string sym, string source, double val,
-                         double divisor, string unit = "°C", double ci = 1.0)
+            void AddRow(string sym, string source, double val, double divisor, string unit = "°C", double ci = 1.0)
             {
                 double ui = val / divisor;
                 _gridBudget.Rows.Add(sym, source,
@@ -823,38 +888,30 @@ namespace HM_19MB_Demo
                     ui.ToString("F4"));
             }
 
-            // Lấy tên phương pháp B từ r.MethodUsed
             string methodB = r.MethodUsed == "U"
                 ? "Thiết bị chuẩn (U/2)"
                 : "Thiết bị chuẩn (∂/√3)";
 
-            // 6 thành phần chính
-            AddRow("u_ch1", "Lặp lại phép đo \u2014 Loại A", r.Uch1, 1.0);
+            AddRow("u_ch1", "Lặp lại phép đo - Loại A", r.Uch1, 1.0);
             AddRow("u_ch2", methodB, r.Uch2, 1.0);
-            AddRow("u_bk1", "Lặp lại chỉ thị tủ \u2014 Loại A", r.Ubk1, 1.0);
+            AddRow("u_bk1", "Lặp lại chỉ thị tủ - Loại A", r.Ubk1, 1.0);
             AddRow("u_bk2", "Độ ổn định tủ nhiệt", r.Ubk2, 1.0);
             AddRow("u_bk3", "Độ đồng đều tủ nhiệt", r.Ubk3, 1.0);
             AddRow("u_bk4", "Độ phân giải thiết bị chỉ thị", r.Ubk4, 1.0);
 
-            // Dòng u_c
             int ucIdx = _gridBudget.Rows.Add(
                 "u_c", "Liên hợp chuẩn tổng hợp",
-                r.Uc.ToString("F4"), "°C", "\u2014", "\u2014",
+                r.Uc.ToString("F4"), "°C", "—", "—",
                 r.Uc.ToString("F4"));
-            _gridBudget.Rows[ucIdx].DefaultCellStyle.BackColor =
-                Color.FromArgb(220, 235, 255);
-            _gridBudget.Rows[ucIdx].DefaultCellStyle.Font =
-                new Font(_gridBudget.Font, FontStyle.Bold);
+            _gridBudget.Rows[ucIdx].DefaultCellStyle.BackColor = Color.FromArgb(220, 235, 255);
+            _gridBudget.Rows[ucIdx].DefaultCellStyle.Font = new Font(_gridBudget.Font, FontStyle.Bold);
 
-            // Dòng U cuối
             int uIdx = _gridBudget.Rows.Add(
-                "U", "Mở rộng \u2014 k=2, P=95%",
-                $"±{r.UFinal:F4}", "°C", "\u2014", "2",
+                "U", "Mở rộng - k=2, P=95%",
+                $"±{r.UFinal:F4}", "°C", "—", "2",
                 $"±{r.UFinal:F4}");
-            _gridBudget.Rows[uIdx].DefaultCellStyle.BackColor =
-                Color.FromArgb(200, 255, 200);
-            _gridBudget.Rows[uIdx].DefaultCellStyle.Font =
-                new Font(_gridBudget.Font, FontStyle.Bold);
+            _gridBudget.Rows[uIdx].DefaultCellStyle.BackColor = Color.FromArgb(200, 255, 200);
+            _gridBudget.Rows[uIdx].DefaultCellStyle.Font = new Font(_gridBudget.Font, FontStyle.Bold);
             _gridBudget.Rows[uIdx].DefaultCellStyle.ForeColor = Color.DarkGreen;
         }
     }

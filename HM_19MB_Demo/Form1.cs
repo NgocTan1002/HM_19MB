@@ -285,6 +285,8 @@ namespace HM_19MB_Demo
                     OnSessionIdAssigned();
                 }
 
+                await DatabaseService.CapNhatPhienAsync(_currentSessionId.Value, CollectMetadata());
+
                 if (_pendingRecords.Count > 0)
                     await SavePendingRecordsAsync();
 

@@ -22,683 +22,53 @@ namespace HM_19MB_Demo
         {
             _tabMain = new TabControl();
             _tabInput = new TabPage();
-            _tabResults = new TabPage();
-            _tabBudget = new TabPage();
-            mainLayout = new TableLayoutPanel();
-            step0Panel = new Panel();
-            lblStep0Title = new Label();
+            inputLayout = new TableLayoutPanel();
+            configStrip = new FlowLayoutPanel();
             lblGiaTriDat = new Label();
             txtGiaTriDat = new TextBox();
             lblGiaTriDatUnit = new Label();
-            lblStep1Title = new Label();
+            lblConfigSeparator = new Label();
             lblChannels = new Label();
             numChannels = new NumericUpDown();
             lblMeasurements = new Label();
             numMeasurements = new NumericUpDown();
             btnApplyConfig = new Button();
-            step2Panel = new Panel();
-            lblStep2Title = new Label();
-            gridMeasurements = new DataGridView();
-            lblUch1Result = new Label();
-            splitStep3 = new TableLayoutPanel();
-            pnlStandards = new Panel();
-            lblStep3Title = new Label();
+            lblMethodB = new Label();
             rbUseU = new RadioButton();
             rbUseDelta = new RadioButton();
-            gridStandards = new DataGridView();
-            lblUch2Result = new Label();
-            pnlIndicator = new Panel();
-            lblStep3bTitle = new Label();
-            gridIndicator = new DataGridView();
+            correctionStrip = new FlowLayoutPanel();
+            lblCorrections = new Label();
+            typeBStrip = new FlowLayoutPanel();
+            lblUMax = new Label();
+            txtUMax = new TextBox();
+            lblDeltaMax = new Label();
+            txtDeltaMax = new TextBox();
             lblResA = new Label();
-            numResolutionA = new NumericUpDown();
+            txtResA = new TextBox();
             lblResD = new Label();
-            numResolutionD = new NumericUpDown();
+            txtResD = new TextBox();
+            gridPanel = new Panel();
+            gridData = new DataGridView();
             resultPanel = new Panel();
-            lblStep4Title = new Label();
-            lblUch1Final = new Label();
-            lblUch2Final = new Label();
-            lblUcFinal = new Label();
-            lblTchResult = new Label();
-            lblUbk1 = new Label();
-            lblUbk2 = new Label();
-            lblUbk3 = new Label();
-            lblUbk4 = new Label();
-            lblUbkResult = new Label();
-            lblTtnResult = new Label();
-            lblDeltaT = new Label();
-            lblDeltaOd = new Label();
-            lblDeltaDd = new Label();
-            lblUFinal = new Label();
-            bottomPanel = new Panel();
-            btnCalculate = new Button();
-            btnAddToTable = new Button();
-            btnSaveToDb = new Button();
-            step1Panel = new Panel();
-            lblStep5Title = new Label();
-            mainLayout.SuspendLayout();
-            step0Panel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)numChannels).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)numMeasurements).BeginInit();
-            step2Panel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)gridMeasurements).BeginInit();
-            splitStep3.SuspendLayout();
-            pnlStandards.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)gridStandards).BeginInit();
-            pnlIndicator.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)gridIndicator).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)numResolutionA).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)numResolutionD).BeginInit();
-            resultPanel.SuspendLayout();
-            bottomPanel.SuspendLayout();
+            resultCards = new TableLayoutPanel();
+            bottomBar = new FlowLayoutPanel();
+            btnCalculateAndAdd = new Button();
+            lblStatus = new Label();
+            _tabResults = new TabPage();
+            _tabBudget = new TabPage();
             _tabMain.SuspendLayout();
             _tabInput.SuspendLayout();
+            inputLayout.SuspendLayout();
+            configStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numChannels).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numMeasurements).BeginInit();
+            correctionStrip.SuspendLayout();
+            typeBStrip.SuspendLayout();
+            gridPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)gridData).BeginInit();
+            resultPanel.SuspendLayout();
+            bottomBar.SuspendLayout();
             SuspendLayout();
-            // 
-            // mainLayout
-            // 
-            mainLayout.ColumnCount = 1;
-            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            mainLayout.Controls.Add(step0Panel, 0, 0);
-            mainLayout.Controls.Add(step2Panel, 0, 1);
-            mainLayout.Controls.Add(splitStep3, 0, 2);
-            mainLayout.Controls.Add(resultPanel, 0, 3);
-            mainLayout.Controls.Add(bottomPanel, 0, 4);
-            mainLayout.Dock = DockStyle.Fill;
-            mainLayout.Location = new Point(0, 0);
-            mainLayout.Name = "mainLayout";
-            mainLayout.Padding = new Padding(10);
-            mainLayout.RowCount = 5;
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 90F));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 220F));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 220F));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
-            mainLayout.Size = new Size(1400, 1170);
-            mainLayout.TabIndex = 0;
-            // 
-            // step0Panel
-            // 
-            step0Panel.BackColor = Color.FromArgb(255, 248, 230);
-            step0Panel.BorderStyle = BorderStyle.FixedSingle;
-            step0Panel.Controls.Add(lblStep0Title);
-            step0Panel.Controls.Add(lblGiaTriDat);
-            step0Panel.Controls.Add(txtGiaTriDat);
-            step0Panel.Controls.Add(lblGiaTriDatUnit);
-            step0Panel.Controls.Add(lblStep1Title);
-            step0Panel.Controls.Add(lblChannels);
-            step0Panel.Controls.Add(numChannels);
-            step0Panel.Controls.Add(lblMeasurements);
-            step0Panel.Controls.Add(numMeasurements);
-            step0Panel.Controls.Add(btnApplyConfig);
-            step0Panel.Dock = DockStyle.Fill;
-            step0Panel.Location = new Point(13, 13);
-            step0Panel.Name = "step0Panel";
-            step0Panel.Size = new Size(1374, 84);
-            step0Panel.TabIndex = 0;
-            // 
-            // lblStep0Title
-            // 
-            lblStep0Title.AutoSize = true;
-            lblStep0Title.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblStep0Title.Location = new Point(10, 8);
-            lblStep0Title.Name = "lblStep0Title";
-            lblStep0Title.Size = new Size(136, 25);
-            lblStep0Title.TabIndex = 0;
-            lblStep0Title.Text = "Điểm kiểm tra";
-            // 
-            // lblGiaTriDat
-            // 
-            lblGiaTriDat.AutoSize = true;
-            lblGiaTriDat.Location = new Point(10, 38);
-            lblGiaTriDat.Name = "lblGiaTriDat";
-            lblGiaTriDat.Size = new Size(107, 20);
-            lblGiaTriDat.TabIndex = 1;
-            lblGiaTriDat.Text = "Giá trị đặt (°C):";
-            // 
-            // txtGiaTriDat
-            // 
-            txtGiaTriDat.Location = new Point(120, 35);
-            txtGiaTriDat.Name = "txtGiaTriDat";
-            txtGiaTriDat.Size = new Size(100, 27);
-            txtGiaTriDat.TabIndex = 2;
-            txtGiaTriDat.Text = "0.0";
-            // 
-            // lblGiaTriDatUnit
-            // 
-            lblGiaTriDatUnit.AutoSize = true;
-            lblGiaTriDatUnit.Location = new Point(228, 38);
-            lblGiaTriDatUnit.Name = "lblGiaTriDatUnit";
-            lblGiaTriDatUnit.Size = new Size(24, 20);
-            lblGiaTriDatUnit.TabIndex = 3;
-            lblGiaTriDatUnit.Text = "°C";
-            // 
-            // lblStep1Title
-            // 
-            lblStep1Title.AutoSize = true;
-            lblStep1Title.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblStep1Title.Location = new Point(799, 4);
-            lblStep1Title.Name = "lblStep1Title";
-            lblStep1Title.Size = new Size(119, 25);
-            lblStep1Title.TabIndex = 0;
-            lblStep1Title.Text = "Cấu hình đo";
-            // 
-            // lblChannels
-            // 
-            lblChannels.AutoSize = true;
-            lblChannels.Location = new Point(799, 38);
-            lblChannels.Name = "lblChannels";
-            lblChannels.Size = new Size(82, 20);
-            lblChannels.TabIndex = 1;
-            lblChannels.Text = "Số kênh (j):";
-            // 
-            // numChannels
-            // 
-            numChannels.Location = new Point(889, 36);
-            numChannels.Maximum = new decimal(new int[] { 20, 0, 0, 0 });
-            numChannels.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            numChannels.Name = "numChannels";
-            numChannels.Size = new Size(100, 27);
-            numChannels.TabIndex = 2;
-            numChannels.Value = new decimal(new int[] { 3, 0, 0, 0 });
-            // 
-            // lblMeasurements
-            // 
-            lblMeasurements.AutoSize = true;
-            lblMeasurements.Location = new Point(1009, 38);
-            lblMeasurements.Name = "lblMeasurements";
-            lblMeasurements.Size = new Size(97, 20);
-            lblMeasurements.TabIndex = 3;
-            lblMeasurements.Text = "Số lần đo (n):";
-            // 
-            // numMeasurements
-            // 
-            numMeasurements.Location = new Point(1119, 36);
-            numMeasurements.Minimum = new decimal(new int[] { 2, 0, 0, 0 });
-            numMeasurements.Name = "numMeasurements";
-            numMeasurements.Size = new Size(100, 27);
-            numMeasurements.TabIndex = 4;
-            numMeasurements.Value = new decimal(new int[] { 10, 0, 0, 0 });
-            // 
-            // btnApplyConfig
-            // 
-            btnApplyConfig.Location = new Point(1239, 33);
-            btnApplyConfig.Name = "btnApplyConfig";
-            btnApplyConfig.Size = new Size(100, 35);
-            btnApplyConfig.TabIndex = 5;
-            btnApplyConfig.Text = "Áp dụng";
-            btnApplyConfig.UseVisualStyleBackColor = true;
-            // 
-            // step2Panel
-            // 
-            step2Panel.BorderStyle = BorderStyle.FixedSingle;
-            step2Panel.Controls.Add(lblStep2Title);
-            step2Panel.Controls.Add(gridMeasurements);
-            step2Panel.Controls.Add(lblUch1Result);
-            step2Panel.Dock = DockStyle.Fill;
-            step2Panel.Location = new Point(13, 103);
-            step2Panel.Name = "step2Panel";
-            step2Panel.Size = new Size(1374, 554);
-            step2Panel.TabIndex = 2;
-            // 
-            // lblStep2Title
-            // 
-            lblStep2Title.AutoSize = true;
-            lblStep2Title.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblStep2Title.Location = new Point(10, 8);
-            lblStep2Title.Name = "lblStep2Title";
-            lblStep2Title.Size = new Size(401, 23);
-            lblStep2Title.TabIndex = 0;
-            lblStep2Title.Text = "Nhập dữ liệu đo (ti,j) - Tự động tính t̄j, Sj, uch1,j";
-            // 
-            // gridMeasurements
-            // 
-            gridMeasurements.AllowUserToAddRows = false;
-            gridMeasurements.AllowUserToDeleteRows = false;
-            gridMeasurements.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            gridMeasurements.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            gridMeasurements.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            gridMeasurements.Location = new Point(10, 35);
-            gridMeasurements.Name = "gridMeasurements";
-            gridMeasurements.RowHeadersWidth = 51;
-            gridMeasurements.Size = new Size(1352, 482);
-            gridMeasurements.TabIndex = 1;
-            // 
-            // lblUch1Result
-            // 
-            lblUch1Result.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            lblUch1Result.AutoSize = true;
-            lblUch1Result.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblUch1Result.ForeColor = Color.DarkBlue;
-            lblUch1Result.Location = new Point(10, 520);
-            lblUch1Result.Name = "lblUch1Result";
-            lblUch1Result.Size = new Size(140, 20);
-            lblUch1Result.TabIndex = 2;
-            lblUch1Result.Text = "uch1 = (chưa tính)";
-            // 
-            // splitStep3
-            // 
-            splitStep3.ColumnCount = 2;
-            splitStep3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55F));
-            splitStep3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 45F));
-            splitStep3.Controls.Add(pnlStandards, 0, 0);
-            splitStep3.Controls.Add(pnlIndicator, 1, 0);
-            splitStep3.Dock = DockStyle.Fill;
-            splitStep3.Location = new Point(13, 663);
-            splitStep3.Name = "splitStep3";
-            splitStep3.RowCount = 1;
-            splitStep3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            splitStep3.Size = new Size(1374, 214);
-            splitStep3.TabIndex = 3;
-            // 
-            // pnlStandards
-            // 
-            pnlStandards.BackColor = Color.FromArgb(255, 250, 240);
-            pnlStandards.BorderStyle = BorderStyle.FixedSingle;
-            pnlStandards.Controls.Add(lblStep3Title);
-            pnlStandards.Controls.Add(rbUseU);
-            pnlStandards.Controls.Add(rbUseDelta);
-            pnlStandards.Controls.Add(gridStandards);
-            pnlStandards.Controls.Add(lblUch2Result);
-            pnlStandards.Dock = DockStyle.Fill;
-            pnlStandards.Location = new Point(3, 3);
-            pnlStandards.Name = "pnlStandards";
-            pnlStandards.Size = new Size(749, 208);
-            pnlStandards.TabIndex = 0;
-            // 
-            // lblStep3Title
-            // 
-            lblStep3Title.AutoSize = true;
-            lblStep3Title.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblStep3Title.Location = new Point(10, 8);
-            lblStep3Title.Name = "lblStep3Title";
-            lblStep3Title.Size = new Size(375, 23);
-            lblStep3Title.TabIndex = 0;
-            lblStep3Title.Text = "Nhập thông số thiết bị chuẩn (U1...Uj, ∂1...∂j)";
-            // 
-            // rbUseU
-            // 
-            rbUseU.AutoSize = true;
-            rbUseU.Checked = true;
-            rbUseU.Location = new Point(10, 36);
-            rbUseU.Name = "rbUseU";
-            rbUseU.Size = new Size(177, 24);
-            rbUseU.TabIndex = 1;
-            rbUseU.TabStop = true;
-            rbUseU.Text = "Tính từ U (uch2 = U/2)";
-            rbUseU.UseVisualStyleBackColor = true;
-            // 
-            // rbUseDelta
-            // 
-            rbUseDelta.AutoSize = true;
-            rbUseDelta.Location = new Point(200, 36);
-            rbUseDelta.Name = "rbUseDelta";
-            rbUseDelta.Size = new Size(183, 24);
-            rbUseDelta.TabIndex = 2;
-            rbUseDelta.Text = "Tính từ ∂ (uch2 = ∂/√3)";
-            rbUseDelta.UseVisualStyleBackColor = true;
-            // 
-            // gridStandards
-            // 
-            gridStandards.AllowUserToAddRows = false;
-            gridStandards.AllowUserToDeleteRows = false;
-            gridStandards.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            gridStandards.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            gridStandards.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            gridStandards.Location = new Point(10, 62);
-            gridStandards.Name = "gridStandards";
-            gridStandards.RowHeadersWidth = 51;
-            gridStandards.Size = new Size(727, 114);
-            gridStandards.TabIndex = 3;
-            // 
-            // lblUch2Result
-            // 
-            lblUch2Result.AutoSize = true;
-            lblUch2Result.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblUch2Result.ForeColor = Color.DarkGreen;
-            lblUch2Result.Location = new Point(10, 180);
-            lblUch2Result.Name = "lblUch2Result";
-            lblUch2Result.Size = new Size(140, 20);
-            lblUch2Result.TabIndex = 4;
-            lblUch2Result.Text = "uch2 = (chưa tính)";
-            // 
-            // pnlIndicator
-            // 
-            pnlIndicator.BackColor = Color.FromArgb(245, 245, 255);
-            pnlIndicator.BorderStyle = BorderStyle.FixedSingle;
-            pnlIndicator.Controls.Add(lblStep3bTitle);
-            pnlIndicator.Controls.Add(gridIndicator);
-            pnlIndicator.Controls.Add(lblResA);
-            pnlIndicator.Controls.Add(numResolutionA);
-            pnlIndicator.Controls.Add(lblResD);
-            pnlIndicator.Controls.Add(numResolutionD);
-            pnlIndicator.Dock = DockStyle.Fill;
-            pnlIndicator.Location = new Point(758, 3);
-            pnlIndicator.Name = "pnlIndicator";
-            pnlIndicator.Size = new Size(613, 208);
-            pnlIndicator.TabIndex = 1;
-            // 
-            // lblStep3bTitle
-            // 
-            lblStep3bTitle.AutoSize = true;
-            lblStep3bTitle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblStep3bTitle.Location = new Point(10, 6);
-            lblStep3bTitle.Name = "lblStep3bTitle";
-            lblStep3bTitle.Size = new Size(398, 23);
-            lblStep3bTitle.TabIndex = 0;
-            lblStep3bTitle.Text = "Nhập chỉ thị tủ nhiệt (t_tn1, t_tn2) & Độ phân giải";
-            // 
-            // gridIndicator
-            // 
-            gridIndicator.AllowUserToAddRows = false;
-            gridIndicator.AllowUserToDeleteRows = false;
-            gridIndicator.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            gridIndicator.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            gridIndicator.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            gridIndicator.Location = new Point(10, 33);
-            gridIndicator.Name = "gridIndicator";
-            gridIndicator.RowHeadersWidth = 51;
-            gridIndicator.Size = new Size(591, 137);
-            gridIndicator.TabIndex = 1;
-            // 
-            // lblResA
-            // 
-            lblResA.AutoSize = true;
-            lblResA.Location = new Point(12, 178);
-            lblResA.Name = "lblResA";
-            lblResA.Size = new Size(149, 20);
-            lblResA.TabIndex = 2;
-            lblResA.Text = "Độ chia nhỏ nhất (A):";
-            // 
-            // numResolutionA
-            // 
-            numResolutionA.DecimalPlaces = 2;
-            numResolutionA.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
-            numResolutionA.Location = new Point(167, 176);
-            numResolutionA.Name = "numResolutionA";
-            numResolutionA.Size = new Size(80, 27);
-            numResolutionA.TabIndex = 3;
-            numResolutionA.Value = new decimal(new int[] { 1, 0, 0, 0 });
-            // 
-            // lblResD
-            // 
-            lblResD.AutoSize = true;
-            lblResD.Location = new Point(272, 178);
-            lblResD.Name = "lblResD";
-            lblResD.Size = new Size(109, 20);
-            lblResD.TabIndex = 4;
-            lblResD.Text = "Hệ số nhân (d):";
-            // 
-            // numResolutionD
-            // 
-            numResolutionD.DecimalPlaces = 2;
-            numResolutionD.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
-            numResolutionD.Location = new Point(387, 176);
-            numResolutionD.Maximum = new decimal(new int[] { 5, 0, 0, 65536 });
-            numResolutionD.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
-            numResolutionD.Name = "numResolutionD";
-            numResolutionD.Size = new Size(80, 27);
-            numResolutionD.TabIndex = 5;
-            numResolutionD.Value = new decimal(new int[] { 5, 0, 0, 65536 });
-            // 
-            // resultPanel
-            // 
-            resultPanel.BackColor = Color.FromArgb(240, 255, 240);
-            resultPanel.BorderStyle = BorderStyle.FixedSingle;
-            resultPanel.Controls.Add(lblStep4Title);
-            resultPanel.Controls.Add(lblUch1Final);
-            resultPanel.Controls.Add(lblUch2Final);
-            resultPanel.Controls.Add(lblUcFinal);
-            resultPanel.Controls.Add(lblTchResult);
-            resultPanel.Controls.Add(lblUbk1);
-            resultPanel.Controls.Add(lblUbk2);
-            resultPanel.Controls.Add(lblUbk3);
-            resultPanel.Controls.Add(lblUbk4);
-            resultPanel.Controls.Add(lblUbkResult);
-            resultPanel.Controls.Add(lblTtnResult);
-            resultPanel.Controls.Add(lblDeltaT);
-            resultPanel.Controls.Add(lblDeltaOd);
-            resultPanel.Controls.Add(lblDeltaDd);
-            resultPanel.Controls.Add(lblUFinal);
-            resultPanel.Dock = DockStyle.Fill;
-            resultPanel.Location = new Point(13, 883);
-            resultPanel.Name = "resultPanel";
-            resultPanel.Size = new Size(1374, 214);
-            resultPanel.TabIndex = 4;
-            // 
-            // lblStep4Title
-            // 
-            lblStep4Title.AutoSize = true;
-            lblStep4Title.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblStep4Title.Location = new Point(10, 10);
-            lblStep4Title.Name = "lblStep4Title";
-            lblStep4Title.Size = new Size(166, 25);
-            lblStep4Title.TabIndex = 0;
-            lblStep4Title.Text = "Kết quả tính toán";
-            // 
-            // lblUch1Final
-            // 
-            lblUch1Final.Anchor = AnchorStyles.None;
-            lblUch1Final.AutoSize = true;
-            lblUch1Final.Font = new Font("Segoe UI", 9F);
-            lblUch1Final.Location = new Point(504, 32);
-            lblUch1Final.Name = "lblUch1Final";
-            lblUch1Final.Size = new Size(76, 20);
-            lblUch1Final.TabIndex = 1;
-            lblUch1Final.Text = "uch1 = ---";
-            // 
-            // lblUch2Final
-            // 
-            lblUch2Final.Anchor = AnchorStyles.None;
-            lblUch2Final.AutoSize = true;
-            lblUch2Final.Font = new Font("Segoe UI", 9F);
-            lblUch2Final.Location = new Point(504, 75);
-            lblUch2Final.Name = "lblUch2Final";
-            lblUch2Final.Size = new Size(76, 20);
-            lblUch2Final.TabIndex = 2;
-            lblUch2Final.Text = "uch2 = ---";
-            // 
-            // lblUcFinal
-            // 
-            lblUcFinal.Anchor = AnchorStyles.None;
-            lblUcFinal.AutoSize = true;
-            lblUcFinal.Font = new Font("Segoe UI", 9F);
-            lblUcFinal.ForeColor = Color.Black;
-            lblUcFinal.Location = new Point(504, 114);
-            lblUcFinal.Name = "lblUcFinal";
-            lblUcFinal.Size = new Size(60, 20);
-            lblUcFinal.TabIndex = 3;
-            lblUcFinal.Text = "uc = ---";
-            // 
-            // lblTchResult
-            // 
-            lblTchResult.Anchor = AnchorStyles.None;
-            lblTchResult.AutoSize = true;
-            lblTchResult.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            lblTchResult.ForeColor = Color.Black;
-            lblTchResult.Location = new Point(29, 75);
-            lblTchResult.Name = "lblTchResult";
-            lblTchResult.Size = new Size(71, 20);
-            lblTchResult.TabIndex = 3;
-            lblTchResult.Text = "t̄_ch = ---";
-            // 
-            // lblUbk1
-            // 
-            lblUbk1.Anchor = AnchorStyles.None;
-            lblUbk1.AutoSize = true;
-            lblUbk1.Font = new Font("Segoe UI", 9F);
-            lblUbk1.Location = new Point(777, 32);
-            lblUbk1.Name = "lblUbk1";
-            lblUbk1.Size = new Size(77, 20);
-            lblUbk1.TabIndex = 5;
-            lblUbk1.Text = "ubk1 = ---";
-            // 
-            // lblUbk2
-            // 
-            lblUbk2.Anchor = AnchorStyles.None;
-            lblUbk2.AutoSize = true;
-            lblUbk2.Font = new Font("Segoe UI", 9F);
-            lblUbk2.Location = new Point(777, 75);
-            lblUbk2.Name = "lblUbk2";
-            lblUbk2.Size = new Size(77, 20);
-            lblUbk2.TabIndex = 6;
-            lblUbk2.Text = "ubk2 = ---";
-            // 
-            // lblUbk3
-            // 
-            lblUbk3.Anchor = AnchorStyles.None;
-            lblUbk3.AutoSize = true;
-            lblUbk3.Font = new Font("Segoe UI", 9F);
-            lblUbk3.Location = new Point(777, 114);
-            lblUbk3.Name = "lblUbk3";
-            lblUbk3.Size = new Size(77, 20);
-            lblUbk3.TabIndex = 7;
-            lblUbk3.Text = "ubk3 = ---";
-            // 
-            // lblUbk4
-            // 
-            lblUbk4.Anchor = AnchorStyles.None;
-            lblUbk4.AutoSize = true;
-            lblUbk4.Font = new Font("Segoe UI", 9F);
-            lblUbk4.Location = new Point(1089, 32);
-            lblUbk4.Name = "lblUbk4";
-            lblUbk4.Size = new Size(77, 20);
-            lblUbk4.TabIndex = 8;
-            lblUbk4.Text = "ubk4 = ---";
-            // 
-            // lblUbkResult
-            // 
-            lblUbkResult.Anchor = AnchorStyles.None;
-            lblUbkResult.AutoSize = true;
-            lblUbkResult.Font = new Font("Segoe UI", 9F);
-            lblUbkResult.ForeColor = Color.Black;
-            lblUbkResult.Location = new Point(1089, 75);
-            lblUbkResult.Name = "lblUbkResult";
-            lblUbkResult.Size = new Size(69, 20);
-            lblUbkResult.TabIndex = 9;
-            lblUbkResult.Text = "ubk = ---";
-            // 
-            // lblTtnResult
-            // 
-            lblTtnResult.Anchor = AnchorStyles.None;
-            lblTtnResult.AutoSize = true;
-            lblTtnResult.Font = new Font("Segoe UI", 9F);
-            lblTtnResult.Location = new Point(29, 32);
-            lblTtnResult.Name = "lblTtnResult";
-            lblTtnResult.Size = new Size(69, 20);
-            lblTtnResult.TabIndex = 1;
-            lblTtnResult.Text = "t̄_tn = ---";
-            // 
-            // lblDeltaT
-            // 
-            lblDeltaT.Anchor = AnchorStyles.None;
-            lblDeltaT.AutoSize = true;
-            lblDeltaT.Font = new Font("Segoe UI", 9F);
-            lblDeltaT.Location = new Point(32, 114);
-            lblDeltaT.Name = "lblDeltaT";
-            lblDeltaT.Size = new Size(60, 20);
-            lblDeltaT.TabIndex = 2;
-            lblDeltaT.Text = "Δt = ---";
-            // 
-            // lblDeltaOd
-            // 
-            lblDeltaOd.Anchor = AnchorStyles.None;
-            lblDeltaOd.AutoSize = true;
-            lblDeltaOd.Font = new Font("Segoe UI", 9F);
-            lblDeltaOd.Location = new Point(220, 32);
-            lblDeltaOd.Name = "lblDeltaOd";
-            lblDeltaOd.Size = new Size(83, 20);
-            lblDeltaOd.TabIndex = 3;
-            lblDeltaOd.Text = "δt_od = ---";
-            // 
-            // lblDeltaDd
-            // 
-            lblDeltaDd.Anchor = AnchorStyles.None;
-            lblDeltaDd.AutoSize = true;
-            lblDeltaDd.Font = new Font("Segoe UI", 9F);
-            lblDeltaDd.Location = new Point(220, 77);
-            lblDeltaDd.Name = "lblDeltaDd";
-            lblDeltaDd.Size = new Size(83, 20);
-            lblDeltaDd.TabIndex = 4;
-            lblDeltaDd.Text = "δt_dd = ---";
-            // 
-            // lblUFinal
-            // 
-            lblUFinal.Anchor = AnchorStyles.None;
-            lblUFinal.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblUFinal.ForeColor = Color.Black;
-            lblUFinal.Location = new Point(1089, 103);
-            lblUFinal.Name = "lblUFinal";
-            lblUFinal.Size = new Size(263, 36);
-            lblUFinal.TabIndex = 4;
-            lblUFinal.Text = "U = ---";
-            lblUFinal.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // bottomPanel
-            // 
-            bottomPanel.Controls.Add(btnCalculate);
-            bottomPanel.Controls.Add(btnAddToTable);
-            bottomPanel.Controls.Add(btnSaveToDb);
-            bottomPanel.Dock = DockStyle.Fill;
-            bottomPanel.Location = new Point(13, 1103);
-            bottomPanel.Name = "bottomPanel";
-            bottomPanel.Size = new Size(1374, 54);
-            bottomPanel.TabIndex = 5;
-            // 
-            // btnCalculate
-            // 
-            btnCalculate.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnCalculate.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            btnCalculate.Location = new Point(1254, 7);
-            btnCalculate.Name = "btnCalculate";
-            btnCalculate.Size = new Size(120, 40);
-            btnCalculate.TabIndex = 0;
-            btnCalculate.Text = "Tính toán";
-            btnCalculate.UseVisualStyleBackColor = true;
-            // 
-            // btnAddToTable
-            // 
-            btnAddToTable.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnAddToTable.BackColor = Color.FromArgb(0, 120, 215);
-            btnAddToTable.Enabled = false;
-            btnAddToTable.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            btnAddToTable.ForeColor = Color.White;
-            btnAddToTable.Location = new Point(1094, 7);
-            btnAddToTable.Name = "btnAddToTable";
-            btnAddToTable.Size = new Size(150, 40);
-            btnAddToTable.TabIndex = 1;
-            btnAddToTable.Text = "Thêm vào bảng";
-            btnAddToTable.UseVisualStyleBackColor = false;
-            // 
-            // btnSaveToDb
-            // 
-            btnSaveToDb.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnSaveToDb.BackColor = Color.LightGreen;
-            btnSaveToDb.Location = new Point(974, 7);
-            btnSaveToDb.Name = "btnSaveToDb";
-            btnSaveToDb.Size = new Size(110, 40);
-            btnSaveToDb.TabIndex = 2;
-            btnSaveToDb.Text = "Lưu vào DB";
-            btnSaveToDb.UseVisualStyleBackColor = false;
-            // 
-            // step1Panel
-            // 
-            step1Panel.BackColor = Color.FromArgb(240, 248, 255);
-            step1Panel.BorderStyle = BorderStyle.FixedSingle;
-            step1Panel.Dock = DockStyle.Fill;
-            step1Panel.Location = new Point(13, 83);
-            step1Panel.Name = "step1Panel";
-            step1Panel.Size = new Size(1374, 94);
-            step1Panel.TabIndex = 1;
-            // 
-            // lblStep5Title
-            // 
-            lblStep5Title.AutoSize = true;
-            lblStep5Title.Location = new Point(0, 0);
-            lblStep5Title.Name = "lblStep5Title";
-            lblStep5Title.Size = new Size(100, 23);
-            lblStep5Title.TabIndex = 0;
-            lblStep5Title.Visible = false;
             // 
             // _tabMain
             // 
@@ -709,28 +79,407 @@ namespace HM_19MB_Demo
             _tabMain.Location = new Point(0, 0);
             _tabMain.Name = "_tabMain";
             _tabMain.SelectedIndex = 0;
-            _tabMain.Size = new Size(1400, 1170);
+            _tabMain.Size = new Size(1379, 820);
             _tabMain.TabIndex = 0;
             // 
             // _tabInput
             // 
-            _tabInput.Controls.Add(mainLayout);
+            _tabInput.Controls.Add(inputLayout);
             _tabInput.Location = new Point(4, 29);
             _tabInput.Name = "_tabInput";
             _tabInput.Padding = new Padding(3);
-            _tabInput.Size = new Size(1392, 1137);
+            _tabInput.Size = new Size(1371, 787);
             _tabInput.TabIndex = 0;
-            _tabInput.Text = "① Nhập liệu";
+            _tabInput.Text = "Nhập liệu";
             _tabInput.UseVisualStyleBackColor = true;
+            // 
+            // inputLayout
+            // 
+            inputLayout.ColumnCount = 1;
+            inputLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            inputLayout.Controls.Add(configStrip, 0, 0);
+            inputLayout.Controls.Add(correctionStrip, 0, 1);
+            inputLayout.Controls.Add(typeBStrip, 0, 2);
+            inputLayout.Controls.Add(gridPanel, 0, 3);
+            inputLayout.Controls.Add(resultPanel, 0, 4);
+            inputLayout.Controls.Add(bottomBar, 0, 5);
+            inputLayout.Dock = DockStyle.Fill;
+            inputLayout.Location = new Point(3, 3);
+            inputLayout.Name = "inputLayout";
+            inputLayout.RowCount = 6;
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 110F));
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
+            inputLayout.Size = new Size(1365, 781);
+            inputLayout.TabIndex = 0;
+            // 
+            // configStrip
+            // 
+            configStrip.BackColor = Color.White;
+            configStrip.Controls.Add(lblGiaTriDat);
+            configStrip.Controls.Add(txtGiaTriDat);
+            configStrip.Controls.Add(lblGiaTriDatUnit);
+            configStrip.Controls.Add(lblConfigSeparator);
+            configStrip.Controls.Add(lblChannels);
+            configStrip.Controls.Add(numChannels);
+            configStrip.Controls.Add(lblMeasurements);
+            configStrip.Controls.Add(numMeasurements);
+            configStrip.Controls.Add(btnApplyConfig);
+            configStrip.Controls.Add(lblMethodB);
+            configStrip.Controls.Add(rbUseU);
+            configStrip.Controls.Add(rbUseDelta);
+            configStrip.Dock = DockStyle.Fill;
+            configStrip.Location = new Point(0, 0);
+            configStrip.Margin = new Padding(0);
+            configStrip.Name = "configStrip";
+            configStrip.Padding = new Padding(8, 7, 8, 0);
+            configStrip.Size = new Size(1365, 44);
+            configStrip.TabIndex = 0;
+            configStrip.WrapContents = false;
+            // 
+            // lblGiaTriDat
+            // 
+            lblGiaTriDat.AutoSize = true;
+            lblGiaTriDat.Location = new Point(8, 12);
+            lblGiaTriDat.Margin = new Padding(0, 5, 4, 0);
+            lblGiaTriDat.Name = "lblGiaTriDat";
+            lblGiaTriDat.Size = new Size(106, 20);
+            lblGiaTriDat.TabIndex = 0;
+            lblGiaTriDat.Text = "Điểm kiểm tra:";
+            // 
+            // txtGiaTriDat
+            // 
+            txtGiaTriDat.Location = new Point(122, 7);
+            txtGiaTriDat.Margin = new Padding(4, 0, 4, 0);
+            txtGiaTriDat.Name = "txtGiaTriDat";
+            txtGiaTriDat.Size = new Size(80, 27);
+            txtGiaTriDat.TabIndex = 1;
+            txtGiaTriDat.Text = "0.0";
+            // 
+            // lblGiaTriDatUnit
+            // 
+            lblGiaTriDatUnit.AutoSize = true;
+            lblGiaTriDatUnit.Location = new Point(206, 12);
+            lblGiaTriDatUnit.Margin = new Padding(0, 5, 12, 0);
+            lblGiaTriDatUnit.Name = "lblGiaTriDatUnit";
+            lblGiaTriDatUnit.Size = new Size(24, 20);
+            lblGiaTriDatUnit.TabIndex = 2;
+            lblGiaTriDatUnit.Text = "°C";
+            // 
+            // lblConfigSeparator
+            // 
+            lblConfigSeparator.AutoSize = true;
+            lblConfigSeparator.Location = new Point(242, 12);
+            lblConfigSeparator.Margin = new Padding(0, 5, 12, 0);
+            lblConfigSeparator.Name = "lblConfigSeparator";
+            lblConfigSeparator.Size = new Size(13, 20);
+            lblConfigSeparator.TabIndex = 3;
+            lblConfigSeparator.Text = "|";
+            // 
+            // lblChannels
+            // 
+            lblChannels.AutoSize = true;
+            lblChannels.Location = new Point(267, 12);
+            lblChannels.Margin = new Padding(0, 5, 4, 0);
+            lblChannels.Name = "lblChannels";
+            lblChannels.Size = new Size(107, 20);
+            lblChannels.TabIndex = 4;
+            lblChannels.Text = "Số kênh chuẩn:";
+            // 
+            // numChannels
+            // 
+            numChannels.Location = new Point(382, 7);
+            numChannels.Margin = new Padding(4, 0, 12, 0);
+            numChannels.Maximum = new decimal(new int[] { 9, 0, 0, 0 });
+            numChannels.Minimum = new decimal(new int[] { 3, 0, 0, 0 });
+            numChannels.Name = "numChannels";
+            numChannels.Size = new Size(55, 27);
+            numChannels.TabIndex = 5;
+            numChannels.Value = new decimal(new int[] { 3, 0, 0, 0 });
+            // 
+            // lblMeasurements
+            // 
+            lblMeasurements.AutoSize = true;
+            lblMeasurements.Location = new Point(449, 12);
+            lblMeasurements.Margin = new Padding(0, 5, 4, 0);
+            lblMeasurements.Name = "lblMeasurements";
+            lblMeasurements.Size = new Size(75, 20);
+            lblMeasurements.TabIndex = 6;
+            lblMeasurements.Text = "Số lần đo:";
+            // 
+            // numMeasurements
+            // 
+            numMeasurements.Location = new Point(532, 7);
+            numMeasurements.Margin = new Padding(4, 0, 12, 0);
+            numMeasurements.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
+            numMeasurements.Minimum = new decimal(new int[] { 3, 0, 0, 0 });
+            numMeasurements.Name = "numMeasurements";
+            numMeasurements.Size = new Size(55, 27);
+            numMeasurements.TabIndex = 7;
+            numMeasurements.Value = new decimal(new int[] { 5, 0, 0, 0 });
+            // 
+            // btnApplyConfig
+            // 
+            btnApplyConfig.Location = new Point(603, 8);
+            btnApplyConfig.Margin = new Padding(4, 1, 12, 0);
+            btnApplyConfig.Name = "btnApplyConfig";
+            btnApplyConfig.Size = new Size(80, 30);
+            btnApplyConfig.TabIndex = 8;
+            btnApplyConfig.Text = "Áp dụng";
+            btnApplyConfig.UseVisualStyleBackColor = true;
+            // 
+            // lblMethodB
+            // 
+            lblMethodB.AutoSize = true;
+            lblMethodB.Location = new Point(695, 12);
+            lblMethodB.Margin = new Padding(0, 5, 4, 0);
+            lblMethodB.Name = "lblMethodB";
+            lblMethodB.Size = new Size(492, 20);
+            lblMethodB.TabIndex = 9;
+            lblMethodB.Text = "Phương pháp tính ĐKĐBĐ của thiết bị đo nhiệt độ đa kênh chuẩn (loại B)";
+            // 
+            // rbUseU
+            // 
+            rbUseU.AutoSize = true;
+            rbUseU.Checked = true;
+            rbUseU.Location = new Point(1195, 9);
+            rbUseU.Margin = new Padding(4, 2, 6, 0);
+            rbUseU.Name = "rbUseU";
+            rbUseU.Size = new Size(80, 24);
+            rbUseU.TabIndex = 10;
+            rbUseU.TabStop = true;
+            rbUseU.Text = "Dùng U";
+            rbUseU.UseVisualStyleBackColor = true;
+            // 
+            // rbUseDelta
+            // 
+            rbUseDelta.AutoSize = true;
+            rbUseDelta.Location = new Point(1285, 9);
+            rbUseDelta.Margin = new Padding(4, 2, 0, 0);
+            rbUseDelta.Name = "rbUseDelta";
+            rbUseDelta.Size = new Size(78, 24);
+            rbUseDelta.TabIndex = 11;
+            rbUseDelta.Text = "Dùng ∂";
+            rbUseDelta.UseVisualStyleBackColor = true;
+            // 
+            // correctionStrip
+            // 
+            correctionStrip.BackColor = SystemColors.ControlLightLight;
+            correctionStrip.Controls.Add(lblCorrections);
+            correctionStrip.Dock = DockStyle.Fill;
+            correctionStrip.Location = new Point(0, 44);
+            correctionStrip.Margin = new Padding(0);
+            correctionStrip.Name = "correctionStrip";
+            correctionStrip.Padding = new Padding(8, 4, 8, 0);
+            correctionStrip.Size = new Size(1365, 36);
+            correctionStrip.TabIndex = 1;
+            correctionStrip.WrapContents = false;
+            // 
+            // lblCorrections
+            // 
+            lblCorrections.AutoSize = true;
+            lblCorrections.Location = new Point(8, 9);
+            lblCorrections.Margin = new Padding(0, 5, 10, 0);
+            lblCorrections.Name = "lblCorrections";
+            lblCorrections.Size = new Size(308, 20);
+            lblCorrections.TabIndex = 0;
+            lblCorrections.Text = "Số hiệu chính của nhiệt kế chuẩn (từ GCNHC):";
+            // 
+            // typeBStrip
+            // 
+            typeBStrip.BackColor = SystemColors.ControlLightLight;
+            typeBStrip.Controls.Add(lblUMax);
+            typeBStrip.Controls.Add(txtUMax);
+            typeBStrip.Controls.Add(lblDeltaMax);
+            typeBStrip.Controls.Add(txtDeltaMax);
+            typeBStrip.Controls.Add(lblResA);
+            typeBStrip.Controls.Add(txtResA);
+            typeBStrip.Controls.Add(lblResD);
+            typeBStrip.Controls.Add(txtResD);
+            typeBStrip.Dock = DockStyle.Fill;
+            typeBStrip.Location = new Point(0, 80);
+            typeBStrip.Margin = new Padding(0);
+            typeBStrip.Name = "typeBStrip";
+            typeBStrip.Padding = new Padding(8, 4, 8, 0);
+            typeBStrip.Size = new Size(1365, 36);
+            typeBStrip.TabIndex = 2;
+            typeBStrip.WrapContents = false;
+            // 
+            // lblUMax
+            // 
+            lblUMax.AutoSize = true;
+            lblUMax.Location = new Point(8, 9);
+            lblUMax.Margin = new Padding(0, 5, 4, 0);
+            lblUMax.Name = "lblUMax";
+            lblUMax.Size = new Size(253, 20);
+            lblUMax.TabIndex = 0;
+            lblUMax.Text = "ĐKĐBĐ mở rộng của thiết bị đo (°C):";
+            // 
+            // txtUMax
+            // 
+            txtUMax.Location = new Point(269, 4);
+            txtUMax.Margin = new Padding(4, 0, 14, 0);
+            txtUMax.Name = "txtUMax";
+            txtUMax.Size = new Size(60, 27);
+            txtUMax.TabIndex = 1;
+            txtUMax.Text = "0.00";
+            // 
+            // lblDeltaMax
+            // 
+            lblDeltaMax.AutoSize = true;
+            lblDeltaMax.Location = new Point(343, 9);
+            lblDeltaMax.Margin = new Padding(0, 5, 4, 0);
+            lblDeltaMax.Name = "lblDeltaMax";
+            lblDeltaMax.Size = new Size(246, 20);
+            lblDeltaMax.TabIndex = 2;
+            lblDeltaMax.Text = "Sai số cho phép của thiết bị đo (°C):";
+            // 
+            // txtDeltaMax
+            // 
+            txtDeltaMax.Location = new Point(597, 4);
+            txtDeltaMax.Margin = new Padding(4, 0, 14, 0);
+            txtDeltaMax.Name = "txtDeltaMax";
+            txtDeltaMax.Size = new Size(60, 27);
+            txtDeltaMax.TabIndex = 3;
+            txtDeltaMax.Text = "0.00";
+            // 
+            // lblResA
+            // 
+            lblResA.AutoSize = true;
+            lblResA.Location = new Point(671, 9);
+            lblResA.Margin = new Padding(0, 5, 4, 0);
+            lblResA.Name = "lblResA";
+            lblResA.Size = new Size(201, 20);
+            lblResA.TabIndex = 4;
+            lblResA.Text = "A-\tGiá trị độ chia nhỏ nhất  A:";
+            // 
+            // txtResA
+            // 
+            txtResA.Location = new Point(880, 4);
+            txtResA.Margin = new Padding(4, 0, 14, 0);
+            txtResA.Name = "txtResA";
+            txtResA.Size = new Size(55, 27);
+            txtResA.TabIndex = 5;
+            txtResA.Text = "0.10";
+            // 
+            // lblResD
+            // 
+            lblResD.AutoSize = true;
+            lblResD.Location = new Point(949, 9);
+            lblResD.Margin = new Padding(0, 5, 4, 0);
+            lblResD.Name = "lblResD";
+            lblResD.Size = new Size(99, 20);
+            lblResD.TabIndex = 6;
+            lblResD.Text = "Hệ số nhân d:";
+            // 
+            // txtResD
+            // 
+            txtResD.Location = new Point(1056, 4);
+            txtResD.Margin = new Padding(4, 0, 0, 0);
+            txtResD.Name = "txtResD";
+            txtResD.Size = new Size(55, 27);
+            txtResD.TabIndex = 7;
+            txtResD.Text = "0.50";
+            // 
+            // gridPanel
+            // 
+            gridPanel.Controls.Add(gridData);
+            gridPanel.Dock = DockStyle.Fill;
+            gridPanel.Location = new Point(0, 116);
+            gridPanel.Margin = new Padding(0);
+            gridPanel.Name = "gridPanel";
+            gridPanel.Padding = new Padding(8);
+            gridPanel.Size = new Size(1365, 515);
+            gridPanel.TabIndex = 3;
+            // 
+            // gridData
+            // 
+            gridData.AllowUserToAddRows = false;
+            gridData.AllowUserToDeleteRows = false;
+            gridData.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            gridData.BackgroundColor = Color.White;
+            gridData.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            gridData.Dock = DockStyle.Fill;
+            gridData.Location = new Point(8, 8);
+            gridData.Name = "gridData";
+            gridData.RowHeadersVisible = false;
+            gridData.RowHeadersWidth = 51;
+            gridData.Size = new Size(1349, 499);
+            gridData.TabIndex = 0;
+            // 
+            // resultPanel
+            // 
+            resultPanel.Controls.Add(resultCards);
+            resultPanel.Dock = DockStyle.Fill;
+            resultPanel.Location = new Point(0, 631);
+            resultPanel.Margin = new Padding(0);
+            resultPanel.Name = "resultPanel";
+            resultPanel.Padding = new Padding(8, 4, 8, 4);
+            resultPanel.Size = new Size(1365, 110);
+            resultPanel.TabIndex = 4;
+            // 
+            // resultCards
+            // 
+            resultCards.ColumnCount = 4;
+            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            resultCards.Dock = DockStyle.Fill;
+            resultCards.Location = new Point(8, 4);
+            resultCards.Name = "resultCards";
+            resultCards.RowCount = 2;
+            resultCards.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            resultCards.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            resultCards.Size = new Size(1349, 102);
+            resultCards.TabIndex = 0;
+            // 
+            // bottomBar
+            // 
+            bottomBar.Controls.Add(btnCalculateAndAdd);
+            bottomBar.Controls.Add(lblStatus);
+            bottomBar.Dock = DockStyle.Fill;
+            bottomBar.Location = new Point(0, 741);
+            bottomBar.Margin = new Padding(0);
+            bottomBar.Name = "bottomBar";
+            bottomBar.Padding = new Padding(8, 4, 8, 0);
+            bottomBar.Size = new Size(1365, 40);
+            bottomBar.TabIndex = 5;
+            bottomBar.WrapContents = false;
+            // 
+            // btnCalculateAndAdd
+            // 
+            btnCalculateAndAdd.Enabled = false;
+            btnCalculateAndAdd.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnCalculateAndAdd.Location = new Point(11, 5);
+            btnCalculateAndAdd.Margin = new Padding(3, 1, 12, 0);
+            btnCalculateAndAdd.Name = "btnCalculateAndAdd";
+            btnCalculateAndAdd.Size = new Size(360, 32);
+            btnCalculateAndAdd.TabIndex = 0;
+            btnCalculateAndAdd.Text = "Tính toán và Thêm vào bảng";
+            btnCalculateAndAdd.UseVisualStyleBackColor = true;
+            // 
+            // lblStatus
+            // 
+            lblStatus.AutoSize = true;
+            lblStatus.ForeColor = Color.DarkGreen;
+            lblStatus.Location = new Point(383, 10);
+            lblStatus.Margin = new Padding(0, 6, 20, 0);
+            lblStatus.Name = "lblStatus";
+            lblStatus.Size = new Size(0, 20);
+            lblStatus.TabIndex = 1;
             // 
             // _tabResults
             // 
             _tabResults.Location = new Point(4, 29);
             _tabResults.Name = "_tabResults";
             _tabResults.Padding = new Padding(3);
-            _tabResults.Size = new Size(1392, 1137);
+            _tabResults.Size = new Size(1422, 787);
             _tabResults.TabIndex = 1;
-            _tabResults.Text = "② Kết quả tổng hợp";
+            _tabResults.Text = "Kết quả tổng hợp";
             _tabResults.UseVisualStyleBackColor = true;
             // 
             // _tabBudget
@@ -738,110 +487,90 @@ namespace HM_19MB_Demo
             _tabBudget.Location = new Point(4, 29);
             _tabBudget.Name = "_tabBudget";
             _tabBudget.Padding = new Padding(3);
-            _tabBudget.Size = new Size(1392, 1137);
+            _tabBudget.Size = new Size(1422, 787);
             _tabBudget.TabIndex = 2;
-            _tabBudget.Text = "③ Budget ĐKĐBĐ";
+            _tabBudget.Text = "Độ không đảm bảo đo";
             _tabBudget.UseVisualStyleBackColor = true;
             // 
             // UncertaintyCalculationForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            AutoScroll = true;
-            ClientSize = new Size(1400, 1170);
+            ClientSize = new Size(1379, 820);
             Controls.Add(_tabMain);
-            MinimumSize = new Size(1200, 700);
+            MinimumSize = new Size(900, 650);
             Name = "UncertaintyCalculationForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Tính toán độ không đảm bảo đo";
-            WindowState = FormWindowState.Maximized;
-            mainLayout.ResumeLayout(false);
-            step0Panel.ResumeLayout(false);
-            step0Panel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)numChannels).EndInit();
-            ((System.ComponentModel.ISupportInitialize)numMeasurements).EndInit();
-            step2Panel.ResumeLayout(false);
-            step2Panel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)gridMeasurements).EndInit();
-            splitStep3.ResumeLayout(false);
-            pnlStandards.ResumeLayout(false);
-            pnlStandards.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)gridStandards).EndInit();
-            pnlIndicator.ResumeLayout(false);
-            pnlIndicator.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)gridIndicator).EndInit();
-            ((System.ComponentModel.ISupportInitialize)numResolutionA).EndInit();
-            ((System.ComponentModel.ISupportInitialize)numResolutionD).EndInit();
-            resultPanel.ResumeLayout(false);
-            resultPanel.PerformLayout();
-            bottomPanel.ResumeLayout(false);
             _tabMain.ResumeLayout(false);
             _tabInput.ResumeLayout(false);
+            inputLayout.ResumeLayout(false);
+            configStrip.ResumeLayout(false);
+            configStrip.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)numChannels).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numMeasurements).EndInit();
+            correctionStrip.ResumeLayout(false);
+            correctionStrip.PerformLayout();
+            typeBStrip.ResumeLayout(false);
+            typeBStrip.PerformLayout();
+            gridPanel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)gridData).EndInit();
+            resultPanel.ResumeLayout(false);
+            bottomBar.ResumeLayout(false);
+            bottomBar.PerformLayout();
             ResumeLayout(false);
         }
 
         #endregion
 
-        // ── Step 0 controls ──────────────────────────────────────────────
-        private Panel step0Panel;
-        private Label lblStep0Title;
+        private TabControl _tabMain;
+        private TabPage _tabInput;
+        private TabPage _tabResults;
+        private TabPage _tabBudget;
+
+        private TableLayoutPanel inputLayout;
+        private FlowLayoutPanel configStrip;
         private Label lblGiaTriDat;
         private TextBox txtGiaTriDat;
         private Label lblGiaTriDatUnit;
-
-        // ── Step 1 controls ──────────────────────────────────────────────
-        private TableLayoutPanel mainLayout;
-        private Panel step1Panel;
-        private Label lblStep1Title;
+        private Label lblConfigSeparator;
         private Label lblChannels;
         private NumericUpDown numChannels;
         private Label lblMeasurements;
         private NumericUpDown numMeasurements;
         private Button btnApplyConfig;
-        private Panel step2Panel;
-        private Label lblStep2Title;
-        private DataGridView gridMeasurements;
-        private Label lblUch1Result;
-        private TableLayoutPanel splitStep3;
-        private Panel pnlStandards;
-        private Label lblStep3Title;
+        private Label lblMethodB;
         private RadioButton rbUseU;
         private RadioButton rbUseDelta;
-        private DataGridView gridStandards;
-        private Label lblUch2Result;
-        private Panel pnlIndicator;
-        private Label lblStep3bTitle;
-        private DataGridView gridIndicator;
-        private Label lblResA;
-        private NumericUpDown numResolutionA;
-        private Label lblResD;
-        private NumericUpDown numResolutionD;
-        private Panel resultPanel;
-        private Label lblStep4Title;
-        private Label lblUch1Final;
-        private Label lblUch2Final;
-        private Label lblUcFinal;
-        private Label lblUFinal;
-        private Label lblTchResult;
-        private Label lblStep5Title;
-        private Label lblTtnResult;
-        private Label lblDeltaT;
-        private Label lblDeltaOd;
-        private Label lblDeltaDd;
-        private Label lblUbk1;
-        private Label lblUbk2;
-        private Label lblUbk3;
-        private Label lblUbk4;
-        private Label lblUbkResult;
-        private Panel bottomPanel;
-        private Button btnCalculate;
-        private Button btnAddToTable;   // MỚI
-        private Button btnSaveToDb;
 
-        // ── TabControl ───────────────────────────────────────────────────
-        private TabControl _tabMain;
-        private TabPage _tabInput;
-        private TabPage _tabResults;
-        private TabPage _tabBudget;
+        private FlowLayoutPanel correctionStrip;
+        private Label lblCorrections;
+        private FlowLayoutPanel typeBStrip;
+        private Label lblUMax;
+        private TextBox txtUMax;
+        private Label lblDeltaMax;
+        private TextBox txtDeltaMax;
+        private Label lblResA;
+        private TextBox txtResA;
+        private Label lblResD;
+        private TextBox txtResD;
+
+        private Panel gridPanel;
+        private DataGridView gridData;
+        private Panel resultPanel;
+        private TableLayoutPanel resultCards;
+        private FlowLayoutPanel bottomBar;
+        private Button btnCalculateAndAdd;
+        private Button btnAddToTable;
+        private Label lblStatus;
+
+        private Label lblR_Dt;
+        private Label lblR_Od;
+        private Label lblR_Dd;
+        private Label lblR_Uch1;
+        private Label lblR_Uch2;
+        private Label lblR_Uch;
+        private Label lblR_Ubk;
+        private Label lblR_U;
     }
 }

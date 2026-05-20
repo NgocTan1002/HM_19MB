@@ -1,4 +1,4 @@
-﻿using HM_19MB_Demo.Data;
+using HM_19MB_Demo.Data;
 using System;
 using System.Drawing;
 using System.Linq;
@@ -388,6 +388,10 @@ namespace HM_19MB_Demo
 
                 row.STT = gridRow.Index + 1;
                 row.Id = await DatabaseService.LuuKetQuaHieuChuanAsync(_currentSessionId.Value, row);
+
+                if (row.Id > 0 && row.ChiTietLanDos?.Count > 0)
+                    await DatabaseService.LuuChiTietLanDoAsync(row.Id, row.ChiTietLanDos);
+
                 savedCount++;
             }
 
