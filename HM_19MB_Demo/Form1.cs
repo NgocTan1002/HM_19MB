@@ -325,6 +325,8 @@ namespace HM_19MB_Demo
             int phienId = _currentSessionId.Value;
             if (_uncertaintyForm != null && !_uncertaintyForm.IsDisposed)
             {
+                if (!_uncertaintyForm.Visible)
+                    _uncertaintyForm.Show(this);
                 _uncertaintyForm.BringToFront();
                 _uncertaintyForm.Focus();
                 return;
@@ -336,7 +338,7 @@ namespace HM_19MB_Demo
                 phienId: phienId,
                 onResultAdded: OnCalibrationResultAdded,
                 onConfigChanged: (k, n) => SetCalibrationConfig(k, n, clearRowsOnChannelChange: true));
-            _uncertaintyForm.FormClosed += (s, e) => _uncertaintyForm = null;
+            ConfigureUncertaintyFormLifetime(_uncertaintyForm);
             _uncertaintyForm.Show(this);
         }
 

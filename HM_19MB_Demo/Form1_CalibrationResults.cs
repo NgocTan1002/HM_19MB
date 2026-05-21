@@ -26,9 +26,11 @@ namespace HM_19MB_Demo
 
         // ── State ─────────────────────────────────────────────────────────
         private UncertaintyCalculationForm? _uncertaintyForm;
+        private bool _forceCloseUncertaintyForm;
         private int _currentKenhCount = 3; // k hiện tại (3/5/9/10)
         private int _currentMeasurementCount = 10; // n hiện tại
         private bool _updatingCalibrationConfig;
+        private bool _updatingCalibrationGrid;
 
         // ── Khởi tạo UI bảng kết quả ─────────────────────────────────────
 
@@ -54,6 +56,12 @@ namespace HM_19MB_Demo
             {
                 await DeleteSelectedCalibRowAsync();
             };
+
+            _gridCalibration.ReadOnly = false;
+            _gridCalibration.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
+            _gridCalibration.CellDoubleClick += GridCalibration_CellDoubleClick;
+            _gridCalibration.CellEndEdit += GridCalibration_CellEndEdit;
+            _gridCalibration.DataError += (s, e) => e.ThrowException = false;
 
             _gridCalibration.SelectionChanged += (s, e) =>
             {
@@ -98,8 +106,6 @@ namespace HM_19MB_Demo
                 if (clearRowsOnChannelChange)
                 {
                     _gridCalibration.Rows.Clear();
-                    _lblCalibStatus.Text = "Đã đổi số kênh - dữ liệu hiển thị cũ đã được làm mới.";
-                    _lblCalibStatus.ForeColor = Color.DarkOrange;
                 }
             }
 
@@ -124,6 +130,7 @@ namespace HM_19MB_Demo
                     Name = name,
                     HeaderText = header,
                     FillWeight = fillWeight,
+                    ReadOnly = name == ColStt,
                     SortMode = DataGridViewColumnSortMode.NotSortable,
                     DefaultCellStyle = new DataGridViewCellStyle
                     {
@@ -167,6 +174,8 @@ namespace HM_19MB_Demo
             // Nếu form đã mở thì bring to front
             if (_uncertaintyForm != null && !_uncertaintyForm.IsDisposed)
             {
+                if (!_uncertaintyForm.Visible)
+                    _uncertaintyForm.Show(this);
                 _uncertaintyForm.BringToFront();
                 _uncertaintyForm.Focus();
                 return;
@@ -180,8 +189,26 @@ namespace HM_19MB_Demo
                 onConfigChanged: (k, n) => SetCalibrationConfig(k, n, clearRowsOnChannelChange: true)
             );
 
-            _uncertaintyForm.FormClosed += (s, e) => _uncertaintyForm = null;
+            ConfigureUncertaintyFormLifetime(_uncertaintyForm);
             _uncertaintyForm.Show(this);
+        }
+
+        private void ConfigureUncertaintyFormLifetime(UncertaintyCalculationForm form)
+        {
+            form.FormClosing += (s, e) =>
+            {
+                if (!_forceCloseUncertaintyForm && e.CloseReason == CloseReason.UserClosing)
+                {
+                    e.Cancel = true;
+                    form.Hide();
+                }
+            };
+
+            form.FormClosed += (s, e) =>
+            {
+                if (ReferenceEquals(_uncertaintyForm, form))
+                    _uncertaintyForm = null;
+            };
         }
 
         // ── Callback khi UncertaintyCalculationForm trả về kết quả ────────
@@ -214,21 +241,14 @@ namespace HM_19MB_Demo
                             await DatabaseService.LuuChiTietLanDoAsync(
                                 row.Id, row.ChiTietLanDos);
 
-                        Invoke(new Action(() =>
-                        {
-                            _lblCalibStatus.Text =
-                                $"Đã lưu {_gridCalibration.Rows.Count} điểm  |  " +
-                                $"{DateTime.Now:HH:mm:ss}";
-                            _lblCalibStatus.ForeColor = Color.DarkGreen;
-                        }));
                     }
                     catch (Exception ex)
                     {
                         AppLogger.Error("CalibrationResults", "Lỗi lưu", ex);
                         Invoke(new Action(() =>
                         {
-                            _lblCalibStatus.Text = $"Lỗi lưu DB: {ex.Message}";
-                            _lblCalibStatus.ForeColor = Color.DarkRed;
+                            MessageBox.Show($"Lỗi lưu DB:\n{ex.Message}", "Lỗi",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }));
                     }
                 });
@@ -277,6 +297,127 @@ namespace HM_19MB_Demo
             _gridCalibration.FirstDisplayedScrollingRowIndex = rowIdx;
         }
 
+        private async void GridCalibration_CellEndEdit(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (_updatingCalibrationGrid || e.RowIndex < 0 || e.ColumnIndex < 0)
+                return;
+
+            var gridRow = _gridCalibration.Rows[e.RowIndex];
+            if (gridRow.Tag is not CalibrationResultRow row)
+                return;
+
+            try
+            {
+                UpdateCalibrationRowFromGrid(gridRow, row);
+                FormatCalibrationGridRow(gridRow, row);
+                await SaveCalibrationRowEditAsync(row);
+            }
+            catch (Exception ex)
+            {
+                FormatCalibrationGridRow(gridRow, row);
+                MessageBox.Show($"Không thể cập nhật dòng:\n{ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void GridCalibration_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+                return;
+
+            var column = _gridCalibration.Columns[e.ColumnIndex];
+            if (column.ReadOnly)
+                return;
+
+            _gridCalibration.CurrentCell = _gridCalibration.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            _gridCalibration.BeginEdit(true);
+        }
+
+        private void UpdateCalibrationRowFromGrid(DataGridViewRow gridRow, CalibrationResultRow row)
+        {
+            int k = row.SoKenh > 0 ? row.SoKenh : _currentKenhCount;
+            var kenh = row.Kenh.ToArray();
+            for (int i = 0; i < k && i < row.Kenh.Length; i++)
+                kenh[i] = ReadCalibrationCell(gridRow, $"CalKenh{i + 1}", allowMissing: true);
+
+            double giaTriDat = ReadCalibrationCell(gridRow, ColGiaTriDat);
+            double giaTriChiThi = ReadCalibrationCell(gridRow, ColGiaTriChiThi);
+            double giaTriTrungBinh = ReadCalibrationCell(gridRow, ColTrungBinh);
+            double soHieuChinh = ReadCalibrationCell(gridRow, ColSoHieuChinh);
+            double doOnDinh = ReadCalibrationCell(gridRow, ColDoOnDinh);
+            double doDongDeu = ReadCalibrationCell(gridRow, ColDoDongDeu);
+            double doKhongDamBao = ReadCalibrationCell(gridRow, ColDKDB);
+
+            row.STT = gridRow.Index + 1;
+            row.GiaTriDat = giaTriDat;
+            row.GiaTriChiThi = giaTriChiThi;
+            row.Kenh = kenh;
+            row.GiaTriTrungBinh = giaTriTrungBinh;
+            row.SoHieuChinh = soHieuChinh;
+            row.DoOnDinh = doOnDinh;
+            row.DoDongDeu = doDongDeu;
+            row.DoKhongDamBao = doKhongDamBao;
+        }
+
+        private double ReadCalibrationCell(DataGridViewRow gridRow, string columnName, bool allowMissing = false)
+        {
+            if (!_gridCalibration.Columns.Contains(columnName))
+            {
+                if (allowMissing) return double.NaN;
+                throw new InvalidOperationException($"Thiếu cột {columnName}.");
+            }
+
+            string text = gridRow.Cells[columnName].Value?.ToString() ?? string.Empty;
+            text = text.Replace("±", string.Empty).Trim();
+            if (text == "---" || text.Length == 0)
+                return double.NaN;
+
+            if (double.TryParse(text, out double value))
+                return value;
+
+            throw new FormatException($"Giá trị '{text}' không phải số hợp lệ.");
+        }
+
+        private void FormatCalibrationGridRow(DataGridViewRow gridRow, CalibrationResultRow row)
+        {
+            _updatingCalibrationGrid = true;
+            try
+            {
+                gridRow.Cells[ColStt].Value = row.STT;
+                gridRow.Cells[ColGiaTriDat].Value = row.GiaTriDat.ToString("F1");
+                gridRow.Cells[ColGiaTriChiThi].Value = row.GiaTriChiThi.ToString("F1");
+
+                int k = row.SoKenh > 0 ? row.SoKenh : _currentKenhCount;
+                for (int i = 0; i < k && i < row.Kenh.Length; i++)
+                {
+                    string columnName = $"CalKenh{i + 1}";
+                    if (!_gridCalibration.Columns.Contains(columnName)) continue;
+                    gridRow.Cells[columnName].Value = double.IsNaN(row.Kenh[i])
+                        ? "---"
+                        : row.Kenh[i].ToString("F2");
+                }
+
+                gridRow.Cells[ColTrungBinh].Value = row.GiaTriTrungBinh.ToString("F2");
+                gridRow.Cells[ColSoHieuChinh].Value = row.SoHieuChinh.ToString("F2");
+                gridRow.Cells[ColDoOnDinh].Value = row.DoOnDinh.ToString("F2");
+                gridRow.Cells[ColDoDongDeu].Value = row.DoDongDeu.ToString("F2");
+                gridRow.Cells[ColDKDB].Value = $"±{row.DoKhongDamBao:F2}";
+            }
+            finally
+            {
+                _updatingCalibrationGrid = false;
+            }
+        }
+
+        private async Task SaveCalibrationRowEditAsync(CalibrationResultRow row)
+        {
+            if (!_currentSessionId.HasValue)
+                return;
+
+            await DatabaseService.EnsureSchemaAsync();
+            row.Id = await DatabaseService.LuuKetQuaHieuChuanAsync(_currentSessionId.Value, row);
+        }
+
         // ── Xoá dòng được chọn ───────────────────────────────────────────
 
         private async Task DeleteSelectedCalibRowAsync()
@@ -315,9 +456,6 @@ namespace HM_19MB_Demo
                         r.STT = i + 1;
                 }
 
-                _lblCalibStatus.Text =
-                    $"Đã xoá. Còn {_gridCalibration.Rows.Count} điểm kiểm tra.";
-                _lblCalibStatus.ForeColor = Color.DarkOrange;
             }
             catch (Exception ex)
             {
@@ -368,9 +506,6 @@ namespace HM_19MB_Demo
             foreach (DataGridViewRow r in _gridCalibration.Rows)
                 r.DefaultCellStyle.BackColor = Color.Empty;
 
-            _lblCalibStatus.Text =
-                $"Đã tải {rows.Count} điểm kiểm tra từ database.";
-            _lblCalibStatus.ForeColor = Color.DarkGreen;
         }
 
         internal async Task EnsureCalibrationGridSavedAsync()
@@ -395,12 +530,6 @@ namespace HM_19MB_Demo
                 savedCount++;
             }
 
-            if (savedCount > 0)
-            {
-                _lblCalibStatus.Text =
-                    $"Đã đồng bộ {savedCount} điểm kiểm tra trước khi xuất báo cáo.";
-                _lblCalibStatus.ForeColor = Color.DarkGreen;
-            }
         }
 
         // ── Public helper cho Form1 gọi khi session thay đổi ─────────────
@@ -411,9 +540,18 @@ namespace HM_19MB_Demo
         internal void ResetCalibrationResults()
         {
             _gridCalibration.Rows.Clear();
-            _lblCalibStatus.Text = "Phiên mới — chưa có dữ liệu hiệu chuẩn.";
-            _lblCalibStatus.ForeColor = Color.DimGray;
-            _uncertaintyForm?.Close();
+            if (_uncertaintyForm != null && !_uncertaintyForm.IsDisposed)
+            {
+                _forceCloseUncertaintyForm = true;
+                try
+                {
+                    _uncertaintyForm.Close();
+                }
+                finally
+                {
+                    _forceCloseUncertaintyForm = false;
+                }
+            }
         }
 
         /// <summary>

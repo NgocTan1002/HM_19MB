@@ -608,8 +608,11 @@ namespace HM_19MB_Demo
 
             int stt = _gridResults.Rows.Count + 1;
             AppendResultRow(_lastFullResult, _lastInput, stt);
-            BuildBudgetTable(_lastFullResult);
-            lblStatus.Text = $"Đã thêm điểm {txtGiaTriDat.Text} °C";
+
+            AppendBudgetPoint(_lastFullResult, stt);
+
+            lblStatus.Text = $"Đã thêm điểm {txtGiaTriDat.Text} °C  " +
+                             $"(tổng {stt} điểm)";
 
             ResetMeasurementCells();
         }
@@ -808,6 +811,88 @@ namespace HM_19MB_Demo
             _gridBudget.Columns.Add(colUi);
 
             _tabBudget.Controls.Add(_gridBudget);
+        }
+
+        private void InitBudgetTable()
+        {
+            _gridBudget.Columns.Clear();
+        }
+
+        private void AppendBudgetPoint(UncertaintyFullResult r, int pointIndex)
+        {
+            int n = _lastInput!.N;
+            bool useU = _lastInput.UseUMethod;
+            double uMax = _lastInput.UValues[0];
+            double delta = _lastInput.DeltaValues[0];
+            double A = _lastInput.ResolutionA;
+            double d = _lastInput.ResolutionD;
+
+            // ── Dòng phân cách nếu đã có điểm trước ─────────────────────────
+            if (_gridBudget.Rows.Count > 0)
+                AddBudgetSeparatorRow($"Điểm {pointIndex}");
+
+            // ── u1: Tản mát KQ đo của chuẩn ──────────────────────────────────
+            AddBudgetRow($"u1-{pointIndex}",
+                         "Tản mát KQ đo của chuẩn",
+                         r.Uch1, "°C", "1", 1.0, 1.0, r.Uch1);
+
+            // ── u2: Tản mát KQ đo của UUT ────────────────────────────────────
+            AddBudgetRow($"u2-{pointIndex}",
+                         "Tản mát KQ đo của UUT",
+                         r.Ubk1, "°C", "1", 1.0, 1.0, r.Ubk1);
+
+            // ── u3: ĐKĐBĐ của chuẩn ──────────────────────────────────────────
+            AddBudgetRow("u3",
+                         "ĐKĐBĐ của chuẩn",
+                         useU ? uMax : delta, "°C",
+                         useU ? "2" : "√3",
+                         useU ? 2.0 : Math.Sqrt(3),
+                         1.0, r.Uch2);
+
+            // ── u4: Độ phân giải của UUT ──────────────────────────────────────
+            AddBudgetRow("u4",
+                         "Độ phân giải của UUT",
+                         A * d, "°C", "√3", Math.Sqrt(3), 1.0, r.Ubk4);
+
+            // ── u5: Độ ổn định ────────────────────────────────────────────────
+            AddBudgetRow($"u5-{pointIndex}",
+                         "Độ ổn định",
+                         r.DeltaOd, "°C", "√3", Math.Sqrt(3), 1.0, r.Ubk2);
+
+            // ── u6: Độ đồng đều ───────────────────────────────────────────────
+            AddBudgetRow($"u6-{pointIndex}",
+                         "Độ đồng đều",
+                         r.DeltaDd, "°C", "√3", Math.Sqrt(3), 1.0, r.Ubk3);
+
+            // ── Tổng hợp điểm này ────────────────────────────────────────────
+            AddSummaryBudgetRow($"u_ch-{pointIndex}",
+                                $"Liên hợp chuẩn — điểm {pointIndex}",
+                                r.Uc, Color.FromArgb(220, 235, 255));
+
+            AddSummaryBudgetRow($"u_bk-{pointIndex}",
+                                $"Liên hợp tủ nhiệt — điểm {pointIndex}",
+                                r.Ubk, Color.FromArgb(220, 235, 255));
+
+            AddSummaryBudgetRow($"U-{pointIndex}",
+                                $"ĐKĐB mở rộng — điểm {pointIndex}, k=2, P=95%",
+                                r.UFinal,
+                                Color.FromArgb(200, 255, 200),
+                                prefix: "±", bold: true,
+                                foreColor: Color.DarkGreen);
+
+            // Scroll xuống dòng mới nhất
+            _gridBudget.FirstDisplayedScrollingRowIndex =
+                _gridBudget.Rows.Count - 1;
+        }
+
+        private void AddBudgetSeparatorRow(string text)
+        {
+            int idx = _gridBudget.Rows.Add(text, "", "", "", "", "", "");
+            var style = _gridBudget.Rows[idx].DefaultCellStyle;
+            style.BackColor = Color.FromArgb(230, 230, 230);
+            style.ForeColor = Color.FromArgb(80, 80, 80);
+            style.Font = new Font("Segoe UI", 8F, FontStyle.Italic);
+            _gridBudget.Rows[idx].ReadOnly = true;
         }
 
         private void AppendResultRow(UncertaintyFullResult r, UncertaintyInput input, int stt)
