@@ -877,42 +877,180 @@ namespace HM_19MB_Demo
         private void BuildBudgetTable(UncertaintyFullResult r)
         {
             _gridBudget.Rows.Clear();
+            RebuildBudgetColumns();
 
-            void AddRow(string sym, string source, double val, double divisor, string unit = "°C", double ci = 1.0)
-            {
-                double ui = val / divisor;
-                _gridBudget.Rows.Add(sym, source,
-                    val.ToString("F4"), unit,
-                    divisor == 1.0 ? "1" : divisor.ToString("F4"),
-                    ci.ToString("F1"),
-                    ui.ToString("F4"));
-            }
+            // Index điểm hiệu chuẩn hiện tại (đếm từ kết quả đã thêm)
+            int pointIndex = _gridResults.Rows.Count; // điểm thứ mấy (1-based)
 
-            string methodB = r.MethodUsed == "U"
-                ? "Thiết bị chuẩn (U/2)"
-                : "Thiết bị chuẩn (∂/√3)";
+            int n = _lastInput!.N;
+            int j = _lastInput!.J;
 
-            AddRow("u_ch1", "Lặp lại phép đo - Loại A", r.Uch1, 1.0);
-            AddRow("u_ch2", methodB, r.Uch2, 1.0);
-            AddRow("u_bk1", "Lặp lại chỉ thị tủ - Loại A", r.Ubk1, 1.0);
-            AddRow("u_bk2", "Độ ổn định tủ nhiệt", r.Ubk2, 1.0);
-            AddRow("u_bk3", "Độ đồng đều tủ nhiệt", r.Ubk3, 1.0);
-            AddRow("u_bk4", "Độ phân giải thiết bị chỉ thị", r.Ubk4, 1.0);
+            // ── u1-{pointIndex}: Tản mát KQ đo của chuẩn ────────────────────
+            // = u_ch1 tổng hợp tại điểm này (CT7) — một dòng duy nhất
+            AddBudgetRow(
+                sym: $"u1-{pointIndex}",
+                source: "Tản mát KQ đo của chuẩn",
+                rawValue: r.Uch1,   // đã là √Σ(uch1,j²) — CT7
+                unit: "°C",
+                divisorText: "1",
+                divisorValue: 1.0,
+                ci: 1.0,
+                ui: r.Uch1);
 
-            int ucIdx = _gridBudget.Rows.Add(
-                "u_c", "Liên hợp chuẩn tổng hợp",
-                r.Uc.ToString("F4"), "°C", "—", "—",
-                r.Uc.ToString("F4"));
-            _gridBudget.Rows[ucIdx].DefaultCellStyle.BackColor = Color.FromArgb(220, 235, 255);
-            _gridBudget.Rows[ucIdx].DefaultCellStyle.Font = new Font(_gridBudget.Font, FontStyle.Bold);
+            // ── u2-{pointIndex}: Tản mát KQ đo của UUT ──────────────────────
+            AddBudgetRow(
+                sym: $"u2-{pointIndex}",
+                source: "Tản mát KQ đo của UUT",
+                rawValue: r.Ubk1,   // CT13
+                unit: "°C",
+                divisorText: "1",
+                divisorValue: 1.0,
+                ci: 1.0,
+                ui: r.Ubk1);
 
-            int uIdx = _gridBudget.Rows.Add(
-                "U", "Mở rộng - k=2, P=95%",
-                $"±{r.UFinal:F4}", "°C", "—", "2",
-                $"±{r.UFinal:F4}");
-            _gridBudget.Rows[uIdx].DefaultCellStyle.BackColor = Color.FromArgb(200, 255, 200);
-            _gridBudget.Rows[uIdx].DefaultCellStyle.Font = new Font(_gridBudget.Font, FontStyle.Bold);
-            _gridBudget.Rows[uIdx].DefaultCellStyle.ForeColor = Color.DarkGreen;
+            // ── u3: ĐKĐBĐ của chuẩn ─────────────────────────────────────────
+            bool useU = _lastInput.UseUMethod;
+            double uMax = _lastInput.UValues[0];
+            double delta = _lastInput.DeltaValues[0];
+            AddBudgetRow(
+                sym: "u3",
+                source: "ĐKĐBĐ của chuẩn",
+                rawValue: useU ? uMax : delta,
+                unit: "°C",
+                divisorText: useU ? "2" : "√3",
+                divisorValue: useU ? 2.0 : Math.Sqrt(3),
+                ci: 1.0,
+                ui: r.Uch2);
+
+            // ── u4: Độ phân giải của UUT ─────────────────────────────────────
+            double A = _lastInput.ResolutionA;
+            double d = _lastInput.ResolutionD;
+            AddBudgetRow(
+                sym: "u4",
+                source: "Độ phân giải của UUT",
+                rawValue: A * d,
+                unit: "°C",
+                divisorText: "√3",
+                divisorValue: Math.Sqrt(3),
+                ci: 1.0,
+                ui: r.Ubk4);
+
+            // ── u5-{pointIndex}: Độ ổn định ──────────────────────────────────
+            // δt_od tại điểm này = max qua k kênh của ½(max-min)
+            AddBudgetRow(
+                sym: $"u5-{pointIndex}",
+                source: "Độ ổn định",
+                rawValue: r.DeltaOd,   // CT5
+                unit: "°C",
+                divisorText: "√3",
+                divisorValue: Math.Sqrt(3),
+                ci: 1.0,
+                ui: r.Ubk2);    // CT15
+
+            // ── u6-{pointIndex}: Độ đồng đều ────────────────────────────────
+            AddBudgetRow(
+                sym: $"u6-{pointIndex}",
+                source: "Độ đồng đều",
+                rawValue: r.DeltaDd,   // CT6
+                unit: "°C",
+                divisorText: "√3",
+                divisorValue: Math.Sqrt(3),
+                ci: 1.0,
+                ui: r.Ubk3);    // CT16
+
+            // ── Separator + Tổng hợp ─────────────────────────────────────────
+            AddSummaryBudgetRow("u_ch",
+                $"Độ KĐB chuẩn liên hợp — điểm {pointIndex} (CT12)",
+                r.Uc,
+                Color.FromArgb(220, 235, 255));
+
+            AddSummaryBudgetRow("u_bk",
+                $"Độ KĐB tủ nhiệt liên hợp — điểm {pointIndex} (CT18)",
+                r.Ubk,
+                Color.FromArgb(220, 235, 255));
+
+            AddSummaryBudgetRow("U",
+                $"Độ KĐB mở rộng — điểm {pointIndex}, k=2, P=95% (CT19)",
+                r.UFinal,
+                Color.FromArgb(200, 255, 200),
+                prefix: "±",
+                bold: true,
+                foreColor: Color.DarkGreen);
+        }
+
+        // ── Helpers ──────────────────────────────────────────────────────────
+
+        private void RebuildBudgetColumns()
+        {
+            _gridBudget.Columns.Clear();
+
+            void Add(string name, string header, int weight) =>
+                _gridBudget.Columns.Add(new DataGridViewTextBoxColumn
+                {
+                    Name = name,
+                    HeaderText = header,
+                    FillWeight = weight,
+                    SortMode = DataGridViewColumnSortMode.NotSortable
+                });
+
+            Add("BudSym", "Ký hiệu", 55);
+            Add("BudSource", "Nguồn gây ra ĐKĐBĐ", 200);
+            Add("BudVal", "Giá trị", 70);
+            Add("BudUnit", "Đơn vị", 45);
+            Add("BudDiv", "Hệ số chia", 70);
+            Add("BudCi", "Ci", 40);
+            Add("BudUi", "ĐKĐB chuẩn (ui)", 80);
+
+            _gridBudget.Columns["BudVal"].DefaultCellStyle.Alignment =
+                DataGridViewContentAlignment.MiddleRight;
+            _gridBudget.Columns["BudUi"].DefaultCellStyle.Alignment =
+                DataGridViewContentAlignment.MiddleRight;
+            _gridBudget.Columns["BudUi"].DefaultCellStyle.Font =
+                new Font("Segoe UI", 9F, FontStyle.Bold);
+        }
+
+        private void AddBudgetRow(
+            string sym, string source,
+            double rawValue, string unit,
+            string divisorText, double divisorValue,
+            double ci, double ui,
+            Color? backColor = null)
+        {
+            double safeUi = divisorValue != 0 ? rawValue * ci / divisorValue : 0;
+            // ui truyền vào được ưu tiên nếu đã tính sẵn, fallback tính lại
+            double displayUi = double.IsNaN(ui) ? safeUi : ui;
+
+            int idx = _gridBudget.Rows.Add(
+                sym,
+                source,
+                double.IsNaN(rawValue) || rawValue == 0 ? "—" : rawValue.ToString("F4"),
+                unit,
+                divisorText,
+                ci.ToString("F1"),
+                displayUi == 0 ? "—" : displayUi.ToString("F4"));
+
+            if (backColor.HasValue)
+                _gridBudget.Rows[idx].DefaultCellStyle.BackColor = backColor.Value;
+        }
+
+        private void AddSummaryBudgetRow(
+            string sym, string source, double value,
+            Color backColor,
+            string prefix = "",
+            bool bold = false,
+            Color? foreColor = null)
+        {
+            int idx = _gridBudget.Rows.Add(
+                sym, source,
+                "—", "°C", "—", "—",
+                $"{prefix}{value:F4}");
+
+            var style = _gridBudget.Rows[idx].DefaultCellStyle;
+            style.BackColor = backColor;
+            style.Font = new Font(_gridBudget.Font,
+                                  bold ? FontStyle.Bold : FontStyle.Regular);
+            if (foreColor.HasValue)
+                style.ForeColor = foreColor.Value;
         }
     }
 }

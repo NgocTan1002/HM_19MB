@@ -79,7 +79,7 @@ namespace HM_19MB_Demo
             _tabMain.Location = new Point(0, 0);
             _tabMain.Name = "_tabMain";
             _tabMain.SelectedIndex = 0;
-            _tabMain.Size = new Size(1379, 820);
+            _tabMain.Size = new Size(1197, 820);
             _tabMain.TabIndex = 0;
             // 
             // _tabInput
@@ -88,7 +88,7 @@ namespace HM_19MB_Demo
             _tabInput.Location = new Point(4, 29);
             _tabInput.Name = "_tabInput";
             _tabInput.Padding = new Padding(3);
-            _tabInput.Size = new Size(1371, 787);
+            _tabInput.Size = new Size(1189, 787);
             _tabInput.TabIndex = 0;
             _tabInput.Text = "Nhập liệu";
             _tabInput.UseVisualStyleBackColor = true;
@@ -113,7 +113,7 @@ namespace HM_19MB_Demo
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 110F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
-            inputLayout.Size = new Size(1365, 781);
+            inputLayout.Size = new Size(1183, 781);
             inputLayout.TabIndex = 0;
             // 
             // configStrip
@@ -136,7 +136,7 @@ namespace HM_19MB_Demo
             configStrip.Margin = new Padding(0);
             configStrip.Name = "configStrip";
             configStrip.Padding = new Padding(8, 7, 8, 0);
-            configStrip.Size = new Size(1365, 44);
+            configStrip.Size = new Size(1183, 44);
             configStrip.TabIndex = 0;
             configStrip.WrapContents = false;
             // 
@@ -157,7 +157,6 @@ namespace HM_19MB_Demo
             txtGiaTriDat.Name = "txtGiaTriDat";
             txtGiaTriDat.Size = new Size(80, 27);
             txtGiaTriDat.TabIndex = 1;
-            txtGiaTriDat.Text = "0.0";
             // 
             // lblGiaTriDatUnit
             // 
@@ -237,15 +236,15 @@ namespace HM_19MB_Demo
             lblMethodB.Location = new Point(695, 12);
             lblMethodB.Margin = new Padding(0, 5, 4, 0);
             lblMethodB.Name = "lblMethodB";
-            lblMethodB.Size = new Size(492, 20);
+            lblMethodB.Size = new Size(304, 20);
             lblMethodB.TabIndex = 9;
-            lblMethodB.Text = "Phương pháp tính ĐKĐBĐ của thiết bị đo nhiệt độ đa kênh chuẩn (loại B)";
+            lblMethodB.Text = "Phương pháp tính ĐKĐBĐ của chuẩn (loại B)";
             // 
             // rbUseU
             // 
             rbUseU.AutoSize = true;
             rbUseU.Checked = true;
-            rbUseU.Location = new Point(1195, 9);
+            rbUseU.Location = new Point(1007, 9);
             rbUseU.Margin = new Padding(4, 2, 6, 0);
             rbUseU.Name = "rbUseU";
             rbUseU.Size = new Size(80, 24);
@@ -257,7 +256,7 @@ namespace HM_19MB_Demo
             // rbUseDelta
             // 
             rbUseDelta.AutoSize = true;
-            rbUseDelta.Location = new Point(1285, 9);
+            rbUseDelta.Location = new Point(1097, 9);
             rbUseDelta.Margin = new Padding(4, 2, 0, 0);
             rbUseDelta.Name = "rbUseDelta";
             rbUseDelta.Size = new Size(78, 24);
@@ -274,7 +273,7 @@ namespace HM_19MB_Demo
             correctionStrip.Margin = new Padding(0);
             correctionStrip.Name = "correctionStrip";
             correctionStrip.Padding = new Padding(8, 4, 8, 0);
-            correctionStrip.Size = new Size(1365, 36);
+            correctionStrip.Size = new Size(1183, 36);
             correctionStrip.TabIndex = 1;
             correctionStrip.WrapContents = false;
             // 
@@ -304,7 +303,7 @@ namespace HM_19MB_Demo
             typeBStrip.Margin = new Padding(0);
             typeBStrip.Name = "typeBStrip";
             typeBStrip.Padding = new Padding(8, 4, 8, 0);
-            typeBStrip.Size = new Size(1365, 36);
+            typeBStrip.Size = new Size(1183, 36);
             typeBStrip.TabIndex = 2;
             typeBStrip.WrapContents = false;
             // 
@@ -325,7 +324,6 @@ namespace HM_19MB_Demo
             txtUMax.Name = "txtUMax";
             txtUMax.Size = new Size(60, 27);
             txtUMax.TabIndex = 1;
-            txtUMax.Text = "0.00";
             // 
             // lblDeltaMax
             // 
@@ -344,7 +342,6 @@ namespace HM_19MB_Demo
             txtDeltaMax.Name = "txtDeltaMax";
             txtDeltaMax.Size = new Size(60, 27);
             txtDeltaMax.TabIndex = 3;
-            txtDeltaMax.Text = "0.00";
             // 
             // lblResA
             // 
@@ -392,7 +389,7 @@ namespace HM_19MB_Demo
             gridPanel.Margin = new Padding(0);
             gridPanel.Name = "gridPanel";
             gridPanel.Padding = new Padding(8);
-            gridPanel.Size = new Size(1365, 515);
+            gridPanel.Size = new Size(1183, 515);
             gridPanel.TabIndex = 3;
             // 
             // gridData
@@ -407,7 +404,7 @@ namespace HM_19MB_Demo
             gridData.Name = "gridData";
             gridData.RowHeadersVisible = false;
             gridData.RowHeadersWidth = 51;
-            gridData.Size = new Size(1349, 499);
+            gridData.Size = new Size(1167, 499);
             gridData.TabIndex = 0;
             // 
             // resultPanel
@@ -418,7 +415,7 @@ namespace HM_19MB_Demo
             resultPanel.Margin = new Padding(0);
             resultPanel.Name = "resultPanel";
             resultPanel.Padding = new Padding(8, 4, 8, 4);
-            resultPanel.Size = new Size(1365, 110);
+            resultPanel.Size = new Size(1183, 110);
             resultPanel.TabIndex = 4;
             // 
             // resultCards
@@ -434,7 +431,7 @@ namespace HM_19MB_Demo
             resultCards.RowCount = 2;
             resultCards.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             resultCards.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            resultCards.Size = new Size(1349, 102);
+            resultCards.Size = new Size(1167, 102);
             resultCards.TabIndex = 0;
             // 
             // bottomBar
@@ -446,7 +443,7 @@ namespace HM_19MB_Demo
             bottomBar.Margin = new Padding(0);
             bottomBar.Name = "bottomBar";
             bottomBar.Padding = new Padding(8, 4, 8, 0);
-            bottomBar.Size = new Size(1365, 40);
+            bottomBar.Size = new Size(1183, 40);
             bottomBar.TabIndex = 5;
             bottomBar.WrapContents = false;
             // 
@@ -477,7 +474,7 @@ namespace HM_19MB_Demo
             _tabResults.Location = new Point(4, 29);
             _tabResults.Name = "_tabResults";
             _tabResults.Padding = new Padding(3);
-            _tabResults.Size = new Size(1422, 787);
+            _tabResults.Size = new Size(1189, 787);
             _tabResults.TabIndex = 1;
             _tabResults.Text = "Kết quả tổng hợp";
             _tabResults.UseVisualStyleBackColor = true;
@@ -487,7 +484,7 @@ namespace HM_19MB_Demo
             _tabBudget.Location = new Point(4, 29);
             _tabBudget.Name = "_tabBudget";
             _tabBudget.Padding = new Padding(3);
-            _tabBudget.Size = new Size(1422, 787);
+            _tabBudget.Size = new Size(1189, 787);
             _tabBudget.TabIndex = 2;
             _tabBudget.Text = "Độ không đảm bảo đo";
             _tabBudget.UseVisualStyleBackColor = true;
@@ -496,7 +493,7 @@ namespace HM_19MB_Demo
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1379, 820);
+            ClientSize = new Size(1197, 820);
             Controls.Add(_tabMain);
             MinimumSize = new Size(900, 650);
             Name = "UncertaintyCalculationForm";
