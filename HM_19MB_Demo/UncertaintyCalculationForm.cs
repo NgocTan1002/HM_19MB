@@ -32,6 +32,7 @@ namespace HM_19MB_Demo
 
         private DataGridView _gridResults = null!;
         private DataGridView _gridBudget = null!;
+        private bool _mathResultLabelsInitialized;
 
         private sealed class StandardTraceabilityData
         {
@@ -545,7 +546,51 @@ namespace HM_19MB_Demo
 
         private void BuildResultCards()
         {
+            InitializeMathResultLabels();
             ResetResultLabels();
+        }
+
+        private void InitializeMathResultLabels()
+        {
+            if (_mathResultLabelsInitialized)
+                return;
+
+            ReplaceWithMathLabel(lblDtTitle, "Số hiệu chỉnh _Delta_t", 9f);
+            ReplaceWithMathLabel(lblUch1Title, "Tản mát của chuẩn u SUB{ch1}", 9f);
+            ReplaceWithMathLabel(lblUch2Title, "ĐKĐBĐ chuẩn u SUB{ch2}", 9f);
+            ReplaceWithMathLabel(lblUchTitle, "Liên hợp chuẩn u SUB{ch}", 9f);
+            ReplaceWithMathLabel(lblUbkTitle, "Liên hợp tủ u SUB{bk}", 9f);
+            ReplaceWithMathLabel(lblUTitle, "U = k _cdot_ u SUB{c} (k=2, P=95%)", 11f);
+
+            _mathResultLabelsInitialized = true;
+        }
+
+        private static void ReplaceWithMathLabel(Label source, string mathText, float baseFontSize = 10f)
+        {
+            if (source.Parent is not TableLayoutPanel parent)
+                return;
+
+            var position = parent.GetPositionFromControl(source);
+            int index = parent.Controls.GetChildIndex(source);
+
+            var mathLabel = new MathLabel
+            {
+                Name = source.Name + "Math",
+                MathText = mathText,
+                BaseFontSize = baseFontSize,
+                Dock = source.Dock,
+                Margin = source.Margin,
+                Padding = source.Padding,
+                ForeColor = source.ForeColor,
+                BackColor = Color.Transparent,
+                TabIndex = source.TabIndex
+            };
+
+            parent.Controls.Remove(source);
+            source.Dispose();
+
+            parent.Controls.Add(mathLabel, position.Column, position.Row);
+            parent.Controls.SetChildIndex(mathLabel, index);
         }
 
         private CalibrationResultRow MapToCalibrationRow(UncertaintyFullResult r, UncertaintyInput input)

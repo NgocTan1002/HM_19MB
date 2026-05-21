@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using W = DocumentFormat.OpenXml.Wordprocessing;
 using HM_19MB_Demo.Data;
 
 namespace HM_19MB_Demo
@@ -50,25 +51,116 @@ namespace HM_19MB_Demo
                 ["DoAmTuongDoi"]     = meta.DoAmTuongDoi,
                 ["ThietBiChuan"]     = meta.ThietBiChuan,
                 ["NgayHieuChuan"]    = meta.NgayHieuChuan.ToString("dd/MM/yyyy"),
-                ["BangKetQua"]       = calibRows.Select((r, i) =>
+                ["BangKetQua"] = calibRows.Select((r, i) =>
                     new Dictionary<string, object>
                     {
-                        ["STT"]          = i + 1,
-                        ["GiaTriDat"]    = r.GiaTriDat.ToString("F1"),
-                        ["GiaTriChiThi"] = r.GiaTriChiThi.ToString("F2"),
-                        ["TrungBinh"]    = r.GiaTriTrungBinh.ToString("F2"),
-                        ["SoHieuChinh"]  = r.SoHieuChinh.ToString("F2"),
-                        ["DoOnDinh"]     = r.DoOnDinh.ToString("F2"),
-                        ["DoDongDeu"]    = r.DoDongDeu.ToString("F2"),
-                        ["DKDB"]         = $"±{r.DoKhongDamBao:F2}",
+                        ["STT"] = (i + 1).ToString(),
+                        ["GiaTriDat"] = r.GiaTriDat.ToString("F1"),
+                        ["GiaTriChiThi"] = r.GiaTriChiThi.ToString("F2"),  // t̄_tn
+                        ["TrungBinh"] = r.GiaTriTrungBinh.ToString("F2"), // t̄_ch
+                        ["SoHieuChinh"] = r.SoHieuChinh.ToString("F2"),
+                        ["DoOnDinh"] = r.DoOnDinh.ToString("F2"),
+                        ["DoDongDeu"] = r.DoDongDeu.ToString("F2"),
+                        ["DKDB"] = $"±{r.DoKhongDamBao:F2}",
                     }).ToList()
             };
 
             await Task.Run(() =>
+            {
                 MiniSoftware.MiniWord.SaveAsByTemplate(
-                    dialog.FileName, templatePath, values));
+                    dialog.FileName, templatePath, values);
+                FillWordResultTable(dialog.FileName, calibRows);
+            });
 
             ToastNotification.ShowSuccess($"Đã xuất: {Path.GetFileName(dialog.FileName)}");
+        }
+
+        private static void FillWordResultTable(string filePath, List<CalibrationResultRow> calibRows)
+        {
+            using var doc = WordprocessingDocument.Open(filePath, true);
+            var body = doc.MainDocumentPart?.Document.Body;
+            if (body == null) return;
+
+            var templateRow = body
+                .Descendants<W.TableRow>()
+                .FirstOrDefault(row => GetWordText(row).Contains("{{STT}}", StringComparison.Ordinal));
+
+            if (templateRow == null)
+                return;
+
+            var parentTable = templateRow.Ancestors<W.Table>().FirstOrDefault();
+            if (parentTable == null)
+                return;
+
+            var rowsToRemove = GetTrailingWordTemplateRows(templateRow).ToList();
+
+            foreach (var item in calibRows.Select((row, index) => new { row, index }))
+            {
+                var newRow = (W.TableRow)templateRow.CloneNode(true);
+                ReplaceWordRowTokens(newRow, CreateWordResultValues(item.row, item.index));
+                parentTable.InsertBefore(newRow, templateRow);
+            }
+
+            templateRow.Remove();
+            foreach (var row in rowsToRemove)
+                row.Remove();
+
+            doc.MainDocumentPart!.Document.Save();
+        }
+
+        private static IEnumerable<W.TableRow> GetTrailingWordTemplateRows(W.TableRow templateRow)
+        {
+            var current = templateRow.NextSibling<W.TableRow>();
+            while (current != null)
+            {
+                string firstCellText = current.Elements<W.TableCell>()
+                    .FirstOrDefault()?
+                    .InnerText
+                    .Trim() ?? string.Empty;
+
+                string fullText = GetWordText(current).Trim();
+                bool isPlaceholderTail =
+                    string.Equals(firstCellText, ".", StringComparison.Ordinal) ||
+                    string.Equals(firstCellText, "N", StringComparison.OrdinalIgnoreCase);
+
+                if (!isPlaceholderTail || fullText.Contains("{{", StringComparison.Ordinal))
+                    yield break;
+
+                var next = current.NextSibling<W.TableRow>();
+                yield return current;
+                current = next;
+            }
+        }
+
+        private static Dictionary<string, string> CreateWordResultValues(CalibrationResultRow row, int index)
+        {
+            return new Dictionary<string, string>
+            {
+                ["{{STT}}"] = (row.STT > 0 ? row.STT : index + 1).ToString(),
+                ["{{GiaTriDat}}"] = row.GiaTriDat.ToString("F1"),
+                ["{{GiaTriChiThi}}"] = row.GiaTriChiThi.ToString("F2"),
+                ["{{TrungBinh}}"] = row.GiaTriTrungBinh.ToString("F2"),
+                ["{{SoHieuChinh}}"] = row.SoHieuChinh.ToString("F2"),
+                ["{{DoOnDinh}}"] = row.DoOnDinh.ToString("F2"),
+                ["{{DoDongDeu}}"] = row.DoDongDeu.ToString("F2"),
+                ["{{DKDB}}"] = $"±{row.DoKhongDamBao:F2}",
+            };
+        }
+
+        private static void ReplaceWordRowTokens(W.TableRow row, Dictionary<string, string> values)
+        {
+            foreach (var text in row.Descendants<W.Text>())
+            {
+                string value = text.Text;
+                foreach (var pair in values)
+                    value = value.Replace(pair.Key, pair.Value, StringComparison.Ordinal);
+                text.Text = value;
+            }
+        }
+
+        private static string GetWordText(OpenXmlElement element)
+        {
+            return string.Concat(element.Descendants<W.Text>().Select(t => t.Text));
         }
 
         public static async Task ExportExcelAsync(
@@ -142,6 +234,7 @@ namespace HM_19MB_Demo
 
             // Điền metadata sau cùng để đảm bảo phần biên bản luôn giữ đúng dữ liệu.
             FillMetadata(worksheetPart, meta, calibRows, sheetName);
+            ApplyGeneratedTableBorders(workbookPart, worksheetPart, calibRows, channelCount);
 
             // Các công thức trong vùng bảng mẫu đã bị thay bằng dữ liệu mới.
             // Xóa calc chain cũ để Excel không recover workbook vì tham chiếu công thức đã lỗi thời.
@@ -159,6 +252,7 @@ namespace HM_19MB_Demo
             calculationProperties.CalculationMode = CalculateModeValues.Auto;
 
             worksheet.Save();
+            workbookPart.WorkbookStylesPart?.Stylesheet.Save();
             workbookPart.Workbook.Save();
         }
 
@@ -245,6 +339,87 @@ namespace HM_19MB_Demo
                     cell.InlineString = null;
                     cell.DataType = null;
                 }
+            }
+        }
+
+        private static void ApplyGeneratedTableBorders(
+            WorkbookPart workbookPart,
+            WorksheetPart worksheetPart,
+            List<CalibrationResultRow> calibRows,
+            int channelCount)
+        {
+            uint detailRows = 0;
+            foreach (var row in calibRows)
+                detailRows += (uint)GetMeasurementCount(row) + 1U;
+
+            if (detailRows > 0)
+            {
+                ApplyBorderRange(
+                    workbookPart,
+                    worksheetPart,
+                    startRow: 4U,
+                    endRow: 4U + detailRows - 1U,
+                    startColumn: "J",
+                    endColumn: channelCount <= 3 ? "N" : "P");
+
+                ApplyAverageRowHeaderStyle(workbookPart, worksheetPart, calibRows, channelCount);
+            }
+
+            uint summaryRows = (uint)Math.Min(calibRows.Count, 5);
+            if (summaryRows > 0)
+            {
+                ApplyBorderRange(
+                    workbookPart,
+                    worksheetPart,
+                    startRow: 5U,
+                    endRow: 5U + summaryRows - 1U,
+                    startColumn: channelCount <= 3 ? "O" : "Q",
+                    endColumn: channelCount <= 3 ? "T" : "W");
+            }
+
+            uint uncertaintyRows = CountUncertaintyBudgetRows(calibRows);
+            if (uncertaintyRows > 0)
+            {
+                ApplyBorderRange(
+                    workbookPart,
+                    worksheetPart,
+                    startRow: 5U,
+                    endRow: 5U + uncertaintyRows - 1U,
+                    startColumn: channelCount <= 3 ? "U" : "X",
+                    endColumn: channelCount <= 3 ? "AA" : "AD");
+            }
+        }
+
+        private static uint CountUncertaintyBudgetRows(List<CalibrationResultRow> calibRows)
+        {
+            if (calibRows.Count == 0)
+                return 0U;
+
+            return (uint)(calibRows.Count * 4 + 2);
+        }
+
+        private static void ApplyAverageRowHeaderStyle(
+            WorkbookPart workbookPart,
+            WorksheetPart worksheetPart,
+            List<CalibrationResultRow> calibRows,
+            int channelCount)
+        {
+            string endColumn = channelCount <= 3 ? "N" : "P";
+            uint currentRow = 4U;
+
+            foreach (var calibRow in calibRows)
+            {
+                currentRow += (uint)GetMeasurementCount(calibRow);
+                ApplyTemplateRowStyle(worksheetPart, sourceRow: 3U, targetRow: currentRow, "J", endColumn);
+                ApplyBorderRange(
+                    workbookPart,
+                    worksheetPart,
+                    currentRow,
+                    currentRow,
+                    "J",
+                    endColumn,
+                    preserveFontAndFill: true);
+                currentRow++;
             }
         }
 
@@ -335,6 +510,28 @@ namespace HM_19MB_Demo
             targetCell.StyleIndex = templateCell.StyleIndex.Value;
         }
 
+        private static void ApplyTemplateRowStyle(
+            WorksheetPart worksheetPart,
+            uint sourceRow,
+            uint targetRow,
+            string startColumn,
+            string endColumn)
+        {
+            var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+            if (sheetData == null) return;
+
+            foreach (string column in EnumerateColumns(startColumn, endColumn))
+            {
+                var sourceCell = TryGetCell(sheetData, sourceRow, column);
+                if (sourceCell?.StyleIndex == null) continue;
+
+                var targetCell = GetOrCreateTemplateCell(worksheetPart, $"{column}{targetRow}");
+                if (targetCell == null) continue;
+
+                targetCell.StyleIndex = sourceCell.StyleIndex.Value;
+            }
+        }
+
         private static void InsertSummaryTable(
             WorksheetPart worksheetPart,
             List<CalibrationResultRow> calibRows,
@@ -346,8 +543,12 @@ namespace HM_19MB_Demo
                 ? new[] { "O", "P", "Q", "R", "S", "T" }
                 : new[] { "Q", "R", "S", "T", "U", "V", "W" };
 
+            const uint fixedSummaryRows = 5U;
+            ClearFixedRowsKeepStyle(worksheetPart, startRow, startRow + fixedSummaryRows - 1U, columns);
+
             uint rowIndex = startRow;
-            for (int i = 0; i < calibRows.Count; i++)
+            int rowsToWrite = Math.Min(calibRows.Count, (int)fixedSummaryRows);
+            for (int i = 0; i < rowsToWrite; i++)
             {
                 var row = calibRows[i];
                 int stt = row.STT > 0 ? row.STT : i + 1;
@@ -451,6 +652,90 @@ namespace HM_19MB_Demo
             }
         }
 
+        private static void InsertCompactUncertaintyBudget(
+            WorksheetPart worksheetPart,
+            List<CalibrationResultRow> calibRows,
+            int channelCount,
+            uint startRow)
+        {
+            string[] columns = channelCount <= 3
+                ? new[] { "U", "V", "W", "X", "Y", "Z", "AA" }
+                : new[] { "X", "Y", "Z", "AA", "AB", "AC", "AD" };
+
+            uint fixedEndRow = channelCount <= 3 ? 26U : 21U;
+            ClearFixedRowsKeepStyle(worksheetPart, startRow, fixedEndRow, columns);
+
+            uint rowIndex = startRow;
+
+            double u1 = MaxFinite(calibRows.Select(row => CalculateStandardTypeA(row, channelCount)));
+            WriteUncertaintyRow(worksheetPart, columns, rowIndex++,
+                "u1", "Tản mát KQ đo của chuẩn (max)",
+                u1, "°C", 1.0, 1.0, u1);
+
+            double u2 = MaxFinite(calibRows.Select(CalculateIndicatorTypeA));
+            WriteUncertaintyRow(worksheetPart, columns, rowIndex++,
+                "u2", "Tản mát KQ đo của UUT (max)",
+                u2, "°C", 1.0, 1.0, u2);
+
+            double u3 = CalculateMaxStandardTypeB(calibRows, channelCount);
+            if (HasFiniteValue(u3))
+            {
+                bool useDelta = calibRows.Any(r =>
+                    string.Equals(r.PhuongPhapB, "Delta", StringComparison.OrdinalIgnoreCase));
+                double divisor = useDelta ? Math.Sqrt(3.0) : 2.0;
+                WriteUncertaintyRow(worksheetPart, columns, rowIndex++,
+                    "u3", "ĐKĐBĐ của chuẩn (max)",
+                    u3 * divisor, "°C", divisor, 1.0, u3);
+            }
+
+            double u4 = CalculateMaxResolutionUncertainty(calibRows);
+            if (HasFiniteValue(u4))
+            {
+                double divisor = Math.Sqrt(3.0);
+                WriteUncertaintyRow(worksheetPart, columns, rowIndex++,
+                    "u4", "Độ phân giải của UUT (max)",
+                    u4 * divisor, "°C", divisor, 1.0, u4);
+            }
+
+            double maxStability = MaxFinite(calibRows.Select(row => row.DoOnDinh));
+            if (HasFiniteValue(maxStability))
+            {
+                double divisor = Math.Sqrt(3.0);
+                WriteUncertaintyRow(worksheetPart, columns, rowIndex++,
+                    "u5", "Độ ổn định (max)",
+                    maxStability, "°C", divisor, 1.0, maxStability / divisor);
+            }
+
+            double maxUniformity = MaxFinite(calibRows.Select(row => row.DoDongDeu));
+            if (HasFiniteValue(maxUniformity))
+            {
+                double divisor = Math.Sqrt(3.0);
+                WriteUncertaintyRow(worksheetPart, columns, rowIndex,
+                    "u6", "Độ đồng đều (max)",
+                    maxUniformity, "°C", divisor, 1.0, maxUniformity / divisor);
+            }
+        }
+
+        private static void ClearFixedRowsKeepStyle(
+            WorksheetPart worksheetPart,
+            uint startRow,
+            uint endRow,
+            string[] columns)
+        {
+            var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+            if (sheetData == null) return;
+
+            for (uint rowIndex = startRow; rowIndex <= endRow; rowIndex++)
+            {
+                foreach (string column in columns)
+                {
+                    var cell = TryGetCell(sheetData, rowIndex, column);
+                    if (cell != null)
+                        ClearCellValue(cell);
+                }
+            }
+        }
+
         private static void WriteUncertaintyRow(
             WorksheetPart worksheetPart,
             string[] columns,
@@ -470,6 +755,227 @@ namespace HM_19MB_Demo
             SetCellNullableNumber(worksheetPart, $"{columns[4]}{rowIndex}", HasFiniteValue(divisor) ? divisor : null);
             SetCellNullableNumber(worksheetPart, $"{columns[5]}{rowIndex}", HasFiniteValue(sensitivity) ? sensitivity : null);
             SetCellNullableNumber(worksheetPart, $"{columns[6]}{rowIndex}", HasFiniteValue(standardUncertainty) ? standardUncertainty : null);
+        }
+
+        private static void AddDetailedUncertaintySheet(
+            WorkbookPart workbookPart,
+            List<CalibrationResultRow> calibRows,
+            int channelCount)
+        {
+            string sheetName = GetUniqueSheetName(workbookPart, "DKDBD_ChiTiet");
+            var worksheetPart = workbookPart.AddNewPart<WorksheetPart>();
+            var sheetData = new SheetData();
+            worksheetPart.Worksheet = new Worksheet(
+                CreateDetailedUncertaintyColumns(),
+                sheetData);
+
+            var sheets = workbookPart.Workbook.GetFirstChild<Sheets>();
+            if (sheets == null)
+                sheets = workbookPart.Workbook.AppendChild(new Sheets());
+
+            uint sheetId = sheets.Elements<Sheet>()
+                .Where(s => s.SheetId != null)
+                .Select(s => s.SheetId!.Value)
+                .DefaultIfEmpty(0U)
+                .Max() + 1U;
+
+            sheets.Append(new Sheet
+            {
+                Id = workbookPart.GetIdOfPart(worksheetPart),
+                SheetId = sheetId,
+                Name = sheetName
+            });
+
+            uint lastDataRow = BuildDetailedUncertaintySheet(sheetData, calibRows, channelCount);
+            if (lastDataRow >= 3U)
+                ApplyBorderRange(workbookPart, worksheetPart, 3U, lastDataRow, "A", "J");
+
+            worksheetPart.Worksheet.Save();
+        }
+
+        private static string GetUniqueSheetName(WorkbookPart workbookPart, string baseName)
+        {
+            var existingNames = workbookPart.Workbook.Descendants<Sheet>()
+                .Select(s => s.Name?.Value)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            if (!existingNames.Contains(baseName))
+                return baseName;
+
+            for (int i = 1; i < 100; i++)
+            {
+                string candidate = $"{baseName}_{i}";
+                if (!existingNames.Contains(candidate))
+                    return candidate;
+            }
+
+            return baseName[..Math.Min(baseName.Length, 27)] + "_99";
+        }
+
+        private static Columns CreateDetailedUncertaintyColumns()
+        {
+            double[] widths = { 8D, 13D, 11D, 34D, 14D, 10D, 12D, 10D, 14D, 14D };
+            var columns = new Columns();
+
+            for (uint i = 0; i < widths.Length; i++)
+            {
+                columns.Append(new Column
+                {
+                    Min = i + 1U,
+                    Max = i + 1U,
+                    Width = widths[i],
+                    CustomWidth = true
+                });
+            }
+
+            return columns;
+        }
+
+        private static uint BuildDetailedUncertaintySheet(
+            SheetData sheetData,
+            List<CalibrationResultRow> calibRows,
+            int channelCount)
+        {
+            WritePlainText(sheetData, 1, 1, "ƯỚC LƯỢNG ĐỘ KHÔNG ĐẢM BẢO ĐO - CHI TIẾT");
+
+            string[] headers =
+            {
+                "STT",
+                "Điểm đo",
+                "Ký hiệu",
+                "Nguồn không đảm bảo",
+                "Giá trị",
+                "Đơn vị",
+                "Số chia",
+                "Hệ số",
+                "u_i",
+                "U điểm"
+            };
+
+            for (int i = 0; i < headers.Length; i++)
+                WritePlainText(sheetData, 3, (uint)(i + 1), headers[i]);
+
+            uint rowIndex = 4;
+            for (int i = 0; i < calibRows.Count; i++)
+            {
+                var row = calibRows[i];
+                int stt = row.STT > 0 ? row.STT : i + 1;
+
+                double u1 = CalculateStandardTypeA(row, channelCount);
+                WriteDetailedUncertaintyRow(sheetData, rowIndex++, stt, row.GiaTriDat,
+                    $"u1-{stt}", "Tản mát KQ đo của chuẩn",
+                    u1, "°C", 1.0, 1.0, u1, row.DoKhongDamBao);
+
+                double u2 = CalculateIndicatorTypeA(row);
+                WriteDetailedUncertaintyRow(sheetData, rowIndex++, stt, row.GiaTriDat,
+                    $"u2-{stt}", "Tản mát KQ đo của UUT",
+                    u2, "°C", 1.0, 1.0, u2, row.DoKhongDamBao);
+
+                double u3 = CalculateStandardTypeB(row, channelCount);
+                if (HasFiniteValue(u3))
+                {
+                    double divisor = string.Equals(row.PhuongPhapB, "Delta", StringComparison.OrdinalIgnoreCase)
+                        ? Math.Sqrt(3.0)
+                        : 2.0;
+                    WriteDetailedUncertaintyRow(sheetData, rowIndex++, stt, row.GiaTriDat,
+                        $"u3-{stt}", "ĐKĐBĐ của chuẩn",
+                        u3 * divisor, "°C", divisor, 1.0, u3, row.DoKhongDamBao);
+                }
+
+                double u4 = CalculateResolutionUncertainty(row);
+                if (HasFiniteValue(u4))
+                {
+                    double divisor = Math.Sqrt(3.0);
+                    WriteDetailedUncertaintyRow(sheetData, rowIndex++, stt, row.GiaTriDat,
+                        $"u4-{stt}", "Độ phân giải của UUT",
+                        u4 * divisor, "°C", divisor, 1.0, u4, row.DoKhongDamBao);
+                }
+
+                if (HasFiniteValue(row.DoOnDinh))
+                {
+                    double divisor = Math.Sqrt(3.0);
+                    WriteDetailedUncertaintyRow(sheetData, rowIndex++, stt, row.GiaTriDat,
+                        $"u5-{stt}", "Độ ổn định",
+                        row.DoOnDinh, "°C", divisor, 1.0, row.DoOnDinh / divisor, row.DoKhongDamBao);
+                }
+
+                if (HasFiniteValue(row.DoDongDeu))
+                {
+                    double divisor = Math.Sqrt(3.0);
+                    WriteDetailedUncertaintyRow(sheetData, rowIndex++, stt, row.GiaTriDat,
+                        $"u6-{stt}", "Độ đồng đều",
+                        row.DoDongDeu, "°C", divisor, 1.0, row.DoDongDeu / divisor, row.DoKhongDamBao);
+                }
+            }
+
+            return rowIndex > 4U ? rowIndex - 1U : 3U;
+        }
+
+        private static void WriteDetailedUncertaintyRow(
+            SheetData sheetData,
+            uint rowIndex,
+            int stt,
+            double setPoint,
+            string symbol,
+            string source,
+            double rawValue,
+            string unit,
+            double divisor,
+            double sensitivity,
+            double standardUncertainty,
+            double expandedUncertainty)
+        {
+            WritePlainNumber(sheetData, rowIndex, 1, stt);
+            WritePlainNumber(sheetData, rowIndex, 2, setPoint);
+            WritePlainText(sheetData, rowIndex, 3, symbol);
+            WritePlainText(sheetData, rowIndex, 4, source);
+            WritePlainNullableNumber(sheetData, rowIndex, 5, rawValue);
+            WritePlainText(sheetData, rowIndex, 6, unit);
+            WritePlainNullableNumber(sheetData, rowIndex, 7, divisor);
+            WritePlainNullableNumber(sheetData, rowIndex, 8, sensitivity);
+            WritePlainNullableNumber(sheetData, rowIndex, 9, standardUncertainty);
+            WritePlainNullableNumber(sheetData, rowIndex, 10, expandedUncertainty);
+        }
+
+        private static void WritePlainNullableNumber(
+            SheetData sheetData,
+            uint rowIndex,
+            uint columnIndex,
+            double value)
+        {
+            if (HasFiniteValue(value))
+                WritePlainNumber(sheetData, rowIndex, columnIndex, value);
+            else
+                WritePlainText(sheetData, rowIndex, columnIndex, string.Empty);
+        }
+
+        private static void WritePlainNumber(
+            SheetData sheetData,
+            uint rowIndex,
+            uint columnIndex,
+            double value)
+        {
+            value = NormalizeNearZero(value);
+            var cell = GetOrCreateCell(sheetData, rowIndex, columnIndex);
+            cell.DataType = CellValues.Number;
+            cell.CellValue = new CellValue(value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            cell.InlineString = null;
+        }
+
+        private static void WritePlainText(
+            SheetData sheetData,
+            uint rowIndex,
+            uint columnIndex,
+            string value)
+        {
+            var cell = GetOrCreateCell(sheetData, rowIndex, columnIndex);
+            cell.DataType = CellValues.InlineString;
+            cell.InlineString = new InlineString(new Text(value ?? string.Empty)
+            {
+                Space = SpaceProcessingModeValues.Preserve
+            });
+            cell.CellValue = null;
         }
 
         private static double CalculateStandardTypeA(CalibrationResultRow row, int channelCount)
@@ -542,6 +1048,39 @@ namespace HM_19MB_Demo
                     continue;
 
                 double value = row.DoPhanGiai * row.HeSoPhanGiai / Math.Sqrt(3.0);
+                if (!HasFiniteValue(max) || value > max)
+                    max = value;
+            }
+
+            return max;
+        }
+
+        private static double CalculateStandardTypeB(CalibrationResultRow row, int channelCount)
+        {
+            double uch1 = CalculateStandardTypeA(row, channelCount);
+            double uc = row.Uch;
+            if (!HasFiniteValue(uch1) || !HasFiniteValue(uc) || uc < uch1)
+                return double.NaN;
+
+            return Math.Sqrt(Math.Max(0.0, uc * uc - uch1 * uch1));
+        }
+
+        private static double CalculateResolutionUncertainty(CalibrationResultRow row)
+        {
+            if (!HasFiniteValue(row.DoPhanGiai) || !HasFiniteValue(row.HeSoPhanGiai))
+                return double.NaN;
+
+            return row.DoPhanGiai * row.HeSoPhanGiai / Math.Sqrt(3.0);
+        }
+
+        private static double MaxFinite(IEnumerable<double> values)
+        {
+            double max = double.NaN;
+            foreach (double value in values)
+            {
+                if (!HasFiniteValue(value))
+                    continue;
+
                 if (!HasFiniteValue(max) || value > max)
                     max = value;
             }
@@ -715,6 +1254,130 @@ namespace HM_19MB_Demo
             cell.CellValue = null;
             cell.InlineString = null;
             cell.DataType = null;
+        }
+
+        private static void ApplyBorderRange(
+            WorkbookPart workbookPart,
+            WorksheetPart worksheetPart,
+            uint startRow,
+            uint endRow,
+            string startColumn,
+            string endColumn,
+            bool preserveFontAndFill = false)
+        {
+            if (endRow < startRow)
+                return;
+
+            uint startColumnIndex = GetColumnIndex(startColumn);
+            uint endColumnIndex = GetColumnIndex(endColumn);
+            if (endColumnIndex < startColumnIndex)
+                return;
+
+            var styleCache = new Dictionary<uint, uint>();
+            for (uint rowIndex = startRow; rowIndex <= endRow; rowIndex++)
+            {
+                for (uint columnIndex = startColumnIndex; columnIndex <= endColumnIndex; columnIndex++)
+                {
+                    string cellReference = GetCellReference(columnIndex, rowIndex);
+                    var cell = GetOrCreateTemplateCell(worksheetPart, cellReference);
+                    if (cell == null) continue;
+
+                    uint sourceStyle = cell.StyleIndex?.Value ?? 0U;
+                    cell.StyleIndex = GetBorderedStyleIndex(
+                        workbookPart,
+                        sourceStyle,
+                        styleCache,
+                        preserveFontAndFill);
+                }
+            }
+        }
+
+        private static uint GetBorderedStyleIndex(
+            WorkbookPart workbookPart,
+            uint sourceStyleIndex,
+            Dictionary<uint, uint> styleCache,
+            bool preserveFontAndFill)
+        {
+            if (styleCache.TryGetValue(sourceStyleIndex, out uint cachedStyleIndex))
+                return cachedStyleIndex;
+
+            var stylesPart = workbookPart.WorkbookStylesPart ?? workbookPart.AddNewPart<WorkbookStylesPart>();
+            stylesPart.Stylesheet ??= CreateStylesheet();
+
+            var stylesheet = stylesPart.Stylesheet;
+            stylesheet.Borders ??= new Borders();
+            stylesheet.CellFormats ??= new CellFormats();
+
+            uint borderId = EnsureThinBorder(stylesheet);
+            var cellFormats = stylesheet.CellFormats;
+
+            CellFormat sourceFormat;
+            if (cellFormats.Count != null &&
+                sourceStyleIndex < cellFormats.Count.Value &&
+                cellFormats.Elements<CellFormat>().ElementAtOrDefault((int)sourceStyleIndex) is CellFormat existingFormat)
+            {
+                sourceFormat = (CellFormat)existingFormat.CloneNode(true);
+            }
+            else
+            {
+                sourceFormat = new CellFormat { FormatId = 0U };
+            }
+
+            if (!preserveFontAndFill)
+            {
+                sourceFormat.FontId = EnsureTimesNewRomanFont(stylesheet);
+                sourceFormat.FillId = 0U;
+                sourceFormat.ApplyFont = true;
+                sourceFormat.ApplyFill = true;
+            }
+            sourceFormat.BorderId = borderId;
+            sourceFormat.ApplyBorder = true;
+
+            cellFormats.Append(sourceFormat);
+            cellFormats.Count = (uint)cellFormats.Elements<CellFormat>().Count();
+
+            uint newStyleIndex = cellFormats.Count.Value - 1U;
+            styleCache[sourceStyleIndex] = newStyleIndex;
+            return newStyleIndex;
+        }
+
+        private static uint EnsureTimesNewRomanFont(Stylesheet stylesheet)
+        {
+            stylesheet.Fonts ??= new Fonts();
+            var fonts = stylesheet.Fonts;
+
+            uint index = 0U;
+            foreach (var font in fonts.Elements<DocumentFormat.OpenXml.Spreadsheet.Font>())
+            {
+                var name = font.FontName?.Val?.Value;
+                double? size = font.FontSize?.Val?.Value;
+                bool isPlain = font.Bold == null && font.Italic == null;
+
+                if (string.Equals(name, "Times New Roman", StringComparison.OrdinalIgnoreCase) &&
+                    isPlain &&
+                    size.HasValue &&
+                    Math.Abs(size.Value - 12D) < 0.001D)
+                {
+                    return index;
+                }
+
+                index++;
+            }
+
+            fonts.Append(new DocumentFormat.OpenXml.Spreadsheet.Font(
+                new FontSize { Val = 12D },
+                new FontName { Val = "Times New Roman" }));
+            fonts.Count = (uint)fonts.Elements<DocumentFormat.OpenXml.Spreadsheet.Font>().Count();
+            return fonts.Count.Value - 1U;
+        }
+
+        private static uint EnsureThinBorder(Stylesheet stylesheet)
+        {
+            var borders = stylesheet.Borders ??= new Borders();
+            uint borderId = (uint)borders.Elements<Border>().Count();
+            borders.Append(CreateThinBorder());
+            borders.Count = (uint)borders.Elements<Border>().Count();
+            return borderId;
         }
 
         private static Cell CreateCell(string cellReference, string value, CellValues dataType)

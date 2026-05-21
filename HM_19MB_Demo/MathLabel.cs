@@ -41,7 +41,7 @@ namespace HM_19MB_Demo
             set { _mathText = value ?? ""; Invalidate(); RecalcSize(); }
         }
 
-        private float _baseFontSize = 10f;
+        private float _baseFontSize = 9f;
 
         [Category("Math")]
         [Description("Cỡ chữ cơ bản.")]
@@ -101,7 +101,7 @@ namespace HM_19MB_Demo
 
             var tokens = Tokenize(_mathText);
             float x = 2;
-            float baseline = Height * 0.68f;
+            float baseline = Height / 2f + _baseFontSize * 0.35f;
             RenderTokens(g, tokens, ref x, baseline, _baseFontSize, false, false);
         }
 
@@ -235,7 +235,7 @@ namespace HM_19MB_Demo
             float yOff = isSup ? -fontSize * 0.55f : (isSub ? fontSize * 0.28f : 0f);
             float fs = (isSup || isSub) ? fontSize * 0.68f : fontSize;
 
-            using var fontReg = new Font("Cambria Math", fs, FontStyle.Regular, GraphicsUnit.Point);
+            using var fontReg = new Font("Segoe UI", fs, FontStyle.Regular, GraphicsUnit.Point);
             using var fontItal = new Font("Cambria Math", fs, FontStyle.Italic, GraphicsUnit.Point);
             using var brush = new SolidBrush(ForeColor);
 

@@ -418,7 +418,7 @@ namespace HM_19MB_Demo
             gridPanel.Margin = new Padding(0);
             gridPanel.Name = "gridPanel";
             gridPanel.Padding = new Padding(8);
-            gridPanel.Size = new Size(1183, 465);
+            gridPanel.Size = new Size(1183, 445);
             gridPanel.TabIndex = 3;
             // 
             // gridData
@@ -433,18 +433,18 @@ namespace HM_19MB_Demo
             gridData.Name = "gridData";
             gridData.RowHeadersVisible = false;
             gridData.RowHeadersWidth = 51;
-            gridData.Size = new Size(1167, 449);
+            gridData.Size = new Size(1167, 429);
             gridData.TabIndex = 0;
             // 
             // resultPanel
             // 
             resultPanel.Controls.Add(resultCards);
             resultPanel.Dock = DockStyle.Fill;
-            resultPanel.Location = new Point(0, 581);
+            resultPanel.Location = new Point(0, 561);
             resultPanel.Margin = new Padding(0);
             resultPanel.Name = "resultPanel";
             resultPanel.Padding = new Padding(8, 4, 8, 4);
-            resultPanel.Size = new Size(1183, 160);
+            resultPanel.Size = new Size(1183, 180);
             resultPanel.TabIndex = 4;
             // 
             // resultCards
@@ -461,7 +461,7 @@ namespace HM_19MB_Demo
             resultCards.Name = "resultCards";
             resultCards.RowCount = 1;
             resultCards.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            resultCards.Size = new Size(1167, 152);
+            resultCards.Size = new Size(1167, 172);
             resultCards.TabIndex = 0;
             // 
             // grpMeasurementCharacteristics
@@ -473,7 +473,7 @@ namespace HM_19MB_Demo
             grpMeasurementCharacteristics.Location = new Point(3, 3);
             grpMeasurementCharacteristics.Name = "grpMeasurementCharacteristics";
             grpMeasurementCharacteristics.Padding = new Padding(6, 14, 6, 4);
-            grpMeasurementCharacteristics.Size = new Size(344, 146);
+            grpMeasurementCharacteristics.Size = new Size(344, 166);
             grpMeasurementCharacteristics.TabIndex = 0;
             grpMeasurementCharacteristics.TabStop = false;
             grpMeasurementCharacteristics.Text = "Đặc trưng điểm đo";
@@ -496,17 +496,17 @@ namespace HM_19MB_Demo
             measurementCharacteristicsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
             measurementCharacteristicsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
             measurementCharacteristicsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
-            measurementCharacteristicsLayout.Size = new Size(332, 109);
+            measurementCharacteristicsLayout.Size = new Size(332, 129);
             measurementCharacteristicsLayout.TabIndex = 0;
             // 
             // lblDtTitle
             // 
             lblDtTitle.Dock = DockStyle.Fill;
-            lblDtTitle.Font = new Font("Segoe UI", 8.5F);
-            lblDtTitle.ForeColor = Color.DimGray;
+            lblDtTitle.Font = new Font("Segoe UI", 9F);
+            lblDtTitle.ForeColor = Color.Black;
             lblDtTitle.Location = new Point(3, 0);
             lblDtTitle.Name = "lblDtTitle";
-            lblDtTitle.Size = new Size(199, 36);
+            lblDtTitle.Size = new Size(199, 43);
             lblDtTitle.TabIndex = 0;
             lblDtTitle.Text = "Số hiệu chính Δt";
             lblDtTitle.TextAlign = ContentAlignment.MiddleLeft;
@@ -518,7 +518,7 @@ namespace HM_19MB_Demo
             lblR_Dt.ForeColor = Color.Black;
             lblR_Dt.Location = new Point(208, 0);
             lblR_Dt.Name = "lblR_Dt";
-            lblR_Dt.Size = new Size(121, 36);
+            lblR_Dt.Size = new Size(121, 43);
             lblR_Dt.TabIndex = 1;
             lblR_Dt.Text = "—";
             lblR_Dt.TextAlign = ContentAlignment.MiddleRight;
@@ -526,11 +526,11 @@ namespace HM_19MB_Demo
             // lblOdTitle
             // 
             lblOdTitle.Dock = DockStyle.Fill;
-            lblOdTitle.Font = new Font("Segoe UI", 8.5F);
-            lblOdTitle.ForeColor = Color.DimGray;
-            lblOdTitle.Location = new Point(3, 36);
+            lblOdTitle.Font = new Font("Segoe UI", 9F);
+            lblOdTitle.ForeColor = Color.Black;
+            lblOdTitle.Location = new Point(3, 43);
             lblOdTitle.Name = "lblOdTitle";
-            lblOdTitle.Size = new Size(199, 36);
+            lblOdTitle.Size = new Size(199, 43);
             lblOdTitle.TabIndex = 2;
             lblOdTitle.Text = "Độ ổn định";
             lblOdTitle.TextAlign = ContentAlignment.MiddleLeft;
@@ -540,9 +540,9 @@ namespace HM_19MB_Demo
             lblR_Od.Dock = DockStyle.Fill;
             lblR_Od.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             lblR_Od.ForeColor = Color.Black;
-            lblR_Od.Location = new Point(208, 36);
+            lblR_Od.Location = new Point(208, 43);
             lblR_Od.Name = "lblR_Od";
-            lblR_Od.Size = new Size(121, 36);
+            lblR_Od.Size = new Size(121, 43);
             lblR_Od.TabIndex = 3;
             lblR_Od.Text = "—";
             lblR_Od.TextAlign = ContentAlignment.MiddleRight;
@@ -550,11 +550,11 @@ namespace HM_19MB_Demo
             // lblDdTitle
             // 
             lblDdTitle.Dock = DockStyle.Fill;
-            lblDdTitle.Font = new Font("Segoe UI", 8.5F);
-            lblDdTitle.ForeColor = Color.DimGray;
-            lblDdTitle.Location = new Point(3, 72);
+            lblDdTitle.Font = new Font("Segoe UI", 9F);
+            lblDdTitle.ForeColor = Color.Black;
+            lblDdTitle.Location = new Point(3, 86);
             lblDdTitle.Name = "lblDdTitle";
-            lblDdTitle.Size = new Size(199, 37);
+            lblDdTitle.Size = new Size(199, 43);
             lblDdTitle.TabIndex = 4;
             lblDdTitle.Text = "Độ đồng đều";
             lblDdTitle.TextAlign = ContentAlignment.MiddleLeft;
@@ -564,9 +564,9 @@ namespace HM_19MB_Demo
             lblR_Dd.Dock = DockStyle.Fill;
             lblR_Dd.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             lblR_Dd.ForeColor = Color.Black;
-            lblR_Dd.Location = new Point(208, 72);
+            lblR_Dd.Location = new Point(208, 86);
             lblR_Dd.Name = "lblR_Dd";
-            lblR_Dd.Size = new Size(121, 37);
+            lblR_Dd.Size = new Size(121, 43);
             lblR_Dd.TabIndex = 5;
             lblR_Dd.Text = "—";
             lblR_Dd.TextAlign = ContentAlignment.MiddleRight;
@@ -580,7 +580,7 @@ namespace HM_19MB_Demo
             grpUncertaintyComponents.Location = new Point(353, 3);
             grpUncertaintyComponents.Name = "grpUncertaintyComponents";
             grpUncertaintyComponents.Padding = new Padding(6, 14, 6, 4);
-            grpUncertaintyComponents.Size = new Size(344, 146);
+            grpUncertaintyComponents.Size = new Size(344, 166);
             grpUncertaintyComponents.TabIndex = 1;
             grpUncertaintyComponents.TabStop = false;
             grpUncertaintyComponents.Text = "Thành phần độ không đảm bảo";
@@ -606,17 +606,17 @@ namespace HM_19MB_Demo
             uncertaintyComponentsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
             uncertaintyComponentsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
             uncertaintyComponentsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
-            uncertaintyComponentsLayout.Size = new Size(332, 109);
+            uncertaintyComponentsLayout.Size = new Size(332, 129);
             uncertaintyComponentsLayout.TabIndex = 0;
             // 
             // lblUch1Title
             // 
             lblUch1Title.Dock = DockStyle.Fill;
-            lblUch1Title.Font = new Font("Segoe UI", 8.5F);
-            lblUch1Title.ForeColor = Color.DimGray;
+            lblUch1Title.Font = new Font("Segoe UI", 9F);
+            lblUch1Title.ForeColor = Color.Black;
             lblUch1Title.Location = new Point(3, 0);
             lblUch1Title.Name = "lblUch1Title";
-            lblUch1Title.Size = new Size(199, 27);
+            lblUch1Title.Size = new Size(199, 32);
             lblUch1Title.TabIndex = 0;
             lblUch1Title.Text = "Tản mát của chuẩn (uch_1)";
             lblUch1Title.TextAlign = ContentAlignment.MiddleLeft;
@@ -628,7 +628,7 @@ namespace HM_19MB_Demo
             lblR_Uch1.ForeColor = Color.Black;
             lblR_Uch1.Location = new Point(208, 0);
             lblR_Uch1.Name = "lblR_Uch1";
-            lblR_Uch1.Size = new Size(121, 27);
+            lblR_Uch1.Size = new Size(121, 32);
             lblR_Uch1.TabIndex = 1;
             lblR_Uch1.Text = "—";
             lblR_Uch1.TextAlign = ContentAlignment.MiddleRight;
@@ -636,11 +636,11 @@ namespace HM_19MB_Demo
             // lblUch2Title
             // 
             lblUch2Title.Dock = DockStyle.Fill;
-            lblUch2Title.Font = new Font("Segoe UI", 8.5F);
-            lblUch2Title.ForeColor = Color.DimGray;
-            lblUch2Title.Location = new Point(3, 27);
+            lblUch2Title.Font = new Font("Segoe UI", 9F);
+            lblUch2Title.ForeColor = Color.Black;
+            lblUch2Title.Location = new Point(3, 32);
             lblUch2Title.Name = "lblUch2Title";
-            lblUch2Title.Size = new Size(199, 27);
+            lblUch2Title.Size = new Size(199, 32);
             lblUch2Title.TabIndex = 2;
             lblUch2Title.Text = "ĐKĐBĐ chuẩn (uch_2)";
             lblUch2Title.TextAlign = ContentAlignment.MiddleLeft;
@@ -650,9 +650,9 @@ namespace HM_19MB_Demo
             lblR_Uch2.Dock = DockStyle.Fill;
             lblR_Uch2.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             lblR_Uch2.ForeColor = Color.Black;
-            lblR_Uch2.Location = new Point(208, 27);
+            lblR_Uch2.Location = new Point(208, 32);
             lblR_Uch2.Name = "lblR_Uch2";
-            lblR_Uch2.Size = new Size(121, 27);
+            lblR_Uch2.Size = new Size(121, 32);
             lblR_Uch2.TabIndex = 3;
             lblR_Uch2.Text = "—";
             lblR_Uch2.TextAlign = ContentAlignment.MiddleRight;
@@ -660,11 +660,11 @@ namespace HM_19MB_Demo
             // lblUchTitle
             // 
             lblUchTitle.Dock = DockStyle.Fill;
-            lblUchTitle.Font = new Font("Segoe UI", 8.5F);
-            lblUchTitle.ForeColor = Color.DimGray;
-            lblUchTitle.Location = new Point(3, 54);
+            lblUchTitle.Font = new Font("Segoe UI", 9F);
+            lblUchTitle.ForeColor = Color.Black;
+            lblUchTitle.Location = new Point(3, 64);
             lblUchTitle.Name = "lblUchTitle";
-            lblUchTitle.Size = new Size(199, 27);
+            lblUchTitle.Size = new Size(199, 32);
             lblUchTitle.TabIndex = 4;
             lblUchTitle.Text = "Liên hợp chuẩn (uch)";
             lblUchTitle.TextAlign = ContentAlignment.MiddleLeft;
@@ -674,9 +674,9 @@ namespace HM_19MB_Demo
             lblR_Uch.Dock = DockStyle.Fill;
             lblR_Uch.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             lblR_Uch.ForeColor = Color.Black;
-            lblR_Uch.Location = new Point(208, 54);
+            lblR_Uch.Location = new Point(208, 64);
             lblR_Uch.Name = "lblR_Uch";
-            lblR_Uch.Size = new Size(121, 27);
+            lblR_Uch.Size = new Size(121, 32);
             lblR_Uch.TabIndex = 5;
             lblR_Uch.Text = "—";
             lblR_Uch.TextAlign = ContentAlignment.MiddleRight;
@@ -684,11 +684,11 @@ namespace HM_19MB_Demo
             // lblUbkTitle
             // 
             lblUbkTitle.Dock = DockStyle.Fill;
-            lblUbkTitle.Font = new Font("Segoe UI", 8.5F);
-            lblUbkTitle.ForeColor = Color.DimGray;
-            lblUbkTitle.Location = new Point(3, 81);
+            lblUbkTitle.Font = new Font("Segoe UI", 9F);
+            lblUbkTitle.ForeColor = Color.Black;
+            lblUbkTitle.Location = new Point(3, 96);
             lblUbkTitle.Name = "lblUbkTitle";
-            lblUbkTitle.Size = new Size(199, 28);
+            lblUbkTitle.Size = new Size(199, 33);
             lblUbkTitle.TabIndex = 6;
             lblUbkTitle.Text = "Liên hợp tủ (u_bk)";
             lblUbkTitle.TextAlign = ContentAlignment.MiddleLeft;
@@ -698,9 +698,9 @@ namespace HM_19MB_Demo
             lblR_Ubk.Dock = DockStyle.Fill;
             lblR_Ubk.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             lblR_Ubk.ForeColor = Color.Black;
-            lblR_Ubk.Location = new Point(208, 81);
+            lblR_Ubk.Location = new Point(208, 96);
             lblR_Ubk.Name = "lblR_Ubk";
-            lblR_Ubk.Size = new Size(121, 28);
+            lblR_Ubk.Size = new Size(121, 33);
             lblR_Ubk.TabIndex = 7;
             lblR_Ubk.Text = "—";
             lblR_Ubk.TextAlign = ContentAlignment.MiddleRight;
@@ -714,7 +714,7 @@ namespace HM_19MB_Demo
             grpFinalResult.Location = new Point(703, 3);
             grpFinalResult.Name = "grpFinalResult";
             grpFinalResult.Padding = new Padding(6, 14, 6, 4);
-            grpFinalResult.Size = new Size(461, 146);
+            grpFinalResult.Size = new Size(461, 166);
             grpFinalResult.TabIndex = 2;
             grpFinalResult.TabStop = false;
             grpFinalResult.Text = "Kết quả";
@@ -731,17 +731,17 @@ namespace HM_19MB_Demo
             finalResultLayout.Name = "finalResultLayout";
             finalResultLayout.RowCount = 1;
             finalResultLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            finalResultLayout.Size = new Size(449, 109);
+            finalResultLayout.Size = new Size(449, 129);
             finalResultLayout.TabIndex = 0;
             // 
             // lblUTitle
             // 
             lblUTitle.Dock = DockStyle.Fill;
-            lblUTitle.Font = new Font("Segoe UI", 8.5F);
-            lblUTitle.ForeColor = Color.DimGray;
+            lblUTitle.Font = new Font("Segoe UI", 9F);
+            lblUTitle.ForeColor = Color.Black;
             lblUTitle.Location = new Point(3, 0);
             lblUTitle.Name = "lblUTitle";
-            lblUTitle.Size = new Size(272, 109);
+            lblUTitle.Size = new Size(272, 129);
             lblUTitle.TabIndex = 0;
             lblUTitle.Text = "U  (k=2, P=95%)";
             lblUTitle.TextAlign = ContentAlignment.MiddleLeft;
@@ -753,7 +753,7 @@ namespace HM_19MB_Demo
             lblR_U.ForeColor = Color.DarkGreen;
             lblR_U.Location = new Point(281, 0);
             lblR_U.Name = "lblR_U";
-            lblR_U.Size = new Size(165, 109);
+            lblR_U.Size = new Size(165, 129);
             lblR_U.TabIndex = 1;
             lblR_U.Text = "—";
             lblR_U.TextAlign = ContentAlignment.MiddleRight;
