@@ -20,10 +20,10 @@ namespace HM_19MB_Demo
 
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
-            ChartArea chartArea2 = new ChartArea();
-            Legend legend2 = new Legend();
-            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            ChartArea chartArea1 = new ChartArea();
+            Legend legend1 = new Legend();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             mainLayout = new TableLayoutPanel();
             metadataPanel = new Panel();
             metadataLayout = new TableLayoutPanel();
@@ -49,6 +49,8 @@ namespace HM_19MB_Demo
             txtEnvTemp = new TextBox();
             lblEnvHumidity = new Label();
             txtEnvHumidity = new TextBox();
+            lblWorkingTemp = new Label();
+            txtWorkingTemp = new TextBox();
             lblTechnicalSpecs = new Label();
             txtTechnicalSpecs = new TextBox();
             lblMeasuringDevices = new Label();
@@ -68,6 +70,9 @@ namespace HM_19MB_Demo
             numKenhCount = new NumericUpDown();
             lblMeasurementCount = new Label();
             numMeasurementCount = new NumericUpDown();
+            _btnAddCalibPoint = new Button();
+            button1 = new Button();
+            _btnDeleteCalibPoint = new Button();
             _split = new SplitContainer();
             _chart = new Chart();
             _chartToolbar = new Panel();
@@ -85,9 +90,6 @@ namespace HM_19MB_Demo
             _btnExport = new Button();
             _btnUncertainty = new Button();
             _lblStatus = new Label();
-            button1 = new Button();
-            _btnDeleteCalibPoint = new Button();
-            _btnAddCalibPoint = new Button();
             mainLayout.SuspendLayout();
             metadataPanel.SuspendLayout();
             metadataLayout.SuspendLayout();
@@ -182,6 +184,8 @@ namespace HM_19MB_Demo
             metadataFieldsPanel.Controls.Add(txtEnvTemp);
             metadataFieldsPanel.Controls.Add(lblEnvHumidity);
             metadataFieldsPanel.Controls.Add(txtEnvHumidity);
+            metadataFieldsPanel.Controls.Add(lblWorkingTemp);
+            metadataFieldsPanel.Controls.Add(txtWorkingTemp);
             metadataFieldsPanel.Controls.Add(lblTechnicalSpecs);
             metadataFieldsPanel.Controls.Add(txtTechnicalSpecs);
             metadataFieldsPanel.Controls.Add(lblMeasuringDevices);
@@ -191,7 +195,7 @@ namespace HM_19MB_Demo
             metadataFieldsPanel.Dock = DockStyle.Fill;
             metadataFieldsPanel.Location = new Point(3, 3);
             metadataFieldsPanel.Name = "metadataFieldsPanel";
-            metadataFieldsPanel.Size = new Size(834, 294);
+            metadataFieldsPanel.Size = new Size(834, 335);
             metadataFieldsPanel.TabIndex = 0;
             // 
             // lblDeviceName
@@ -376,10 +380,27 @@ namespace HM_19MB_Demo
             txtEnvHumidity.Size = new Size(187, 27);
             txtEnvHumidity.TabIndex = 20;
             // 
+            // lblWorkingTemp
+            // 
+            lblWorkingTemp.AutoSize = true;
+            lblWorkingTemp.Location = new Point(10, 193);
+            lblWorkingTemp.Name = "lblWorkingTemp";
+            lblWorkingTemp.Size = new Size(130, 20);
+            lblWorkingTemp.TabIndex = 201;
+            lblWorkingTemp.Text = "Nhiệt độ làm việc:";
+            lblWorkingTemp.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // txtWorkingTemp
+            // 
+            txtWorkingTemp.Location = new Point(160, 190);
+            txtWorkingTemp.Name = "txtWorkingTemp";
+            txtWorkingTemp.Size = new Size(660, 27);
+            txtWorkingTemp.TabIndex = 202;
+            // 
             // lblTechnicalSpecs
             // 
             lblTechnicalSpecs.AutoSize = true;
-            lblTechnicalSpecs.Location = new Point(10, 193);
+            lblTechnicalSpecs.Location = new Point(10, 228);
             lblTechnicalSpecs.Name = "lblTechnicalSpecs";
             lblTechnicalSpecs.Size = new Size(123, 20);
             lblTechnicalSpecs.TabIndex = 21;
@@ -388,7 +409,7 @@ namespace HM_19MB_Demo
             // 
             // txtTechnicalSpecs
             // 
-            txtTechnicalSpecs.Location = new Point(160, 190);
+            txtTechnicalSpecs.Location = new Point(160, 225);
             txtTechnicalSpecs.Name = "txtTechnicalSpecs";
             txtTechnicalSpecs.Size = new Size(660, 27);
             txtTechnicalSpecs.TabIndex = 22;
@@ -396,7 +417,7 @@ namespace HM_19MB_Demo
             // lblMeasuringDevices
             // 
             lblMeasuringDevices.AutoSize = true;
-            lblMeasuringDevices.Location = new Point(10, 228);
+            lblMeasuringDevices.Location = new Point(10, 263);
             lblMeasuringDevices.Name = "lblMeasuringDevices";
             lblMeasuringDevices.Size = new Size(200, 20);
             lblMeasuringDevices.TabIndex = 23;
@@ -405,7 +426,7 @@ namespace HM_19MB_Demo
             // 
             // txtMeasuringDevices
             // 
-            txtMeasuringDevices.Location = new Point(220, 225);
+            txtMeasuringDevices.Location = new Point(220, 260);
             txtMeasuringDevices.Name = "txtMeasuringDevices";
             txtMeasuringDevices.Size = new Size(600, 27);
             txtMeasuringDevices.TabIndex = 24;
@@ -413,7 +434,7 @@ namespace HM_19MB_Demo
             // lblCalibDate
             // 
             lblCalibDate.AutoSize = true;
-            lblCalibDate.Location = new Point(10, 265);
+            lblCalibDate.Location = new Point(10, 300);
             lblCalibDate.Name = "lblCalibDate";
             lblCalibDate.Size = new Size(204, 20);
             lblCalibDate.TabIndex = 25;
@@ -428,7 +449,7 @@ namespace HM_19MB_Demo
             calibDatePanel.Controls.Add(txtCalibMonth);
             calibDatePanel.Controls.Add(lblYear);
             calibDatePanel.Controls.Add(txtCalibYear);
-            calibDatePanel.Location = new Point(220, 261);
+            calibDatePanel.Location = new Point(220, 296);
             calibDatePanel.Name = "calibDatePanel";
             calibDatePanel.Size = new Size(240, 33);
             calibDatePanel.TabIndex = 26;
@@ -494,7 +515,7 @@ namespace HM_19MB_Demo
             _gridCalibration.AllowUserToDeleteRows = false;
             _gridCalibration.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             _gridCalibration.BackgroundColor = Color.White;
-            _gridCalibration.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            _gridCalibration.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             _gridCalibration.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             _gridCalibration.Dock = DockStyle.Fill;
             _gridCalibration.Font = new Font("Segoe UI", 9F);
@@ -581,6 +602,34 @@ namespace HM_19MB_Demo
             numMeasurementCount.TabIndex = 4;
             numMeasurementCount.Value = new decimal(new int[] { 10, 0, 0, 0 });
             // 
+            // _btnAddCalibPoint
+            // 
+            _btnAddCalibPoint.Location = new Point(488, 5);
+            _btnAddCalibPoint.Name = "_btnAddCalibPoint";
+            _btnAddCalibPoint.Size = new Size(129, 29);
+            _btnAddCalibPoint.TabIndex = 9;
+            _btnAddCalibPoint.Text = "Thêm điểm đo";
+            _btnAddCalibPoint.UseVisualStyleBackColor = true;
+            // 
+            // button1
+            // 
+            button1.Location = new Point(623, 5);
+            button1.Name = "button1";
+            button1.Size = new Size(127, 29);
+            button1.TabIndex = 7;
+            button1.Text = "Sửa điểm đo";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
+            // 
+            // _btnDeleteCalibPoint
+            // 
+            _btnDeleteCalibPoint.Location = new Point(756, 5);
+            _btnDeleteCalibPoint.Name = "_btnDeleteCalibPoint";
+            _btnDeleteCalibPoint.Size = new Size(123, 29);
+            _btnDeleteCalibPoint.TabIndex = 8;
+            _btnDeleteCalibPoint.Text = "Xóa điểm đo";
+            _btnDeleteCalibPoint.UseVisualStyleBackColor = true;
+            // 
             // _split
             // 
             _split.Dock = DockStyle.Fill;
@@ -603,28 +652,28 @@ namespace HM_19MB_Demo
             // 
             // _chart
             // 
-            chartArea2.AxisX.LabelStyle.Angle = -30;
-            chartArea2.AxisX.MajorGrid.LineColor = Color.LightGray;
-            chartArea2.AxisX.Title = "Thời gian";
-            chartArea2.AxisY.Interval = 1D;
-            chartArea2.AxisY.IsStartedFromZero = false;
-            chartArea2.AxisY.MajorGrid.LineColor = Color.LightGray;
-            chartArea2.AxisY.Maximum = 30D;
-            chartArea2.AxisY.Minimum = 20D;
-            chartArea2.AxisY.Title = "Nhiệt độ (°C)";
-            chartArea2.AxisY2.Interval = 1D;
-            chartArea2.AxisY2.LabelStyle.ForeColor = Color.SteelBlue;
-            chartArea2.AxisY2.MajorGrid.Enabled = false;
-            chartArea2.AxisY2.Maximum = 65D;
-            chartArea2.AxisY2.Minimum = 55D;
-            chartArea2.AxisY2.Title = "Độ ẩm (%)";
-            chartArea2.AxisY2.TitleForeColor = Color.SteelBlue;
-            chartArea2.Name = "MainArea";
-            _chart.ChartAreas.Add(chartArea2);
+            chartArea1.AxisX.LabelStyle.Angle = -30;
+            chartArea1.AxisX.MajorGrid.LineColor = Color.LightGray;
+            chartArea1.AxisX.Title = "Thời gian";
+            chartArea1.AxisY.Interval = 1D;
+            chartArea1.AxisY.IsStartedFromZero = false;
+            chartArea1.AxisY.MajorGrid.LineColor = Color.LightGray;
+            chartArea1.AxisY.Maximum = 30D;
+            chartArea1.AxisY.Minimum = 20D;
+            chartArea1.AxisY.Title = "Nhiệt độ (°C)";
+            chartArea1.AxisY2.Interval = 1D;
+            chartArea1.AxisY2.LabelStyle.ForeColor = Color.SteelBlue;
+            chartArea1.AxisY2.MajorGrid.Enabled = false;
+            chartArea1.AxisY2.Maximum = 65D;
+            chartArea1.AxisY2.Minimum = 55D;
+            chartArea1.AxisY2.Title = "Độ ẩm (%)";
+            chartArea1.AxisY2.TitleForeColor = Color.SteelBlue;
+            chartArea1.Name = "MainArea";
+            _chart.ChartAreas.Add(chartArea1);
             _chart.Dock = DockStyle.Fill;
-            legend2.Docking = Docking.Bottom;
-            legend2.Name = "MainLegend";
-            _chart.Legends.Add(legend2);
+            legend1.Docking = Docking.Bottom;
+            legend1.Name = "MainLegend";
+            _chart.Legends.Add(legend1);
             _chart.Location = new Point(0, 38);
             _chart.Margin = new Padding(3, 4, 3, 4);
             _chart.Name = "_chart";
@@ -718,14 +767,14 @@ namespace HM_19MB_Demo
             _grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             _grid.BackgroundColor = Color.White;
             _grid.BorderStyle = BorderStyle.Fixed3D;
-            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle4.BackColor = SystemColors.Control;
-            dataGridViewCellStyle4.Font = new Font("Segoe UI", 9F);
-            dataGridViewCellStyle4.ForeColor = SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.True;
-            _grid.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle2.BackColor = SystemColors.Control;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle2.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.True;
+            _grid.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle2;
             _grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             _grid.Dock = DockStyle.Fill;
             _grid.Location = new Point(3, 4);
@@ -832,33 +881,6 @@ namespace HM_19MB_Demo
             _lblStatus.TabIndex = 5;
             _lblStatus.Text = "Chưa kết nối";
             _lblStatus.TextAlign = ContentAlignment.MiddleLeft;
-            // 
-            // button1
-            // 
-            button1.Location = new Point(623, 5);
-            button1.Name = "button1";
-            button1.Size = new Size(127, 29);
-            button1.TabIndex = 7;
-            button1.Text = "Sửa điểm đo";
-            button1.UseVisualStyleBackColor = true;
-            // 
-            // _btnDeleteCalibPoint
-            // 
-            _btnDeleteCalibPoint.Location = new Point(756, 5);
-            _btnDeleteCalibPoint.Name = "_btnDeleteCalibPoint";
-            _btnDeleteCalibPoint.Size = new Size(123, 29);
-            _btnDeleteCalibPoint.TabIndex = 8;
-            _btnDeleteCalibPoint.Text = "Xóa điểm đo";
-            _btnDeleteCalibPoint.UseVisualStyleBackColor = true;
-            // 
-            // _btnAddCalibPoint
-            // 
-            _btnAddCalibPoint.Location = new Point(488, 5);
-            _btnAddCalibPoint.Name = "_btnAddCalibPoint";
-            _btnAddCalibPoint.Size = new Size(129, 29);
-            _btnAddCalibPoint.TabIndex = 9;
-            _btnAddCalibPoint.Text = "Thêm điểm đo";
-            _btnAddCalibPoint.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -1042,6 +1064,9 @@ namespace HM_19MB_Demo
         private Label lblCalibCondition;
         private Label lblEnvTemp;
         private Label lblEnvHumidity;
+        private TextBox txtEnvHumidity;
+        private Label lblWorkingTemp;
+        private TextBox txtWorkingTemp;
         private Label lblTechnicalSpecs;
         private Label lblMeasuringDevices;
         private Label lblCalibDate;
@@ -1052,7 +1077,7 @@ namespace HM_19MB_Demo
 
         private TextBox txtDeviceName, txtDeviceCode, txtDeviceNumber, txtSealNumber;
         private TextBox txtManufacturer, txtManufactureYear, txtUsingUnit, txtMethod;
-        private TextBox txtEnvTemp, txtEnvHumidity, txtTechnicalSpecs, txtMeasuringDevices;
+        private TextBox txtEnvTemp, txtTechnicalSpecs, txtMeasuringDevices;
         private TextBox txtCalibDay, txtCalibMonth, txtCalibYear;
 
         private Panel _calibPanel;

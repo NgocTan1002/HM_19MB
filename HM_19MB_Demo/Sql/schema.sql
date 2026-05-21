@@ -11,10 +11,14 @@ CREATE TABLE IF NOT EXISTS phien_hieu_chuan (
     ngay_hieu_chuan         DATE            NOT NULL DEFAULT CURRENT_DATE,
     nhiet_do_moi_truong     VARCHAR(50)     NOT NULL DEFAULT '',
     do_am_tuong_doi        VARCHAR(50)     NOT NULL DEFAULT '',
+    nhiet_do_lam_viec       VARCHAR(255)    NOT NULL DEFAULT '',
     dac_tinh_ky_thuat       TEXT            NOT NULL DEFAULT '',
     thiet_bi_chuan          TEXT            NOT NULL DEFAULT '',
     ngay_tao                TIMESTAMP       NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE phien_hieu_chuan
+    ADD COLUMN IF NOT EXISTS nhiet_do_lam_viec VARCHAR(255) NOT NULL DEFAULT '';
 
 
 -- ----------------------------------------------------------------
@@ -141,6 +145,11 @@ CREATE TABLE IF NOT EXISTS ket_qua_hieu_chuan (
     so_lan_do           INT             NULL,   -- n: số lần đọc
     phuong_phap_b       VARCHAR(10)     NULL,   -- 'U' hoặc 'Delta'
 
+    -- ── Thông số mở rộng ────────────────────────────────────────
+    do_phan_giai        FLOAT           NULL,
+    he_so_phan_giai     FLOAT           NULL,
+    thong_so_chuan_json TEXT            NULL,
+
     ngay_tao            TIMESTAMP       NOT NULL DEFAULT NOW()
 );
 
@@ -190,7 +199,11 @@ ALTER TABLE ket_qua_hieu_chuan
     ADD COLUMN IF NOT EXISTS kenh_7  FLOAT NULL,
     ADD COLUMN IF NOT EXISTS kenh_8  FLOAT NULL,
     ADD COLUMN IF NOT EXISTS kenh_9  FLOAT NULL,
-    ADD COLUMN IF NOT EXISTS kenh_10 FLOAT NULL;
+    ADD COLUMN IF NOT EXISTS kenh_10 FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS do_phan_giai FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS he_so_phan_giai FLOAT NULL,
+    ADD COLUMN IF NOT EXISTS thong_so_chuan_json TEXT NULL;
+
 
 -- ── Migration v7: đảm bảo chi_tiet_lan_do denormalized (kenh_1..10) ──
 -- Nếu bảng cũ dùng cấu trúc normalized (kenh + gia_tri) thì tạo lại

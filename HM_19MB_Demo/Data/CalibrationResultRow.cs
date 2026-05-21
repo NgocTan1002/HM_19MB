@@ -29,6 +29,11 @@ namespace HM_19MB_Demo.Data
         public int SoLanDo { get; set; }
         public string PhuongPhapB { get; set; } = "U";
 
+        // Mở rộng thêm cho xuất báo cáo
+        public double DoPhanGiai { get; set; } = double.NaN;
+        public double HeSoPhanGiai { get; set; } = double.NaN;
+        public string ThongSoChuanJson { get; set; } = "";
+
         // Dữ liệu thô từng lần đo (không lưu DB trực tiếp — qua chi_tiet_lan_do)
         public List<ChiTietLanDo>? ChiTietLanDos { get; set; }
 
@@ -126,7 +131,8 @@ namespace HM_19MB_Demo.Data
                 "@gia_tri_trung_binh, @so_hieu_chinh," +
                 "@do_on_dinh, @do_dong_deu, @do_khong_dam_bao," +
                 "@uch, @ubk," +                    // ← bỏ uch1, uch2, ubk1..ubk4
-                "@so_kenh, @so_lan_do, @phuong_phap_b)", conn);
+                "@so_kenh, @so_lan_do, @phuong_phap_b," +
+                "@do_phan_giai, @he_so_phan_giai, @thong_so_chuan_json)", conn);
 
             cmd.Parameters.AddWithValue("@phien_id", phienId);
             cmd.Parameters.AddWithValue("@stt", row.STT);
@@ -150,6 +156,10 @@ namespace HM_19MB_Demo.Data
             cmd.Parameters.AddWithValue("@so_kenh", row.SoKenh);
             cmd.Parameters.AddWithValue("@so_lan_do", row.SoLanDo);
             cmd.Parameters.AddWithValue("@phuong_phap_b", row.PhuongPhapB);
+            
+            cmd.Parameters.AddWithValue("@do_phan_giai", double.IsNaN(row.DoPhanGiai) ? DBNull.Value : (object)row.DoPhanGiai);
+            cmd.Parameters.AddWithValue("@he_so_phan_giai", double.IsNaN(row.HeSoPhanGiai) ? DBNull.Value : (object)row.HeSoPhanGiai);
+            cmd.Parameters.AddWithValue("@thong_so_chuan_json", string.IsNullOrEmpty(row.ThongSoChuanJson) ? DBNull.Value : (object)row.ThongSoChuanJson);
 
             var result = await cmd.ExecuteScalarAsync();
             return Convert.ToInt32(result);
@@ -178,6 +188,7 @@ namespace HM_19MB_Demo.Data
                 // 16=do_on_dinh, 17=do_dong_deu, 18=do_khong_dam_bao,
                 // 19=uch, 20=ubk,
                 // 21=so_kenh, 22=so_lan_do, 23=phuong_phap_b
+                // 24=do_phan_giai, 25=he_so_phan_giai, 26=thong_so_chuan_json
 
                 var row = new CalibrationResultRow
                 {
@@ -195,6 +206,9 @@ namespace HM_19MB_Demo.Data
                     SoKenh = rdr.IsDBNull(21) ? 0 : rdr.GetInt32(21),
                     SoLanDo = rdr.IsDBNull(22) ? 0 : rdr.GetInt32(22),
                     PhuongPhapB = rdr.IsDBNull(23) ? "U" : rdr.GetString(23),
+                    DoPhanGiai = ReadDoubleNullable(rdr, 24),
+                    HeSoPhanGiai = ReadDoubleNullable(rdr, 25),
+                    ThongSoChuanJson = rdr.IsDBNull(26) ? "" : rdr.GetString(26),
                 };
 
                 for (int i = 0; i < 10; i++)

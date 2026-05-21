@@ -22,6 +22,7 @@ namespace HM_19MB_Demo.Data
         public DateTime NgayHieuChuan { get; set; } = DateTime.Today;
         public string NhietDoMoiTruong { get; set; } = "";
         public string DoAmTuongDoi { get; set; } = "";
+        public string NhietDoLamViec { get; set; } = "";
         public string DacTinhKyThuat { get; set; } = "";
         public string ThietBiChuan { get; set; } = "";
     }
@@ -104,7 +105,7 @@ namespace HM_19MB_Demo.Data
                 "@p_ten_thiet_bi::varchar, @p_ky_hieu::varchar, @p_so_hieu::varchar, @p_so_tem::varchar," +
                 "@p_noi_san_xuat::varchar, @p_nam_san_xuat::varchar, @p_don_vi_su_dung::varchar, @p_phuong_phap::varchar," +
                 "@p_ngay_hieu_chuan::date," +
-                "@p_nhiet_do_moi_truong::varchar, @p_do_am_tuong_doi::varchar," +
+                "@p_nhiet_do_moi_truong::varchar, @p_do_am_tuong_doi::varchar, @p_nhiet_do_lam_viec::varchar," +
                 "@p_dac_tinh_ky_thuat::text, @p_thiet_bi_chuan::text)", conn);
 
             cmd.Parameters.AddWithValue("@p_ten_thiet_bi", meta.TenThietBi);
@@ -118,6 +119,7 @@ namespace HM_19MB_Demo.Data
             cmd.Parameters.AddWithValue("@p_ngay_hieu_chuan", meta.NgayHieuChuan);
             cmd.Parameters.AddWithValue("@p_nhiet_do_moi_truong", meta.NhietDoMoiTruong);
             cmd.Parameters.AddWithValue("@p_do_am_tuong_doi", meta.DoAmTuongDoi);
+            cmd.Parameters.AddWithValue("@p_nhiet_do_lam_viec", meta.NhietDoLamViec);
             cmd.Parameters.AddWithValue("@p_dac_tinh_ky_thuat", meta.DacTinhKyThuat);
             cmd.Parameters.AddWithValue("@p_thiet_bi_chuan", meta.ThietBiChuan);
 
@@ -143,6 +145,7 @@ namespace HM_19MB_Demo.Data
                     ngay_hieu_chuan = @ngay_hieu_chuan,
                     nhiet_do_moi_truong = @nhiet_do_moi_truong,
                     do_am_tuong_doi = @do_am_tuong_doi,
+                    nhiet_do_lam_viec = @nhiet_do_lam_viec,
                     dac_tinh_ky_thuat = @dac_tinh_ky_thuat,
                     thiet_bi_chuan = @thiet_bi_chuan
                 WHERE id = @id", conn);
@@ -159,6 +162,7 @@ namespace HM_19MB_Demo.Data
             cmd.Parameters.AddWithValue("@ngay_hieu_chuan", meta.NgayHieuChuan);
             cmd.Parameters.AddWithValue("@nhiet_do_moi_truong", meta.NhietDoMoiTruong);
             cmd.Parameters.AddWithValue("@do_am_tuong_doi", meta.DoAmTuongDoi);
+            cmd.Parameters.AddWithValue("@nhiet_do_lam_viec", meta.NhietDoLamViec);
             cmd.Parameters.AddWithValue("@dac_tinh_ky_thuat", meta.DacTinhKyThuat);
             cmd.Parameters.AddWithValue("@thiet_bi_chuan", meta.ThietBiChuan);
 
@@ -238,8 +242,9 @@ namespace HM_19MB_Demo.Data
                 NgayHieuChuan = rdr.GetDateTime(8),
                 NhietDoMoiTruong = rdr.GetString(9),
                 DoAmTuongDoi = rdr.GetString(10),
-                DacTinhKyThuat = rdr.GetString(11),
-                ThietBiChuan = rdr.GetString(12),
+                NhietDoLamViec = rdr.GetString(11),
+                DacTinhKyThuat = rdr.GetString(12),
+                ThietBiChuan = rdr.GetString(13),
             };
         }
 

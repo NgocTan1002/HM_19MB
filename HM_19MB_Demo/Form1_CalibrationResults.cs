@@ -57,16 +57,15 @@ namespace HM_19MB_Demo
                 await DeleteSelectedCalibRowAsync();
             };
 
-            _gridCalibration.ReadOnly = false;
-            _gridCalibration.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
-            _gridCalibration.CellDoubleClick += GridCalibration_CellDoubleClick;
-            _gridCalibration.CellEndEdit += GridCalibration_CellEndEdit;
+            _gridCalibration.ReadOnly = true;
+            _gridCalibration.EditMode = DataGridViewEditMode.EditProgrammatically;
             _gridCalibration.DataError += (s, e) => e.ThrowException = false;
 
             _gridCalibration.SelectionChanged += (s, e) =>
             {
-                _btnDeleteCalibPoint.Enabled = _gridCalibration.SelectedRows.Count > 0;
+                UpdateCalibrationActionButtons();
             };
+            UpdateCalibrationActionButtons();
 
             // Xây cột ban đầu theo số kênh hiện tại
             _currentKenhCount = (int)numKenhCount.Value;
@@ -106,6 +105,7 @@ namespace HM_19MB_Demo
                 if (clearRowsOnChannelChange)
                 {
                     _gridCalibration.Rows.Clear();
+                    UpdateCalibrationActionButtons();
                 }
             }
 
@@ -164,6 +164,14 @@ namespace HM_19MB_Demo
                    Color.FromArgb(255, 245, 235));
 
             _gridCalibration.Rows.Clear();
+            UpdateCalibrationActionButtons();
+        }
+
+        private void UpdateCalibrationActionButtons()
+        {
+            bool hasSelectedRow = _gridCalibration.SelectedRows.Count > 0;
+            button1.Enabled = hasSelectedRow;
+            _btnDeleteCalibPoint.Enabled = hasSelectedRow;
         }
 
         // ── Thêm điểm kiểm tra ────────────────────────────────────────────
@@ -292,9 +300,12 @@ namespace HM_19MB_Demo
 
             // Tag dòng với Id DB để xoá sau này
             _gridCalibration.Rows[rowIdx].Tag = row;
+            _gridCalibration.ClearSelection();
+            _gridCalibration.Rows[rowIdx].Selected = true;
 
             // Scroll to bottom
             _gridCalibration.FirstDisplayedScrollingRowIndex = rowIdx;
+            UpdateCalibrationActionButtons();
         }
 
         private async void GridCalibration_CellEndEdit(object? sender, DataGridViewCellEventArgs e)
@@ -456,6 +467,13 @@ namespace HM_19MB_Demo
                         r.STT = i + 1;
                 }
 
+                if (_gridCalibration.Rows.Count > 0)
+                {
+                    int nextIndex = Math.Min(deletedIndex, _gridCalibration.Rows.Count - 1);
+                    _gridCalibration.Rows[nextIndex].Selected = true;
+                }
+                UpdateCalibrationActionButtons();
+
             }
             catch (Exception ex)
             {
@@ -506,6 +524,7 @@ namespace HM_19MB_Demo
             foreach (DataGridViewRow r in _gridCalibration.Rows)
                 r.DefaultCellStyle.BackColor = Color.Empty;
 
+            UpdateCalibrationActionButtons();
         }
 
         internal async Task EnsureCalibrationGridSavedAsync()
@@ -540,6 +559,7 @@ namespace HM_19MB_Demo
         internal void ResetCalibrationResults()
         {
             _gridCalibration.Rows.Clear();
+            UpdateCalibrationActionButtons();
             if (_uncertaintyForm != null && !_uncertaintyForm.IsDisposed)
             {
                 _forceCloseUncertaintyForm = true;

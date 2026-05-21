@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -27,6 +27,7 @@ namespace HM_19MB_Demo
         private CalibrationResultRow? _lastCalculatedResult;
         private UncertaintyFullResult? _lastFullResult;
         private UncertaintyInput? _lastInput;
+        private bool _editMode;
 
         private DataGridView _gridResults = null!;
         private DataGridView _gridBudget = null!;
@@ -175,7 +176,7 @@ namespace HM_19MB_Demo
                 {
                     AutoSize = true,
                     Margin = new Padding(j == 0 ? 0 : 10, 5, 4, 0),
-                    Text = $"Kênh {j + 1}:"
+                    Text = $"KÃªnh {j + 1}:"
                 };
 
                 var textBox = new TextBox
@@ -215,7 +216,7 @@ namespace HM_19MB_Demo
                 var measurementNoColumn = new DataGridViewTextBoxColumn
                 {
                     Name = "MeasurementNo",
-                    HeaderText = "Lần đo",
+                    HeaderText = "Láº§n Ä‘o",
                     ReadOnly = true,
                     Width = 55,
                     FillWeight = 55,
@@ -230,7 +231,7 @@ namespace HM_19MB_Demo
                     var channelColumn = new DataGridViewTextBoxColumn
                     {
                         Name = $"Channel{j}",
-                        HeaderText = $"Kênh {j} (°C)",
+                        HeaderText = $"KÃªnh {j} (Â°C)",
                         Width = 70,
                         FillWeight = 70,
                         SortMode = DataGridViewColumnSortMode.NotSortable
@@ -242,7 +243,7 @@ namespace HM_19MB_Demo
                 var ttn1Column = new DataGridViewTextBoxColumn
                 {
                     Name = "Ttn1",
-                    HeaderText = "Tủ lần 1 ttn1i (°C)",
+                    HeaderText = "Tá»§ láº§n 1 ttn1i (Â°C)",
                     Width = 75,
                     FillWeight = 75,
                     SortMode = DataGridViewColumnSortMode.NotSortable
@@ -253,7 +254,7 @@ namespace HM_19MB_Demo
                 var ttn2Column = new DataGridViewTextBoxColumn
                 {
                     Name = "Ttn2",
-                    HeaderText = "Tủ lần 2 ttn2i (°C)",
+                    HeaderText = "Tá»§ láº§n 2 ttn2i (Â°C)",
                     Width = 75,
                     FillWeight = 75,
                     SortMode = DataGridViewColumnSortMode.NotSortable
@@ -264,7 +265,7 @@ namespace HM_19MB_Demo
                 var ttnMeanColumn = new DataGridViewTextBoxColumn
                 {
                     Name = "TtnMean",
-                    HeaderText = "t̄tn,i (°C)",
+                    HeaderText = "tÌ„tn,i (Â°C)",
                     ReadOnly = true,
                     Width = 68,
                     FillWeight = 68,
@@ -277,16 +278,16 @@ namespace HM_19MB_Demo
                 {
                     int rowIndex = gridData.Rows.Add();
                     var row = gridData.Rows[rowIndex];
-                    row.Cells[0].Value = $"Lần {i + 1}";
+                    row.Cells[0].Value = $"Láº§n {i + 1}";
                     for (int col = 1; col < gridData.Columns.Count; col++)
                         row.Cells[col].Value = "0.00";
                     row.Cells[TtnMeanColumn].ReadOnly = true;
                     row.Cells[TtnMeanColumn].Style.BackColor = SystemColors.Control;
                 }
 
-                AddSummaryRow("t̄ⱼ (hiệu chính)", Color.LightBlue);
-                AddSummaryRow("Sⱼ (độ lệch chuẩn)", SystemColors.Control);
-                AddSummaryRow("uch1,j (loại A)", SystemColors.Control);
+                AddSummaryRow("tÌ„â±¼ (hiá»‡u chÃ­nh)", Color.LightBlue);
+                AddSummaryRow("Sâ±¼ (Ä‘á»™ lá»‡ch chuáº©n)", SystemColors.Control);
+                AddSummaryRow("uch1,j (loáº¡i A)", SystemColors.Control);
                 FitGridDataLayout();
                 ResetResultLabels();
             }
@@ -304,7 +305,7 @@ namespace HM_19MB_Demo
             row.DefaultCellStyle.BackColor = backColor;
             row.Cells[0].Value = label;
             for (int col = 1; col < gridData.Columns.Count; col++)
-                row.Cells[col].Value = "—";
+                row.Cells[col].Value = "â€”";
         }
 
         private void FitGridDataLayout()
@@ -391,7 +392,7 @@ namespace HM_19MB_Demo
                 {
                     InvalidateLastCalculation();
                     if (showErrors)
-                        MessageBox.Show($"Dữ liệu không hợp lệ: {error}", "Lỗi",
+                        MessageBox.Show($"Dá»¯ liá»‡u khÃ´ng há»£p lá»‡: {error}", "Lá»—i",
                             MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
@@ -408,7 +409,7 @@ namespace HM_19MB_Demo
             {
                 InvalidateLastCalculation();
                 if (showErrors)
-                    MessageBox.Show($"Lỗi tính toán: {ex.Message}", "Lỗi",
+                    MessageBox.Show($"Lá»—i tÃ­nh toÃ¡n: {ex.Message}", "Lá»—i",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
@@ -489,15 +490,15 @@ namespace HM_19MB_Demo
                 int stdDevRow = _n + 1;
                 int typeARow = _n + 2;
 
-                gridData.Rows[correctedMeanRow].Cells[Ttn1Column].Value = "—";
-                gridData.Rows[correctedMeanRow].Cells[Ttn2Column].Value = "—";
+                gridData.Rows[correctedMeanRow].Cells[Ttn1Column].Value = "â€”";
+                gridData.Rows[correctedMeanRow].Cells[Ttn2Column].Value = "â€”";
                 gridData.Rows[correctedMeanRow].Cells[TtnMeanColumn].Value = r.Ttn.ToString("F4");
-                gridData.Rows[stdDevRow].Cells[Ttn1Column].Value = "—";
-                gridData.Rows[stdDevRow].Cells[Ttn2Column].Value = "—";
-                gridData.Rows[stdDevRow].Cells[TtnMeanColumn].Value = "—";
-                gridData.Rows[typeARow].Cells[Ttn1Column].Value = "—";
-                gridData.Rows[typeARow].Cells[Ttn2Column].Value = "—";
-                gridData.Rows[typeARow].Cells[TtnMeanColumn].Value = "—";
+                gridData.Rows[stdDevRow].Cells[Ttn1Column].Value = "â€”";
+                gridData.Rows[stdDevRow].Cells[Ttn2Column].Value = "â€”";
+                gridData.Rows[stdDevRow].Cells[TtnMeanColumn].Value = "â€”";
+                gridData.Rows[typeARow].Cells[Ttn1Column].Value = "â€”";
+                gridData.Rows[typeARow].Cells[Ttn2Column].Value = "â€”";
+                gridData.Rows[typeARow].Cells[TtnMeanColumn].Value = "â€”";
 
                 for (int j = 0; j < _j; j++)
                 {
@@ -506,14 +507,14 @@ namespace HM_19MB_Demo
                     gridData.Rows[typeARow].Cells[ChannelColumn(j)].Value = r.ChannelTypeAUncertainties[j].ToString("F4");
                 }
 
-                lblR_Dt.Text = $"Δt = {r.DeltaT:F4} °C";
-                lblR_Od.Text = $"±{r.DeltaOd:F3} °C";
-                lblR_Dd.Text = $"±{r.DeltaDd:F3} °C";
-                lblR_Uch1.Text = $"{r.Uch1:F4} °C";
-                lblR_Uch2.Text = $"{r.Uch2:F4} °C";
-                lblR_Uch.Text = $"{r.Uc:F4} °C";
-                lblR_Ubk.Text = $"{r.Ubk:F4} °C";
-                lblR_U.Text = $"±{r.UFinal:F3} °C";
+                lblR_Dt.Text = $"Î”t = {r.DeltaT:F4} Â°C";
+                lblR_Od.Text = $"Â±{r.DeltaOd:F3} Â°C";
+                lblR_Dd.Text = $"Â±{r.DeltaDd:F3} Â°C";
+                lblR_Uch1.Text = $"{r.Uch1:F4} Â°C";
+                lblR_Uch2.Text = $"{r.Uch2:F4} Â°C";
+                lblR_Uch.Text = $"{r.Uc:F4} Â°C";
+                lblR_Ubk.Text = $"{r.Ubk:F4} Â°C";
+                lblR_U.Text = $"Â±{r.UFinal:F3} Â°C";
             }
             finally
             {
@@ -524,14 +525,14 @@ namespace HM_19MB_Demo
         private void ResetResultLabels()
         {
             if (lblR_Dt == null) return;
-            lblR_Dt.Text = "—";
-            lblR_Od.Text = "—";
-            lblR_Dd.Text = "—";
-            lblR_Uch1.Text = "—";
-            lblR_Uch2.Text = "—";
-            lblR_Uch.Text = "—";
-            lblR_Ubk.Text = "—";
-            lblR_U.Text = "—";
+            lblR_Dt.Text = "â€”";
+            lblR_Od.Text = "â€”";
+            lblR_Dd.Text = "â€”";
+            lblR_Uch1.Text = "â€”";
+            lblR_Uch2.Text = "â€”";
+            lblR_Uch.Text = "â€”";
+            lblR_Ubk.Text = "â€”";
+            lblR_U.Text = "â€”";
         }
 
         private void BuildResultCards()
@@ -599,20 +600,26 @@ namespace HM_19MB_Demo
 
             if (_onResultAdded == null)
             {
-                MessageBox.Show("Form không được mở với callback. Vui lòng mở lại từ màn hình chính.", "Thông báo",
+                MessageBox.Show("Form khÃ´ng Ä‘Æ°á»£c má»Ÿ vá»›i callback. Vui lÃ²ng má»Ÿ láº¡i tá»« mÃ n hÃ¬nh chÃ­nh.", "ThÃ´ng bÃ¡o",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             await _onResultAdded(_lastCalculatedResult);
 
+            if (_editMode)
+            {
+                lblStatus.Text = "\u0110\u00e3 l\u01b0u ch\u1ec9nh s\u1eeda \u0111i\u1ec3m \u0111o.";
+                return;
+            }
+
             int stt = _gridResults.Rows.Count + 1;
             AppendResultRow(_lastFullResult, _lastInput, stt);
 
             AppendBudgetPoint(_lastFullResult, stt);
 
-            lblStatus.Text = $"Đã thêm điểm {txtGiaTriDat.Text} °C  " +
-                             $"(tổng {stt} điểm)";
+            lblStatus.Text = $"ÄÃ£ thÃªm Ä‘iá»ƒm {txtGiaTriDat.Text} Â°C  " +
+                             $"(tá»•ng {stt} Ä‘iá»ƒm)";
 
             ResetMeasurementCells();
         }
@@ -630,7 +637,7 @@ namespace HM_19MB_Demo
 
                 for (int row = _n; row < _n + 3; row++)
                     for (int col = 1; col < gridData.Columns.Count; col++)
-                        gridData.Rows[row].Cells[col].Value = "—";
+                        gridData.Rows[row].Cells[col].Value = "â€”";
 
                 _lastCalculatedResult = null;
                 _lastFullResult = null;
@@ -649,18 +656,18 @@ namespace HM_19MB_Demo
             using var openDialog = new OpenFileDialog
             {
                 Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*",
-                Title = "Import dữ liệu từ CSV"
+                Title = "Import dá»¯ liá»‡u tá»« CSV"
             };
             if (openDialog.ShowDialog() != DialogResult.OK) return;
             try
             {
                 ImportFromCSV(openDialog.FileName);
-                MessageBox.Show("Import thành công!", "Thông báo",
+                MessageBox.Show("Import thÃ nh cÃ´ng!", "ThÃ´ng bÃ¡o",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi import: {ex.Message}", "Lỗi",
+                MessageBox.Show($"Lá»—i import: {ex.Message}", "Lá»—i",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -696,12 +703,12 @@ namespace HM_19MB_Demo
             try
             {
                 ExportToCSV(saveDialog.FileName);
-                MessageBox.Show("Export thành công!", "Thông báo",
+                MessageBox.Show("Export thÃ nh cÃ´ng!", "ThÃ´ng bÃ¡o",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi export: {ex.Message}", "Lỗi",
+                MessageBox.Show($"Lá»—i export: {ex.Message}", "Lá»—i",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -711,20 +718,20 @@ namespace HM_19MB_Demo
             var sb = new StringBuilder();
 
             sb.AppendLine($"{_j},{_n}");
-            sb.Append("Lần đo,t_tn1");
-            for (int j = 1; j <= _j; j++) sb.Append($",Kênh {j}");
+            sb.Append("Láº§n Ä‘o,t_tn1");
+            for (int j = 1; j <= _j; j++) sb.Append($",KÃªnh {j}");
             sb.AppendLine(",t_tn2,t_tn_mean");
 
             for (int i = 0; i < _n; i++)
             {
-                sb.Append($"Lần {i + 1}");
+                sb.Append($"Láº§n {i + 1}");
                 for (int col = 1; col < gridData.Columns.Count; col++)
                     sb.Append($",{gridData.Rows[i].Cells[col].Value}");
                 sb.AppendLine();
             }
 
             sb.AppendLine();
-            sb.AppendLine("Kết quả tính toán:");
+            sb.AppendLine("Káº¿t quáº£ tÃ­nh toÃ¡n:");
             sb.AppendLine($"DeltaT,{lblR_Dt.Text}");
             sb.AppendLine($"Uch1,{lblR_Uch1.Text}");
             sb.AppendLine($"Uch2,{lblR_Uch2.Text}");
@@ -757,17 +764,17 @@ namespace HM_19MB_Demo
             };
 
             _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResSTT", HeaderText = "STT", FillWeight = 35, SortMode = DataGridViewColumnSortMode.NotSortable });
-            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResGTDat", HeaderText = "Giá trị đặt\n(°C)", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
-            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResChiThi", HeaderText = "Chỉ thị tủ\n(°C)", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
-            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResTch", HeaderText = "t̄_ch (°C)", FillWeight = 75, SortMode = DataGridViewColumnSortMode.NotSortable });
-            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResDeltaT", HeaderText = "Δt (°C)", FillWeight = 65, SortMode = DataGridViewColumnSortMode.NotSortable });
-            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResDeltaOd", HeaderText = "δt_od (°C)", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
-            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResDeltaDd", HeaderText = "δt_dd (°C)", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResGTDat", HeaderText = "GiÃ¡ trá»‹ Ä‘áº·t\n(Â°C)", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResChiThi", HeaderText = "Chá»‰ thá»‹ tá»§\n(Â°C)", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResTch", HeaderText = "tÌ„_ch (Â°C)", FillWeight = 75, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResDeltaT", HeaderText = "Î”t (Â°C)", FillWeight = 65, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResDeltaOd", HeaderText = "Î´t_od (Â°C)", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridResults.Columns.Add(new DataGridViewTextBoxColumn { Name = "ResDeltaDd", HeaderText = "Î´t_dd (Â°C)", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
 
             var colU = new DataGridViewTextBoxColumn
             {
                 Name = "ResU",
-                HeaderText = "U (k=2, P=95%)\n(°C)",
+                HeaderText = "U (k=2, P=95%)\n(Â°C)",
                 FillWeight = 90,
                 SortMode = DataGridViewColumnSortMode.NotSortable
             };
@@ -793,17 +800,17 @@ namespace HM_19MB_Demo
                 BackgroundColor = Color.White,
             };
 
-            _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudSym", HeaderText = "Ký hiệu", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
-            _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudSource", HeaderText = "Nguồn không đảm bảo", FillWeight = 200, SortMode = DataGridViewColumnSortMode.NotSortable });
-            _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudVal", HeaderText = "Giá trị", FillWeight = 80, SortMode = DataGridViewColumnSortMode.NotSortable });
-            _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudUnit", HeaderText = "Đơn vị", FillWeight = 50, SortMode = DataGridViewColumnSortMode.NotSortable });
-            _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudDiv", HeaderText = "Hệ số chia", FillWeight = 65, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudSym", HeaderText = "KÃ½ hiá»‡u", FillWeight = 70, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudSource", HeaderText = "Nguá»“n khÃ´ng Ä‘áº£m báº£o", FillWeight = 200, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudVal", HeaderText = "GiÃ¡ trá»‹", FillWeight = 80, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudUnit", HeaderText = "ÄÆ¡n vá»‹", FillWeight = 50, SortMode = DataGridViewColumnSortMode.NotSortable });
+            _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudDiv", HeaderText = "Há»‡ sá»‘ chia", FillWeight = 65, SortMode = DataGridViewColumnSortMode.NotSortable });
             _gridBudget.Columns.Add(new DataGridViewTextBoxColumn { Name = "BudCi", HeaderText = "Ci", FillWeight = 50, SortMode = DataGridViewColumnSortMode.NotSortable });
 
             var colUi = new DataGridViewTextBoxColumn
             {
                 Name = "BudUi",
-                HeaderText = "u_i (°C)",
+                HeaderText = "u_i (Â°C)",
                 FillWeight = 80,
                 SortMode = DataGridViewColumnSortMode.NotSortable
             };
@@ -827,60 +834,60 @@ namespace HM_19MB_Demo
             double A = _lastInput.ResolutionA;
             double d = _lastInput.ResolutionD;
 
-            // ── Dòng phân cách nếu đã có điểm trước ─────────────────────────
+            // â”€â”€ DÃ²ng phÃ¢n cÃ¡ch náº¿u Ä‘Ã£ cÃ³ Ä‘iá»ƒm trÆ°á»›c â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             if (_gridBudget.Rows.Count > 0)
-                AddBudgetSeparatorRow($"Điểm {pointIndex}");
+                AddBudgetSeparatorRow($"Äiá»ƒm {pointIndex}");
 
-            // ── u1: Tản mát KQ đo của chuẩn ──────────────────────────────────
+            // â”€â”€ u1: Táº£n mÃ¡t KQ Ä‘o cá»§a chuáº©n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             AddBudgetRow($"u1-{pointIndex}",
-                         "Tản mát KQ đo của chuẩn",
-                         r.Uch1, "°C", "1", 1.0, 1.0, r.Uch1);
+                         "Táº£n mÃ¡t KQ Ä‘o cá»§a chuáº©n",
+                         r.Uch1, "Â°C", "1", 1.0, 1.0, r.Uch1);
 
-            // ── u2: Tản mát KQ đo của UUT ────────────────────────────────────
+            // â”€â”€ u2: Táº£n mÃ¡t KQ Ä‘o cá»§a UUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             AddBudgetRow($"u2-{pointIndex}",
-                         "Tản mát KQ đo của UUT",
-                         r.Ubk1, "°C", "1", 1.0, 1.0, r.Ubk1);
+                         "Táº£n mÃ¡t KQ Ä‘o cá»§a UUT",
+                         r.Ubk1, "Â°C", "1", 1.0, 1.0, r.Ubk1);
 
-            // ── u3: ĐKĐBĐ của chuẩn ──────────────────────────────────────────
+            // â”€â”€ u3: ÄKÄBÄ cá»§a chuáº©n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             AddBudgetRow("u3",
-                         "ĐKĐBĐ của chuẩn",
-                         useU ? uMax : delta, "°C",
-                         useU ? "2" : "√3",
+                         "ÄKÄBÄ cá»§a chuáº©n",
+                         useU ? uMax : delta, "Â°C",
+                         useU ? "2" : "âˆš3",
                          useU ? 2.0 : Math.Sqrt(3),
                          1.0, r.Uch2);
 
-            // ── u4: Độ phân giải của UUT ──────────────────────────────────────
+            // â”€â”€ u4: Äá»™ phÃ¢n giáº£i cá»§a UUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             AddBudgetRow("u4",
-                         "Độ phân giải của UUT",
-                         A * d, "°C", "√3", Math.Sqrt(3), 1.0, r.Ubk4);
+                         "Äá»™ phÃ¢n giáº£i cá»§a UUT",
+                         A * d, "Â°C", "âˆš3", Math.Sqrt(3), 1.0, r.Ubk4);
 
-            // ── u5: Độ ổn định ────────────────────────────────────────────────
+            // â”€â”€ u5: Äá»™ á»•n Ä‘á»‹nh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             AddBudgetRow($"u5-{pointIndex}",
-                         "Độ ổn định",
-                         r.DeltaOd, "°C", "√3", Math.Sqrt(3), 1.0, r.Ubk2);
+                         "Äá»™ á»•n Ä‘á»‹nh",
+                         r.DeltaOd, "Â°C", "âˆš3", Math.Sqrt(3), 1.0, r.Ubk2);
 
-            // ── u6: Độ đồng đều ───────────────────────────────────────────────
+            // â”€â”€ u6: Äá»™ Ä‘á»“ng Ä‘á»u â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             AddBudgetRow($"u6-{pointIndex}",
-                         "Độ đồng đều",
-                         r.DeltaDd, "°C", "√3", Math.Sqrt(3), 1.0, r.Ubk3);
+                         "Äá»™ Ä‘á»“ng Ä‘á»u",
+                         r.DeltaDd, "Â°C", "âˆš3", Math.Sqrt(3), 1.0, r.Ubk3);
 
-            // ── Tổng hợp điểm này ────────────────────────────────────────────
+            // â”€â”€ Tá»•ng há»£p Ä‘iá»ƒm nÃ y â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             AddSummaryBudgetRow($"u_ch-{pointIndex}",
-                                $"Liên hợp chuẩn — điểm {pointIndex}",
+                                $"LiÃªn há»£p chuáº©n â€” Ä‘iá»ƒm {pointIndex}",
                                 r.Uc, Color.FromArgb(220, 235, 255));
 
             AddSummaryBudgetRow($"u_bk-{pointIndex}",
-                                $"Liên hợp tủ nhiệt — điểm {pointIndex}",
+                                $"LiÃªn há»£p tá»§ nhiá»‡t â€” Ä‘iá»ƒm {pointIndex}",
                                 r.Ubk, Color.FromArgb(220, 235, 255));
 
             AddSummaryBudgetRow($"U-{pointIndex}",
-                                $"ĐKĐB mở rộng — điểm {pointIndex}, k=2, P=95%",
+                                $"ÄKÄB má»Ÿ rá»™ng â€” Ä‘iá»ƒm {pointIndex}, k=2, P=95%",
                                 r.UFinal,
                                 Color.FromArgb(200, 255, 200),
-                                prefix: "±", bold: true,
+                                prefix: "Â±", bold: true,
                                 foreColor: Color.DarkGreen);
 
-            // Scroll xuống dòng mới nhất
+            // Scroll xuá»‘ng dÃ²ng má»›i nháº¥t
             _gridBudget.FirstDisplayedScrollingRowIndex =
                 _gridBudget.Rows.Count - 1;
         }
@@ -905,7 +912,7 @@ namespace HM_19MB_Demo
                 r.DeltaT.ToString("F4"),
                 r.DeltaOd.ToString("F4"),
                 r.DeltaDd.ToString("F4"),
-                $"±{r.UFinal:F4}");
+                $"Â±{r.UFinal:F4}");
 
             var row = _gridResults.Rows[idx];
             row.DefaultCellStyle.BackColor = Color.FromArgb(255, 255, 200);
@@ -927,106 +934,106 @@ namespace HM_19MB_Demo
             _gridBudget.Rows.Clear();
             RebuildBudgetColumns();
 
-            // Index điểm hiệu chuẩn hiện tại (đếm từ kết quả đã thêm)
-            int pointIndex = _gridResults.Rows.Count; // điểm thứ mấy (1-based)
+            // Index Ä‘iá»ƒm hiá»‡u chuáº©n hiá»‡n táº¡i (Ä‘áº¿m tá»« káº¿t quáº£ Ä‘Ã£ thÃªm)
+            int pointIndex = _gridResults.Rows.Count; // Ä‘iá»ƒm thá»© máº¥y (1-based)
 
             int n = _lastInput!.N;
             int j = _lastInput!.J;
 
-            // ── u1-{pointIndex}: Tản mát KQ đo của chuẩn ────────────────────
-            // = u_ch1 tổng hợp tại điểm này (CT7) — một dòng duy nhất
+            // â”€â”€ u1-{pointIndex}: Táº£n mÃ¡t KQ Ä‘o cá»§a chuáº©n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // = u_ch1 tá»•ng há»£p táº¡i Ä‘iá»ƒm nÃ y (CT7) â€” má»™t dÃ²ng duy nháº¥t
             AddBudgetRow(
                 sym: $"u1-{pointIndex}",
-                source: "Tản mát KQ đo của chuẩn",
-                rawValue: r.Uch1,   // đã là √Σ(uch1,j²) — CT7
-                unit: "°C",
+                source: "Táº£n mÃ¡t KQ Ä‘o cá»§a chuáº©n",
+                rawValue: r.Uch1,   // Ä‘Ã£ lÃ  âˆšÎ£(uch1,jÂ²) â€” CT7
+                unit: "Â°C",
                 divisorText: "1",
                 divisorValue: 1.0,
                 ci: 1.0,
                 ui: r.Uch1);
 
-            // ── u2-{pointIndex}: Tản mát KQ đo của UUT ──────────────────────
+            // â”€â”€ u2-{pointIndex}: Táº£n mÃ¡t KQ Ä‘o cá»§a UUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             AddBudgetRow(
                 sym: $"u2-{pointIndex}",
-                source: "Tản mát KQ đo của UUT",
+                source: "Táº£n mÃ¡t KQ Ä‘o cá»§a UUT",
                 rawValue: r.Ubk1,   // CT13
-                unit: "°C",
+                unit: "Â°C",
                 divisorText: "1",
                 divisorValue: 1.0,
                 ci: 1.0,
                 ui: r.Ubk1);
 
-            // ── u3: ĐKĐBĐ của chuẩn ─────────────────────────────────────────
+            // â”€â”€ u3: ÄKÄBÄ cá»§a chuáº©n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             bool useU = _lastInput.UseUMethod;
             double uMax = _lastInput.UValues[0];
             double delta = _lastInput.DeltaValues[0];
             AddBudgetRow(
                 sym: "u3",
-                source: "ĐKĐBĐ của chuẩn",
+                source: "ÄKÄBÄ cá»§a chuáº©n",
                 rawValue: useU ? uMax : delta,
-                unit: "°C",
-                divisorText: useU ? "2" : "√3",
+                unit: "Â°C",
+                divisorText: useU ? "2" : "âˆš3",
                 divisorValue: useU ? 2.0 : Math.Sqrt(3),
                 ci: 1.0,
                 ui: r.Uch2);
 
-            // ── u4: Độ phân giải của UUT ─────────────────────────────────────
+            // â”€â”€ u4: Äá»™ phÃ¢n giáº£i cá»§a UUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             double A = _lastInput.ResolutionA;
             double d = _lastInput.ResolutionD;
             AddBudgetRow(
                 sym: "u4",
-                source: "Độ phân giải của UUT",
+                source: "Äá»™ phÃ¢n giáº£i cá»§a UUT",
                 rawValue: A * d,
-                unit: "°C",
-                divisorText: "√3",
+                unit: "Â°C",
+                divisorText: "âˆš3",
                 divisorValue: Math.Sqrt(3),
                 ci: 1.0,
                 ui: r.Ubk4);
 
-            // ── u5-{pointIndex}: Độ ổn định ──────────────────────────────────
-            // δt_od tại điểm này = max qua k kênh của ½(max-min)
+            // â”€â”€ u5-{pointIndex}: Äá»™ á»•n Ä‘á»‹nh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // Î´t_od táº¡i Ä‘iá»ƒm nÃ y = max qua k kÃªnh cá»§a Â½(max-min)
             AddBudgetRow(
                 sym: $"u5-{pointIndex}",
-                source: "Độ ổn định",
+                source: "Äá»™ á»•n Ä‘á»‹nh",
                 rawValue: r.DeltaOd,   // CT5
-                unit: "°C",
-                divisorText: "√3",
+                unit: "Â°C",
+                divisorText: "âˆš3",
                 divisorValue: Math.Sqrt(3),
                 ci: 1.0,
                 ui: r.Ubk2);    // CT15
 
-            // ── u6-{pointIndex}: Độ đồng đều ────────────────────────────────
+            // â”€â”€ u6-{pointIndex}: Äá»™ Ä‘á»“ng Ä‘á»u â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             AddBudgetRow(
                 sym: $"u6-{pointIndex}",
-                source: "Độ đồng đều",
+                source: "Äá»™ Ä‘á»“ng Ä‘á»u",
                 rawValue: r.DeltaDd,   // CT6
-                unit: "°C",
-                divisorText: "√3",
+                unit: "Â°C",
+                divisorText: "âˆš3",
                 divisorValue: Math.Sqrt(3),
                 ci: 1.0,
                 ui: r.Ubk3);    // CT16
 
-            // ── Separator + Tổng hợp ─────────────────────────────────────────
+            // â”€â”€ Separator + Tá»•ng há»£p â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             AddSummaryBudgetRow("u_ch",
-                $"Độ KĐB chuẩn liên hợp — điểm {pointIndex} (CT12)",
+                $"Äá»™ KÄB chuáº©n liÃªn há»£p â€” Ä‘iá»ƒm {pointIndex} (CT12)",
                 r.Uc,
                 Color.FromArgb(220, 235, 255));
 
             AddSummaryBudgetRow("u_bk",
-                $"Độ KĐB tủ nhiệt liên hợp — điểm {pointIndex} (CT18)",
+                $"Äá»™ KÄB tá»§ nhiá»‡t liÃªn há»£p â€” Ä‘iá»ƒm {pointIndex} (CT18)",
                 r.Ubk,
                 Color.FromArgb(220, 235, 255));
 
             AddSummaryBudgetRow("U",
-                $"Độ KĐB mở rộng — điểm {pointIndex}, k=2, P=95% (CT19)",
+                $"Äá»™ KÄB má»Ÿ rá»™ng â€” Ä‘iá»ƒm {pointIndex}, k=2, P=95% (CT19)",
                 r.UFinal,
                 Color.FromArgb(200, 255, 200),
-                prefix: "±",
+                prefix: "Â±",
                 bold: true,
                 foreColor: Color.DarkGreen);
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────────
+        // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
         private void RebuildBudgetColumns()
         {
@@ -1041,13 +1048,13 @@ namespace HM_19MB_Demo
                     SortMode = DataGridViewColumnSortMode.NotSortable
                 });
 
-            Add("BudSym", "Ký hiệu", 55);
-            Add("BudSource", "Nguồn gây ra ĐKĐBĐ", 200);
-            Add("BudVal", "Giá trị", 70);
-            Add("BudUnit", "Đơn vị", 45);
-            Add("BudDiv", "Hệ số chia", 70);
+            Add("BudSym", "KÃ½ hiá»‡u", 55);
+            Add("BudSource", "Nguá»“n gÃ¢y ra ÄKÄBÄ", 200);
+            Add("BudVal", "GiÃ¡ trá»‹", 70);
+            Add("BudUnit", "ÄÆ¡n vá»‹", 45);
+            Add("BudDiv", "Há»‡ sá»‘ chia", 70);
             Add("BudCi", "Ci", 40);
-            Add("BudUi", "ĐKĐB chuẩn (ui)", 80);
+            Add("BudUi", "ÄKÄB chuáº©n (ui)", 80);
 
             _gridBudget.Columns["BudVal"].DefaultCellStyle.Alignment =
                 DataGridViewContentAlignment.MiddleRight;
@@ -1065,17 +1072,17 @@ namespace HM_19MB_Demo
             Color? backColor = null)
         {
             double safeUi = divisorValue != 0 ? rawValue * ci / divisorValue : 0;
-            // ui truyền vào được ưu tiên nếu đã tính sẵn, fallback tính lại
+            // ui truyá»n vÃ o Ä‘Æ°á»£c Æ°u tiÃªn náº¿u Ä‘Ã£ tÃ­nh sáºµn, fallback tÃ­nh láº¡i
             double displayUi = double.IsNaN(ui) ? safeUi : ui;
 
             int idx = _gridBudget.Rows.Add(
                 sym,
                 source,
-                double.IsNaN(rawValue) || rawValue == 0 ? "—" : rawValue.ToString("F4"),
+                double.IsNaN(rawValue) || rawValue == 0 ? "â€”" : rawValue.ToString("F4"),
                 unit,
                 divisorText,
                 ci.ToString("F1"),
-                displayUi == 0 ? "—" : displayUi.ToString("F4"));
+                displayUi == 0 ? "â€”" : displayUi.ToString("F4"));
 
             if (backColor.HasValue)
                 _gridBudget.Rows[idx].DefaultCellStyle.BackColor = backColor.Value;
@@ -1090,7 +1097,7 @@ namespace HM_19MB_Demo
         {
             int idx = _gridBudget.Rows.Add(
                 sym, source,
-                "—", "°C", "—", "—",
+                "â€”", "Â°C", "â€”", "â€”",
                 $"{prefix}{value:F4}");
 
             var style = _gridBudget.Rows[idx].DefaultCellStyle;
@@ -1099,6 +1106,66 @@ namespace HM_19MB_Demo
                                   bold ? FontStyle.Bold : FontStyle.Regular);
             if (foreColor.HasValue)
                 style.ForeColor = foreColor.Value;
+        }
+
+        /// <summary>
+        /// Load dá»¯ liá»‡u tá»« má»™t Ä‘iá»ƒm Ä‘o Ä‘Ã£ tÃ­nh Ä‘á»ƒ cho phÃ©p chá»‰nh sá»­a láº¡i.
+        /// </summary>
+        public void LoadExistingData(CalibrationResultRow row)
+        {
+            // Cáº­p nháº­t config trÆ°á»›c
+            SetConfiguration(
+                row.SoKenh > 0 ? row.SoKenh : _j,
+                row.SoLanDo > 0 ? row.SoLanDo : _n,
+                notifyOwner: false);
+
+            // Äiá»n giÃ¡ trá»‹ Ä‘áº·t
+            txtGiaTriDat.Text = row.GiaTriDat.ToString("F1");
+
+            // Náº¿u khÃ´ng cÃ³ chi tiáº¿t tá»«ng láº§n Ä‘o, dÃ¹ng giÃ¡ trá»‹ trung bÃ¬nh kÃªnh
+            if (row.ChiTietLanDos == null || row.ChiTietLanDos.Count == 0)
+                return;
+
+            _suppressGridEvents = true;
+            try
+            {
+                for (int i = 0; i < _n; i++)
+                {
+                    int lanDo = i + 1;
+
+                    // Äiá»n giÃ¡ trá»‹ tá»«ng kÃªnh
+                    for (int j = 0; j < _j; j++)
+                    {
+                        var detail = row.ChiTietLanDos
+                            .FirstOrDefault(d => d.LanDo == lanDo && d.Kenh == j + 1);
+
+                        if (detail != null)
+                            gridData.Rows[i].Cells[ChannelColumn(j)].Value =
+                                detail.GiaTri.ToString("F2");
+                    }
+
+                    // Äiá»n chá»‰ thá»‹ tá»§ â€” ttn1 vÃ  ttn2 Ä‘á»u dÃ¹ng chi_thi_uut
+                    // (giÃ¡ trá»‹ lÆ°u lÃ  (ttn1+ttn2)/2; khi load láº¡i,
+                    //  Ä‘iá»n vÃ o cáº£ hai Ã´ Ä‘á»ƒ tÃ­nh láº¡i cho Ä‘Ãºng)
+                    var anyDetail = row.ChiTietLanDos
+                        .FirstOrDefault(d => d.LanDo == lanDo && d.ChiThiUut.HasValue);
+
+                    if (anyDetail?.ChiThiUut is double chiThi)
+                    {
+                        gridData.Rows[i].Cells[Ttn1Column].Value = chiThi.ToString("F2");
+                        gridData.Rows[i].Cells[Ttn2Column].Value = chiThi.ToString("F2");
+                    }
+                }
+            }
+            finally
+            {
+                _suppressGridEvents = false;
+            }
+
+            // TÃ­nh láº¡i ngay Ä‘á»ƒ hiá»ƒn thá»‹ káº¿t quáº£
+            RecalculateAll(showErrors: false);
+            _editMode = true;
+            btnCalculateAndAdd.Text = "TÃ­nh láº¡i vÃ  LÆ°u chá»‰nh sá»­a";
         }
     }
 }

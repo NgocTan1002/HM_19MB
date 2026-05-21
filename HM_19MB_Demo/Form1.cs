@@ -71,7 +71,7 @@ namespace HM_19MB_Demo
         }
 
         // ── Form Load — safe place to set SplitterDistance ──────────────────
-        private void Form1_Load(object? sender, EventArgs e)
+        private async void Form1_Load(object? sender, EventArgs e)
         {
             int min = _split.Panel1MinSize;
             int max = _split.Width - _split.Panel2MinSize;
@@ -81,6 +81,17 @@ namespace HM_19MB_Demo
 
             // Điều chỉnh chiều cao các dòng trong grid để fill toàn bộ
             AdjustRowHeights();
+
+            try
+            {
+                await DatabaseService.EnsureSchemaAsync();
+            }
+            catch (Exception ex)
+            {
+                AppLogger.Error("Database", "Khong the khoi tao schema database", ex);
+                MessageBox.Show($"Khong the khoi tao database:\n{ex.Message}",
+                    "Loi database", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         // ── Event wiring ─────────────────────────────────────────────────────
@@ -562,6 +573,7 @@ namespace HM_19MB_Demo
                 PhuongPhap = txtMethod.Text,
                 NhietDoMoiTruong = txtEnvTemp.Text,
                 DoAmTuongDoi = txtEnvHumidity.Text,
+                NhietDoLamViec = txtWorkingTemp.Text,
                 DacTinhKyThuat = txtTechnicalSpecs.Text,
                 ThietBiChuan = txtMeasuringDevices.Text,
                 NgayHieuChuan = int.TryParse(txtCalibDay.Text, out int day) &&
@@ -745,6 +757,100 @@ namespace HM_19MB_Demo
         private void mainLayout_Paint(object sender, PaintEventArgs e)
         {
 
+        }
+
+        private void button1_Click(object? sender, EventArgs e)
+        {
+            if (_gridCalibration.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Vui lòng chọn một điểm đo để sửa,",
+                                "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var selectedRow = _gridCalibration.SelectedRows[0];
+            if (selectedRow.Tag is not CalibrationResultRow rowData)
+                return;
+
+            if (_uncertaintyForm != null && !_uncertaintyForm.IsDisposed)
+            {
+                _forceCloseUncertaintyForm = true;
+                try
+                {
+                    _uncertaintyForm.Close();
+                }
+                finally
+                {
+                    _forceCloseUncertaintyForm = false;
+                }
+                _uncertaintyForm = null;
+            }
+            int editingRowIndex = selectedRow.Index;
+
+            _uncertaintyForm = new UncertaintyCalculationForm(
+                kenhCount: rowData.SoKenh > 0 ? rowData.SoKenh : _currentKenhCount,
+                measurementCount: rowData.SoLanDo > 0 ? rowData.SoLanDo : _currentMeasurementCount,
+                phienId: _currentSessionId,
+                onResultAdded: updatedRow =>
+                {
+                    OnCalibrationResultEdited(editingRowIndex, rowData, updatedRow);
+                },
+                onConfigChanged: null
+            );
+            // Load dữ liệu cũ vào form
+            _uncertaintyForm.LoadExistingData(rowData);
+
+            ConfigureUncertaintyFormLifetime(_uncertaintyForm);
+            _uncertaintyForm.Show(this);
+        }
+
+        private void OnCalibrationResultEdited(
+            int rowIndex,
+            CalibrationResultRow oldRow,
+            CalibrationResultRow updatedRow)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() =>
+                    OnCalibrationResultEdited(rowIndex, oldRow, updatedRow)));
+                return;
+            }
+
+            // Giữ nguyên STT và Id DB của dòng cũ
+            updatedRow.STT = oldRow.STT;
+            updatedRow.Id = oldRow.Id;
+
+            // Cập nhật lại Tag và các ô trong grid
+            if (rowIndex >= 0 && rowIndex < _gridCalibration.Rows.Count)
+            {
+                _gridCalibration.Rows[rowIndex].Tag = updatedRow;
+                FormatCalibrationGridRow(_gridCalibration.Rows[rowIndex], updatedRow);
+            }
+
+            // Lưu DB (upsert theo phien_id + stt)
+            if (_currentSessionId.HasValue)
+            {
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await DatabaseService.EnsureSchemaAsync();
+                        updatedRow.Id = await DatabaseService
+                            .LuuKetQuaHieuChuanAsync(_currentSessionId.Value, updatedRow);
+
+                        if (updatedRow.Id > 0 && updatedRow.ChiTietLanDos?.Count > 0)
+                            await DatabaseService
+                                .LuuChiTietLanDoAsync(updatedRow.Id, updatedRow.ChiTietLanDos);
+                    }
+                    catch (Exception ex)
+                    {
+                        AppLogger.Error("CalibrationResults", "Lỗi lưu khi sửa", ex);
+                        Invoke(new Action(() =>
+                            MessageBox.Show($"Lỗi lưu DB:\n{ex.Message}", "Lỗi",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error)));
+                    }
+                });
+            }
         }
     }
 }

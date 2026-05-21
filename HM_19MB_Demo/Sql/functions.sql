@@ -10,6 +10,7 @@ CREATE OR REPLACE FUNCTION fn_tao_phien(
     p_ngay_hieu_chuan       DATE,
     p_nhiet_do_moi_truong   VARCHAR,
     p_do_am_tuong_doi      VARCHAR,
+    p_nhiet_do_lam_viec     VARCHAR,
     p_dac_tinh_ky_thuat     TEXT,
     p_thiet_bi_chuan        TEXT
 )
@@ -23,14 +24,14 @@ BEGIN
         ten_thiet_bi, ky_hieu, so_hieu, so_tem,
         noi_san_xuat, nam_san_xuat, don_vi_su_dung, phuong_phap,
         ngay_hieu_chuan,
-        nhiet_do_moi_truong, do_am_tuong_doi,
+        nhiet_do_moi_truong, do_am_tuong_doi, nhiet_do_lam_viec,
         dac_tinh_ky_thuat, thiet_bi_chuan
     )
     VALUES (
         p_ten_thiet_bi, p_ky_hieu, p_so_hieu, p_so_tem,
         p_noi_san_xuat, p_nam_san_xuat, p_don_vi_su_dung, p_phuong_phap,
         p_ngay_hieu_chuan,
-        p_nhiet_do_moi_truong, p_do_am_tuong_doi,
+        p_nhiet_do_moi_truong, p_do_am_tuong_doi, p_nhiet_do_lam_viec,
         p_dac_tinh_ky_thuat, p_thiet_bi_chuan
     )
     RETURNING id INTO v_id;
@@ -84,7 +85,12 @@ CREATE OR REPLACE FUNCTION fn_luu_ket_qua_hieu_chuan(
     -- Metadata tính toán
     p_so_kenh               INT,
     p_so_lan_do             INT,
-    p_phuong_phap_b         VARCHAR
+    p_phuong_phap_b         VARCHAR,
+
+    -- Thông số mở rộng
+    p_do_phan_giai          FLOAT,
+    p_he_so_phan_giai       FLOAT,
+    p_thong_so_chuan_json   TEXT
 )
 RETURNS INT
 LANGUAGE plpgsql
@@ -100,7 +106,8 @@ BEGIN
         gia_tri_trung_binh, so_hieu_chinh,
         do_on_dinh, do_dong_deu, do_khong_dam_bao,
         uch, ubk,
-        so_kenh, so_lan_do, phuong_phap_b
+        so_kenh, so_lan_do, phuong_phap_b,
+        do_phan_giai, he_so_phan_giai, thong_so_chuan_json
     )
     VALUES (
         p_phien_id, p_stt,
@@ -110,7 +117,8 @@ BEGIN
         p_gia_tri_trung_binh, p_so_hieu_chinh,
         p_do_on_dinh, p_do_dong_deu, p_do_khong_dam_bao,
         p_uch, p_ubk,
-        p_so_kenh, p_so_lan_do, p_phuong_phap_b
+        p_so_kenh, p_so_lan_do, p_phuong_phap_b,
+        p_do_phan_giai, p_he_so_phan_giai, p_thong_so_chuan_json
     )
     ON CONFLICT (phien_id, stt) DO UPDATE SET
         gia_tri_dat          = EXCLUDED.gia_tri_dat,
@@ -135,6 +143,9 @@ BEGIN
         so_kenh              = EXCLUDED.so_kenh,
         so_lan_do            = EXCLUDED.so_lan_do,
         phuong_phap_b        = EXCLUDED.phuong_phap_b,
+        do_phan_giai         = EXCLUDED.do_phan_giai,
+        he_so_phan_giai      = EXCLUDED.he_so_phan_giai,
+        thong_so_chuan_json  = EXCLUDED.thong_so_chuan_json,
         ngay_tao             = NOW()
     RETURNING id INTO v_id;
  
@@ -204,6 +215,7 @@ RETURNS TABLE (
     ngay_hieu_chuan         DATE,
     nhiet_do_moi_truong     VARCHAR,
     do_am_tuong_doi        VARCHAR,
+    nhiet_do_lam_viec       VARCHAR,
     dac_tinh_ky_thuat       TEXT,
     thiet_bi_chuan          TEXT
 )
@@ -214,7 +226,7 @@ AS $$
         ten_thiet_bi, ky_hieu, so_hieu, so_tem,
         noi_san_xuat, nam_san_xuat, don_vi_su_dung, phuong_phap,
         ngay_hieu_chuan,
-        nhiet_do_moi_truong, do_am_tuong_doi,
+        nhiet_do_moi_truong, do_am_tuong_doi, nhiet_do_lam_viec,
         dac_tinh_ky_thuat, thiet_bi_chuan
     FROM phien_hieu_chuan
     WHERE id = p_phien_id;
@@ -325,7 +337,10 @@ RETURNS TABLE (
     ubk                 FLOAT,
     so_kenh             INT,
     so_lan_do           INT,
-    phuong_phap_b       VARCHAR
+    phuong_phap_b       VARCHAR,
+    do_phan_giai        FLOAT,
+    he_so_phan_giai     FLOAT,
+    thong_so_chuan_json TEXT
 )
 LANGUAGE sql STABLE AS $$
     SELECT
@@ -336,7 +351,8 @@ LANGUAGE sql STABLE AS $$
         gia_tri_trung_binh, so_hieu_chinh,
         do_on_dinh, do_dong_deu, do_khong_dam_bao,
         uch, ubk,
-        so_kenh, so_lan_do, phuong_phap_b
+        so_kenh, so_lan_do, phuong_phap_b,
+        do_phan_giai, he_so_phan_giai, thong_so_chuan_json
     FROM ket_qua_hieu_chuan
     WHERE phien_id = p_phien_id
     ORDER BY stt;
