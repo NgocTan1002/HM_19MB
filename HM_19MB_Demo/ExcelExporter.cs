@@ -34,7 +34,7 @@ namespace HM_19MB_Demo
                 "Resources", "Templates", "GiayChungNhanHieuChuan.docx");
 
             if (!File.Exists(templatePath))
-                throw new FileNotFoundException($"KhÃ´ng tÃ¬m tháº¥y template: {templatePath}");
+                throw new FileNotFoundException($"Không tìm thấy template: {templatePath}");
 
             var values = new Dictionary<string, object>
             {
@@ -60,7 +60,7 @@ namespace HM_19MB_Demo
                         ["SoHieuChinh"]  = r.SoHieuChinh.ToString("F2"),
                         ["DoOnDinh"]     = r.DoOnDinh.ToString("F2"),
                         ["DoDongDeu"]    = r.DoDongDeu.ToString("F2"),
-                        ["DKDB"]         = $"Â±{r.DoKhongDamBao:F2}",
+                        ["DKDB"]         = $"±{r.DoKhongDamBao:F2}",
                     }).ToList()
             };
 
@@ -68,7 +68,7 @@ namespace HM_19MB_Demo
                 MiniSoftware.MiniWord.SaveAsByTemplate(
                     dialog.FileName, templatePath, values));
 
-            ToastNotification.ShowSuccess($"ÄÃ£ xuáº¥t: {Path.GetFileName(dialog.FileName)}");
+            ToastNotification.ShowSuccess($"Đã xuất: {Path.GetFileName(dialog.FileName)}");
         }
 
         public static async Task ExportExcelAsync(
@@ -88,7 +88,7 @@ namespace HM_19MB_Demo
 
             await Task.Run(() => CreateExcelFromTemplate(dialog.FileName, meta, calibRows, kenhCount));
 
-            ToastNotification.ShowSuccess($"ÄÃ£ xuáº¥t: {Path.GetFileName(dialog.FileName)}");
+            ToastNotification.ShowSuccess($"Đã xuất: {Path.GetFileName(dialog.FileName)}");
         }
 
         private static void CreateExcelFromTemplate(
@@ -97,7 +97,7 @@ namespace HM_19MB_Demo
             List<CalibrationResultRow> calibRows,
             int kenhCount)
         {
-            // XÃ¡c Ä‘á»‹nh template dá»±a trÃªn sá»‘ kÃªnh
+            // Xác định template dựa trên số kênh
             int channelCount = GetExportChannelCount(calibRows, kenhCount);
             string sheetName = channelCount <= 3 ? "3 Pos" : "5 Pos";
             
@@ -106,45 +106,45 @@ namespace HM_19MB_Demo
                 "Resources", "Templates", "Tu_nhiet_V3.xlsx");
 
             if (!File.Exists(templatePath))
-                throw new FileNotFoundException($"KhÃ´ng tÃ¬m tháº¥y template: {templatePath}");
+                throw new FileNotFoundException($"Không tìm thấy template: {templatePath}");
 
-            // Copy template sang file Ä‘Ã­ch
+            // Copy template sang file đích
             File.Copy(templatePath, filePath, overwrite: true);
 
-            // Má»Ÿ file vÃ  chá»‰nh sá»­a
+            // Mở file và chỉnh sửa
             using var doc = SpreadsheetDocument.Open(filePath, isEditable: true);
             var workbookPart = doc.WorkbookPart;
             if (workbookPart == null) 
-                throw new InvalidOperationException("Workbook part khÃ´ng tá»“n táº¡i");
+                throw new InvalidOperationException("Workbook part không tồn tại");
 
-            // TÃ¬m sheet phÃ¹ há»£p
+            // Tìm sheet phù hợp
             var sheet = workbookPart.Workbook.Descendants<Sheet>()
                 .FirstOrDefault(s => s.Name == sheetName);
             
             if (sheet == null || sheet.Id == null)
-                throw new InvalidOperationException($"KhÃ´ng tÃ¬m tháº¥y sheet '{sheetName}' trong template");
+                throw new InvalidOperationException($"Không tìm thấy sheet '{sheetName}' trong template");
 
             var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id);
             var worksheet = worksheetPart.Worksheet;
             var sheetData = worksheet.GetFirstChild<SheetData>();
             
             if (sheetData == null)
-                throw new InvalidOperationException("SheetData khÃ´ng tá»“n táº¡i");
+                throw new InvalidOperationException("SheetData không tồn tại");
 
-            // Chá»‰ xÃ³a dá»¯ liá»‡u trong vÃ¹ng báº£ng bÃªn pháº£i, khÃ´ng xÃ³a nguyÃªn dÃ²ng vÃ¬
-            // cÃ¡c dÃ²ng 6-20 cÃ²n chá»©a pháº§n thÃ´ng tin biÃªn báº£n á»Ÿ cá»™t A:I.
+            // Chỉ xóa dữ liệu trong vùng bảng bên phải, không xóa nguyên dòng vì
+            // các dòng 6-20 còn chứa phần thông tin biên bản ở cột A:I.
             ClearTemplateTableArea(worksheetPart, calibRows, channelCount);
 
-            // Báº£ng máº«u báº¯t Ä‘áº§u tá»« J4: J=TT, K=Ä‘iá»ƒm kiá»ƒm tra, L:N/L:P=cÃ¡c vá»‹ trÃ­.
+            // Bảng mẫu bắt đầu từ J4: J=TT, K=điểm kiểm tra, L:N/L:P=các vị trí.
             InsertDynamicDataTable(worksheetPart, calibRows, channelCount, startRow: 4);
             InsertSummaryTable(worksheetPart, calibRows, channelCount, startRow: 5);
             InsertUncertaintyBudget(worksheetPart, calibRows, channelCount, startRow: 5);
 
-            // Äiá»n metadata sau cÃ¹ng Ä‘á»ƒ Ä‘áº£m báº£o pháº§n biÃªn báº£n luÃ´n giá»¯ Ä‘Ãºng dá»¯ liá»‡u.
-            FillMetadata(worksheetPart, meta, sheetName);
+            // Điền metadata sau cùng để đảm bảo phần biên bản luôn giữ đúng dữ liệu.
+            FillMetadata(worksheetPart, meta, calibRows, sheetName);
 
-            // CÃ¡c cÃ´ng thá»©c trong vÃ¹ng báº£ng máº«u Ä‘Ã£ bá»‹ thay báº±ng dá»¯ liá»‡u má»›i.
-            // XÃ³a calc chain cÅ© Ä‘á»ƒ Excel khÃ´ng recover workbook vÃ¬ tham chiáº¿u cÃ´ng thá»©c Ä‘Ã£ lá»—i thá»i.
+            // Các công thức trong vùng bảng mẫu đã bị thay bằng dữ liệu mới.
+            // Xóa calc chain cũ để Excel không recover workbook vì tham chiếu công thức đã lỗi thời.
             if (workbookPart.CalculationChainPart != null)
                 workbookPart.DeletePart(workbookPart.CalculationChainPart);
 
@@ -162,17 +162,22 @@ namespace HM_19MB_Demo
             workbookPart.Workbook.Save();
         }
 
-        private static void FillMetadata(WorksheetPart worksheetPart, SessionMetadata meta, string sheetName)
+        private static void FillMetadata(
+            WorksheetPart worksheetPart,
+            SessionMetadata meta,
+            List<CalibrationResultRow> calibRows,
+            string sheetName)
         {
-            // Äiá»n thÃ´ng tin vÃ o cÃ¡c Ã´ cá»‘ Ä‘á»‹nh theo template
-            // Vá»‹ trÃ­ cÃ¡c Ã´ cÃ³ thá»ƒ khÃ¡c nhau giá»¯a sheet 3 Pos vÃ  5 Pos
+            // Điền thông tin vào các ô cố định theo template
+            // Vị trí các ô có thể khác nhau giữa sheet 3 Pos và 5 Pos
             
             SetCellValue(worksheetPart, "C6", meta.TenThietBi);
             SetCellValue(worksheetPart, "H7", meta.SoHieu);
             SetCellValue(worksheetPart, "C8", meta.NoiSanXuat);
             SetCellValue(worksheetPart, "H8", meta.KyHieu);
             SetCellValue(worksheetPart, "C9", meta.DacTinhKyThuat);
-            SetCellValue(worksheetPart, "C10", $"-Nhiá»‡t Ä‘á»™ lÃ m viá»‡c: {meta.NhietDoLamViec}");
+            SetCellValue(worksheetPart, "C10",meta.NhietDoLamViec);
+            SetCellValue(worksheetPart, "C11", FormatResolutionA(calibRows));
             SetCellValue(worksheetPart, "C13", meta.DonViSuDung);
             SetCellValue(worksheetPart, "D12", meta.PhuongPhap);
             SetCellValue(worksheetPart, "C16", meta.NhietDoMoiTruong);
@@ -180,6 +185,31 @@ namespace HM_19MB_Demo
             SetCellValue(worksheetPart, "C17", meta.ThietBiChuan);
             SetCellValue(worksheetPart, "C19", meta.NgayHieuChuan.ToString("dd-MM-yyyy"));
             SetCellValue(worksheetPart, "H19", meta.SoTem);
+        }
+
+        private static string FormatResolutionA(List<CalibrationResultRow> calibRows)
+        {
+            var values = new List<double>();
+
+            foreach (var row in calibRows)
+            {
+                if (!HasFiniteValue(row.DoPhanGiai))
+                    continue;
+
+                double value = NormalizeNearZero(row.DoPhanGiai);
+                if (!values.Any(existing => Math.Abs(existing - value) < ZeroTolerance))
+                    values.Add(value);
+            }
+
+            if (values.Count == 0)
+                return string.Empty;
+
+            return string.Join("; ", values.Select(FormatMetadataNumber));
+        }
+
+        private static string FormatMetadataNumber(double value)
+        {
+            return NormalizeNearZero(value).ToString("0.#####");
         }
 
         private static void ClearTemplateTableArea(
@@ -249,7 +279,7 @@ namespace HM_19MB_Demo
                     rawIndex++;
                 }
 
-                SetCellValue(worksheetPart, $"J{currentRow}", "Trung bÃ¬nh");
+                SetCellValue(worksheetPart, $"J{currentRow}", "Trung bình");
                 SetCellNumber(worksheetPart, $"K{currentRow}", calibRow.GiaTriDat);
 
                 for (int ch = 0; ch < channelCount && ch < channelCols.Length; ch++)
@@ -546,9 +576,9 @@ namespace HM_19MB_Demo
                 int stt = row.STT > 0 ? row.STT : i + 1;
 
                 SetCellValue(worksheetPart, $"{columns[0]}{rowIndex}", $"u{stt}");
-                SetCellValue(worksheetPart, $"{columns[1]}{rowIndex}", $"ÄKÄBÄ Ä‘iá»ƒm {row.GiaTriDat:F1} Â°C");
+                SetCellValue(worksheetPart, $"{columns[1]}{rowIndex}", $"ĐKĐBĐ điểm {row.GiaTriDat:F1} °C");
                 SetCellNumber(worksheetPart, $"{columns[2]}{rowIndex}", row.DoKhongDamBao);
-                SetCellValue(worksheetPart, $"{columns[3]}{rowIndex}", "Â°C");
+                SetCellValue(worksheetPart, $"{columns[3]}{rowIndex}", "°C");
                 SetCellNumber(worksheetPart, $"{columns[4]}{rowIndex}", 1);
                 SetCellNumber(worksheetPart, $"{columns[5]}{rowIndex}", 1);
                 SetCellNumber(worksheetPart, $"{columns[6]}{rowIndex}", row.DoKhongDamBao);
@@ -772,35 +802,35 @@ namespace HM_19MB_Demo
             int totalColumns)
         {
             WriteMergedText(sheetData, mergeCells, 1, 1, 1, (uint)totalColumns,
-                "BIÃŠN Báº¢N HIá»†U CHUáº¨N THIáº¾T Bá»Š", Styles.Title);
+                "BIÊN BẢN HIỆU CHUẨN THIẾT BỊ", Styles.Title);
             WriteMergedText(sheetData, mergeCells, 2, 1, 2, (uint)totalColumns,
-                $"Báº£ng káº¿t quáº£ tá»± Ä‘á»™ng - {DateTime.Now:dd/MM/yyyy HH:mm}", Styles.Subtitle);
+                $"Bảng kết quả tự động - {DateTime.Now:dd/MM/yyyy HH:mm}", Styles.Subtitle);
 
             WriteMergedText(sheetData, mergeCells, 4, 1, 4, (uint)totalColumns,
-                "THÃ”NG TIN THIáº¾T Bá»Š", Styles.Section);
+                "THÔNG TIN THIẾT BỊ", Styles.Section);
 
             WriteMetadataRow(sheetData, mergeCells, 5, totalColumns,
-                "TÃªn thiáº¿t bá»‹", meta.TenThietBi,
-                "Sá»‘ hiá»‡u", meta.SoHieu);
+                "Tên thiết bị", meta.TenThietBi,
+                "Số hiệu", meta.SoHieu);
             WriteMetadataRow(sheetData, mergeCells, 6, totalColumns,
-                "KÃ½ hiá»‡u", meta.KyHieu,
-                "Sá»‘ tem", meta.SoTem);
+                "Ký hiệu", meta.KyHieu,
+                "Số tem", meta.SoTem);
             WriteMetadataRow(sheetData, mergeCells, 7, totalColumns,
-                "NÆ¡i sáº£n xuáº¥t", meta.NoiSanXuat,
-                "Äáº·c tÃ­nh ká»¹ thuáº­t", meta.DacTinhKyThuat);
+                "Nơi sản xuất", meta.NoiSanXuat,
+                "Đặc tính kỹ thuật", meta.DacTinhKyThuat);
             WriteMetadataRow(sheetData, mergeCells, 8, totalColumns,
-                "ÄÆ¡n vá»‹ sá»­ dá»¥ng", meta.DonViSuDung,
-                "PhÆ°Æ¡ng phÃ¡p", meta.PhuongPhap);
+                "Đơn vị sử dụng", meta.DonViSuDung,
+                "Phương pháp", meta.PhuongPhap);
             WriteMetadataRow(sheetData, mergeCells, 9, totalColumns,
-                "Nhiá»‡t Ä‘á»™ mÃ´i trÆ°á»ng", meta.NhietDoMoiTruong,
-                "Äá»™ áº©m tÆ°Æ¡ng Ä‘á»‘i", meta.DoAmTuongDoi);
+                "Nhiệt độ môi trường", meta.NhietDoMoiTruong,
+                "Độ ẩm tương đối", meta.DoAmTuongDoi);
             WriteMetadataRow(sheetData, mergeCells, 10, totalColumns,
-                "Thiáº¿t bá»‹ chuáº©n", meta.ThietBiChuan,
-                "NgÃ y hiá»‡u chuáº©n", meta.NgayHieuChuan.ToString("dd/MM/yyyy"));
+                "Thiết bị chuẩn", meta.ThietBiChuan,
+                "Ngày hiệu chuẩn", meta.NgayHieuChuan.ToString("dd/MM/yyyy"));
 
             uint rowIndex = 12;
             WriteMergedText(sheetData, mergeCells, rowIndex, 1, rowIndex, (uint)totalColumns,
-                "Káº¾T QUáº¢ ÄO CHI TIáº¾T", Styles.Section);
+                "KẾT QUẢ ĐO CHI TIẾT", Styles.Section);
 
             rowIndex++;
             WriteDetailHeader(sheetData, rowIndex, channelCount);
@@ -850,7 +880,7 @@ namespace HM_19MB_Demo
 
             rowIndex += 1;
             WriteMergedText(sheetData, mergeCells, rowIndex, 1, rowIndex, (uint)totalColumns,
-                "Tá»”NG Há»¢P Káº¾T QUáº¢ HIá»†U CHUáº¨N", Styles.Section);
+                "TỔNG HỢP KẾT QUẢ HIỆU CHUẨN", Styles.Section);
 
             rowIndex++;
             WriteSummaryHeader(sheetData, rowIndex);
@@ -896,19 +926,19 @@ namespace HM_19MB_Demo
         private static void WriteDetailHeader(SheetData sheetData, uint rowIndex, int channelCount)
         {
             WriteText(sheetData, rowIndex, 1, "STT", Styles.Header);
-            WriteText(sheetData, rowIndex, 2, "Äiá»ƒm Ä‘áº·t (Â°C)", Styles.Header);
-            WriteText(sheetData, rowIndex, 3, "Láº§n Ä‘o", Styles.Header);
-            WriteText(sheetData, rowIndex, 4, "Chá»‰ thá»‹ UUT (Â°C)", Styles.Header);
+            WriteText(sheetData, rowIndex, 2, "Điểm đặt (°C)", Styles.Header);
+            WriteText(sheetData, rowIndex, 3, "Lần đo", Styles.Header);
+            WriteText(sheetData, rowIndex, 4, "Chỉ thị UUT (°C)", Styles.Header);
 
             for (int channel = 1; channel <= channelCount; channel++)
-                WriteText(sheetData, rowIndex, (uint)(4 + channel), $"KÃªnh {channel} (Â°C)", Styles.Header);
+                WriteText(sheetData, rowIndex, (uint)(4 + channel), $"Kênh {channel} (°C)", Styles.Header);
 
             uint summaryStartColumn = (uint)(5 + channelCount);
-            WriteText(sheetData, rowIndex, summaryStartColumn, "Trung bÃ¬nh (Â°C)", Styles.Header);
-            WriteText(sheetData, rowIndex, summaryStartColumn + 1, "Sá»‘ hiá»‡u chá»‰nh (Â°C)", Styles.Header);
-            WriteText(sheetData, rowIndex, summaryStartColumn + 2, "Äá»™ á»•n Ä‘á»‹nh (Â°C)", Styles.Header);
-            WriteText(sheetData, rowIndex, summaryStartColumn + 3, "Äá»™ Ä‘á»“ng Ä‘á»u (Â°C)", Styles.Header);
-            WriteText(sheetData, rowIndex, summaryStartColumn + 4, "U (Â°C)", Styles.Header);
+            WriteText(sheetData, rowIndex, summaryStartColumn, "Trung bình (°C)", Styles.Header);
+            WriteText(sheetData, rowIndex, summaryStartColumn + 1, "Số hiệu chỉnh (°C)", Styles.Header);
+            WriteText(sheetData, rowIndex, summaryStartColumn + 2, "Độ ổn định (°C)", Styles.Header);
+            WriteText(sheetData, rowIndex, summaryStartColumn + 3, "Độ đồng đều (°C)", Styles.Header);
+            WriteText(sheetData, rowIndex, summaryStartColumn + 4, "U (°C)", Styles.Header);
         }
 
         private static void WriteSummaryHeader(SheetData sheetData, uint rowIndex)
@@ -916,13 +946,13 @@ namespace HM_19MB_Demo
             string[] headers =
             {
                 "STT",
-                "GiÃ¡ trá»‹ Ä‘áº·t (Â°C)",
-                "GiÃ¡ trá»‹ chá»‰ thá»‹ (Â°C)",
-                "GiÃ¡ trá»‹ trung bÃ¬nh (Â°C)",
-                "Sá»‘ hiá»‡u chá»‰nh (Â°C)",
-                "Äá»™ á»•n Ä‘á»‹nh (Â°C)",
-                "Äá»™ Ä‘á»“ng Ä‘á»u (Â°C)",
-                "ÄKÄBÄ (Â°C)"
+                "Giá trị đặt (°C)",
+                "Giá trị chỉ thị (°C)",
+                "Giá trị trung bình (°C)",
+                "Số hiệu chỉnh (°C)",
+                "Độ ổn định (°C)",
+                "Độ đồng đều (°C)",
+                "ĐKĐBĐ (°C)"
             };
 
             for (int i = 0; i < headers.Length; i++)
@@ -1416,7 +1446,7 @@ namespace HM_19MB_Demo
             string sheetName = kenhCount <= 3 ? "3 Pos" : "5 Pos";
             if (kenhCount > 5)
                 AppLogger.Warning("ExcelExporter",
-                    $"kenhCount={kenhCount} > 5, dÃ¹ng sheet '5 Pos', chá»‰ ghi 5 kÃªnh Ä‘áº§u.");
+                    $"kenhCount={kenhCount} > 5, dùng sheet '5 Pos', chỉ ghi 5 kênh đầu.");
 
             var sheet = workbookPart.Workbook.Descendants<Sheet>().FirstOrDefault(s => s.Name == sheetName);
             if (sheet == null || sheet.Id == null) return;

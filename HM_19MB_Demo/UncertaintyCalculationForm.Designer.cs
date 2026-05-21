@@ -140,7 +140,7 @@ namespace HM_19MB_Demo
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 160F));
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 180F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
             inputLayout.Size = new Size(1183, 781);
             inputLayout.TabIndex = 0;
