@@ -51,6 +51,28 @@ namespace HM_19MB_Demo
             gridData = new DataGridView();
             resultPanel = new Panel();
             resultCards = new TableLayoutPanel();
+            grpMeasurementCharacteristics = new GroupBox();
+            measurementCharacteristicsLayout = new TableLayoutPanel();
+            lblDtTitle = new Label();
+            lblR_Dt = new Label();
+            lblOdTitle = new Label();
+            lblR_Od = new Label();
+            lblDdTitle = new Label();
+            lblR_Dd = new Label();
+            grpUncertaintyComponents = new GroupBox();
+            uncertaintyComponentsLayout = new TableLayoutPanel();
+            lblUch1Title = new Label();
+            lblR_Uch1 = new Label();
+            lblUch2Title = new Label();
+            lblR_Uch2 = new Label();
+            lblUchTitle = new Label();
+            lblR_Uch = new Label();
+            lblUbkTitle = new Label();
+            lblR_Ubk = new Label();
+            grpFinalResult = new GroupBox();
+            finalResultLayout = new TableLayoutPanel();
+            lblUTitle = new Label();
+            lblR_U = new Label();
             bottomBar = new FlowLayoutPanel();
             btnCalculateAndAdd = new Button();
             lblStatus = new Label();
@@ -67,6 +89,13 @@ namespace HM_19MB_Demo
             gridPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)gridData).BeginInit();
             resultPanel.SuspendLayout();
+            resultCards.SuspendLayout();
+            grpMeasurementCharacteristics.SuspendLayout();
+            measurementCharacteristicsLayout.SuspendLayout();
+            grpUncertaintyComponents.SuspendLayout();
+            uncertaintyComponentsLayout.SuspendLayout();
+            grpFinalResult.SuspendLayout();
+            finalResultLayout.SuspendLayout();
             bottomBar.SuspendLayout();
             SuspendLayout();
             // 
@@ -111,7 +140,7 @@ namespace HM_19MB_Demo
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 110F));
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 160F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
             inputLayout.Size = new Size(1183, 781);
             inputLayout.TabIndex = 0;
@@ -389,7 +418,7 @@ namespace HM_19MB_Demo
             gridPanel.Margin = new Padding(0);
             gridPanel.Name = "gridPanel";
             gridPanel.Padding = new Padding(8);
-            gridPanel.Size = new Size(1183, 515);
+            gridPanel.Size = new Size(1183, 465);
             gridPanel.TabIndex = 3;
             // 
             // gridData
@@ -404,35 +433,330 @@ namespace HM_19MB_Demo
             gridData.Name = "gridData";
             gridData.RowHeadersVisible = false;
             gridData.RowHeadersWidth = 51;
-            gridData.Size = new Size(1167, 499);
+            gridData.Size = new Size(1167, 449);
             gridData.TabIndex = 0;
             // 
             // resultPanel
             // 
             resultPanel.Controls.Add(resultCards);
             resultPanel.Dock = DockStyle.Fill;
-            resultPanel.Location = new Point(0, 631);
+            resultPanel.Location = new Point(0, 581);
             resultPanel.Margin = new Padding(0);
             resultPanel.Name = "resultPanel";
             resultPanel.Padding = new Padding(8, 4, 8, 4);
-            resultPanel.Size = new Size(1183, 110);
+            resultPanel.Size = new Size(1183, 160);
             resultPanel.TabIndex = 4;
             // 
             // resultCards
             // 
-            resultCards.ColumnCount = 4;
-            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            resultCards.ColumnCount = 3;
+            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30F));
+            resultCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            resultCards.Controls.Add(grpMeasurementCharacteristics, 0, 0);
+            resultCards.Controls.Add(grpUncertaintyComponents, 1, 0);
+            resultCards.Controls.Add(grpFinalResult, 2, 0);
             resultCards.Dock = DockStyle.Fill;
             resultCards.Location = new Point(8, 4);
             resultCards.Name = "resultCards";
-            resultCards.RowCount = 2;
-            resultCards.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            resultCards.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            resultCards.Size = new Size(1167, 102);
+            resultCards.RowCount = 1;
+            resultCards.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            resultCards.Size = new Size(1167, 152);
             resultCards.TabIndex = 0;
+            // 
+            // grpMeasurementCharacteristics
+            // 
+            grpMeasurementCharacteristics.Controls.Add(measurementCharacteristicsLayout);
+            grpMeasurementCharacteristics.Dock = DockStyle.Fill;
+            grpMeasurementCharacteristics.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            grpMeasurementCharacteristics.ForeColor = Color.FromArgb(60, 60, 60);
+            grpMeasurementCharacteristics.Location = new Point(3, 3);
+            grpMeasurementCharacteristics.Name = "grpMeasurementCharacteristics";
+            grpMeasurementCharacteristics.Padding = new Padding(6, 14, 6, 4);
+            grpMeasurementCharacteristics.Size = new Size(344, 146);
+            grpMeasurementCharacteristics.TabIndex = 0;
+            grpMeasurementCharacteristics.TabStop = false;
+            grpMeasurementCharacteristics.Text = "Đặc trưng điểm đo";
+            // 
+            // measurementCharacteristicsLayout
+            // 
+            measurementCharacteristicsLayout.ColumnCount = 2;
+            measurementCharacteristicsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 62F));
+            measurementCharacteristicsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38F));
+            measurementCharacteristicsLayout.Controls.Add(lblDtTitle, 0, 0);
+            measurementCharacteristicsLayout.Controls.Add(lblR_Dt, 1, 0);
+            measurementCharacteristicsLayout.Controls.Add(lblOdTitle, 0, 1);
+            measurementCharacteristicsLayout.Controls.Add(lblR_Od, 1, 1);
+            measurementCharacteristicsLayout.Controls.Add(lblDdTitle, 0, 2);
+            measurementCharacteristicsLayout.Controls.Add(lblR_Dd, 1, 2);
+            measurementCharacteristicsLayout.Dock = DockStyle.Fill;
+            measurementCharacteristicsLayout.Location = new Point(6, 33);
+            measurementCharacteristicsLayout.Name = "measurementCharacteristicsLayout";
+            measurementCharacteristicsLayout.RowCount = 3;
+            measurementCharacteristicsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
+            measurementCharacteristicsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
+            measurementCharacteristicsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3333321F));
+            measurementCharacteristicsLayout.Size = new Size(332, 109);
+            measurementCharacteristicsLayout.TabIndex = 0;
+            // 
+            // lblDtTitle
+            // 
+            lblDtTitle.Dock = DockStyle.Fill;
+            lblDtTitle.Font = new Font("Segoe UI", 8.5F);
+            lblDtTitle.ForeColor = Color.DimGray;
+            lblDtTitle.Location = new Point(3, 0);
+            lblDtTitle.Name = "lblDtTitle";
+            lblDtTitle.Size = new Size(199, 36);
+            lblDtTitle.TabIndex = 0;
+            lblDtTitle.Text = "Số hiệu chính Δt";
+            lblDtTitle.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblR_Dt
+            // 
+            lblR_Dt.Dock = DockStyle.Fill;
+            lblR_Dt.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblR_Dt.ForeColor = Color.Black;
+            lblR_Dt.Location = new Point(208, 0);
+            lblR_Dt.Name = "lblR_Dt";
+            lblR_Dt.Size = new Size(121, 36);
+            lblR_Dt.TabIndex = 1;
+            lblR_Dt.Text = "—";
+            lblR_Dt.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // lblOdTitle
+            // 
+            lblOdTitle.Dock = DockStyle.Fill;
+            lblOdTitle.Font = new Font("Segoe UI", 8.5F);
+            lblOdTitle.ForeColor = Color.DimGray;
+            lblOdTitle.Location = new Point(3, 36);
+            lblOdTitle.Name = "lblOdTitle";
+            lblOdTitle.Size = new Size(199, 36);
+            lblOdTitle.TabIndex = 2;
+            lblOdTitle.Text = "Độ ổn định";
+            lblOdTitle.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblR_Od
+            // 
+            lblR_Od.Dock = DockStyle.Fill;
+            lblR_Od.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblR_Od.ForeColor = Color.Black;
+            lblR_Od.Location = new Point(208, 36);
+            lblR_Od.Name = "lblR_Od";
+            lblR_Od.Size = new Size(121, 36);
+            lblR_Od.TabIndex = 3;
+            lblR_Od.Text = "—";
+            lblR_Od.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // lblDdTitle
+            // 
+            lblDdTitle.Dock = DockStyle.Fill;
+            lblDdTitle.Font = new Font("Segoe UI", 8.5F);
+            lblDdTitle.ForeColor = Color.DimGray;
+            lblDdTitle.Location = new Point(3, 72);
+            lblDdTitle.Name = "lblDdTitle";
+            lblDdTitle.Size = new Size(199, 37);
+            lblDdTitle.TabIndex = 4;
+            lblDdTitle.Text = "Độ đồng đều";
+            lblDdTitle.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblR_Dd
+            // 
+            lblR_Dd.Dock = DockStyle.Fill;
+            lblR_Dd.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblR_Dd.ForeColor = Color.Black;
+            lblR_Dd.Location = new Point(208, 72);
+            lblR_Dd.Name = "lblR_Dd";
+            lblR_Dd.Size = new Size(121, 37);
+            lblR_Dd.TabIndex = 5;
+            lblR_Dd.Text = "—";
+            lblR_Dd.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // grpUncertaintyComponents
+            // 
+            grpUncertaintyComponents.Controls.Add(uncertaintyComponentsLayout);
+            grpUncertaintyComponents.Dock = DockStyle.Fill;
+            grpUncertaintyComponents.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            grpUncertaintyComponents.ForeColor = Color.FromArgb(60, 60, 60);
+            grpUncertaintyComponents.Location = new Point(353, 3);
+            grpUncertaintyComponents.Name = "grpUncertaintyComponents";
+            grpUncertaintyComponents.Padding = new Padding(6, 14, 6, 4);
+            grpUncertaintyComponents.Size = new Size(344, 146);
+            grpUncertaintyComponents.TabIndex = 1;
+            grpUncertaintyComponents.TabStop = false;
+            grpUncertaintyComponents.Text = "Thành phần độ không đảm bảo";
+            // 
+            // uncertaintyComponentsLayout
+            // 
+            uncertaintyComponentsLayout.ColumnCount = 2;
+            uncertaintyComponentsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 62F));
+            uncertaintyComponentsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38F));
+            uncertaintyComponentsLayout.Controls.Add(lblUch1Title, 0, 0);
+            uncertaintyComponentsLayout.Controls.Add(lblR_Uch1, 1, 0);
+            uncertaintyComponentsLayout.Controls.Add(lblUch2Title, 0, 1);
+            uncertaintyComponentsLayout.Controls.Add(lblR_Uch2, 1, 1);
+            uncertaintyComponentsLayout.Controls.Add(lblUchTitle, 0, 2);
+            uncertaintyComponentsLayout.Controls.Add(lblR_Uch, 1, 2);
+            uncertaintyComponentsLayout.Controls.Add(lblUbkTitle, 0, 3);
+            uncertaintyComponentsLayout.Controls.Add(lblR_Ubk, 1, 3);
+            uncertaintyComponentsLayout.Dock = DockStyle.Fill;
+            uncertaintyComponentsLayout.Location = new Point(6, 33);
+            uncertaintyComponentsLayout.Name = "uncertaintyComponentsLayout";
+            uncertaintyComponentsLayout.RowCount = 4;
+            uncertaintyComponentsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            uncertaintyComponentsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            uncertaintyComponentsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            uncertaintyComponentsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            uncertaintyComponentsLayout.Size = new Size(332, 109);
+            uncertaintyComponentsLayout.TabIndex = 0;
+            // 
+            // lblUch1Title
+            // 
+            lblUch1Title.Dock = DockStyle.Fill;
+            lblUch1Title.Font = new Font("Segoe UI", 8.5F);
+            lblUch1Title.ForeColor = Color.DimGray;
+            lblUch1Title.Location = new Point(3, 0);
+            lblUch1Title.Name = "lblUch1Title";
+            lblUch1Title.Size = new Size(199, 27);
+            lblUch1Title.TabIndex = 0;
+            lblUch1Title.Text = "Tản mát của chuẩn (uch_1)";
+            lblUch1Title.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblR_Uch1
+            // 
+            lblR_Uch1.Dock = DockStyle.Fill;
+            lblR_Uch1.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblR_Uch1.ForeColor = Color.Black;
+            lblR_Uch1.Location = new Point(208, 0);
+            lblR_Uch1.Name = "lblR_Uch1";
+            lblR_Uch1.Size = new Size(121, 27);
+            lblR_Uch1.TabIndex = 1;
+            lblR_Uch1.Text = "—";
+            lblR_Uch1.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // lblUch2Title
+            // 
+            lblUch2Title.Dock = DockStyle.Fill;
+            lblUch2Title.Font = new Font("Segoe UI", 8.5F);
+            lblUch2Title.ForeColor = Color.DimGray;
+            lblUch2Title.Location = new Point(3, 27);
+            lblUch2Title.Name = "lblUch2Title";
+            lblUch2Title.Size = new Size(199, 27);
+            lblUch2Title.TabIndex = 2;
+            lblUch2Title.Text = "ĐKĐBĐ chuẩn (uch_2)";
+            lblUch2Title.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblR_Uch2
+            // 
+            lblR_Uch2.Dock = DockStyle.Fill;
+            lblR_Uch2.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblR_Uch2.ForeColor = Color.Black;
+            lblR_Uch2.Location = new Point(208, 27);
+            lblR_Uch2.Name = "lblR_Uch2";
+            lblR_Uch2.Size = new Size(121, 27);
+            lblR_Uch2.TabIndex = 3;
+            lblR_Uch2.Text = "—";
+            lblR_Uch2.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // lblUchTitle
+            // 
+            lblUchTitle.Dock = DockStyle.Fill;
+            lblUchTitle.Font = new Font("Segoe UI", 8.5F);
+            lblUchTitle.ForeColor = Color.DimGray;
+            lblUchTitle.Location = new Point(3, 54);
+            lblUchTitle.Name = "lblUchTitle";
+            lblUchTitle.Size = new Size(199, 27);
+            lblUchTitle.TabIndex = 4;
+            lblUchTitle.Text = "Liên hợp chuẩn (uch)";
+            lblUchTitle.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblR_Uch
+            // 
+            lblR_Uch.Dock = DockStyle.Fill;
+            lblR_Uch.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblR_Uch.ForeColor = Color.Black;
+            lblR_Uch.Location = new Point(208, 54);
+            lblR_Uch.Name = "lblR_Uch";
+            lblR_Uch.Size = new Size(121, 27);
+            lblR_Uch.TabIndex = 5;
+            lblR_Uch.Text = "—";
+            lblR_Uch.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // lblUbkTitle
+            // 
+            lblUbkTitle.Dock = DockStyle.Fill;
+            lblUbkTitle.Font = new Font("Segoe UI", 8.5F);
+            lblUbkTitle.ForeColor = Color.DimGray;
+            lblUbkTitle.Location = new Point(3, 81);
+            lblUbkTitle.Name = "lblUbkTitle";
+            lblUbkTitle.Size = new Size(199, 28);
+            lblUbkTitle.TabIndex = 6;
+            lblUbkTitle.Text = "Liên hợp tủ (u_bk)";
+            lblUbkTitle.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblR_Ubk
+            // 
+            lblR_Ubk.Dock = DockStyle.Fill;
+            lblR_Ubk.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblR_Ubk.ForeColor = Color.Black;
+            lblR_Ubk.Location = new Point(208, 81);
+            lblR_Ubk.Name = "lblR_Ubk";
+            lblR_Ubk.Size = new Size(121, 28);
+            lblR_Ubk.TabIndex = 7;
+            lblR_Ubk.Text = "—";
+            lblR_Ubk.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // grpFinalResult
+            // 
+            grpFinalResult.Controls.Add(finalResultLayout);
+            grpFinalResult.Dock = DockStyle.Fill;
+            grpFinalResult.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            grpFinalResult.ForeColor = Color.FromArgb(60, 60, 60);
+            grpFinalResult.Location = new Point(703, 3);
+            grpFinalResult.Name = "grpFinalResult";
+            grpFinalResult.Padding = new Padding(6, 14, 6, 4);
+            grpFinalResult.Size = new Size(461, 146);
+            grpFinalResult.TabIndex = 2;
+            grpFinalResult.TabStop = false;
+            grpFinalResult.Text = "Kết quả";
+            // 
+            // finalResultLayout
+            // 
+            finalResultLayout.ColumnCount = 2;
+            finalResultLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 62F));
+            finalResultLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38F));
+            finalResultLayout.Controls.Add(lblUTitle, 0, 0);
+            finalResultLayout.Controls.Add(lblR_U, 1, 0);
+            finalResultLayout.Dock = DockStyle.Fill;
+            finalResultLayout.Location = new Point(6, 33);
+            finalResultLayout.Name = "finalResultLayout";
+            finalResultLayout.RowCount = 1;
+            finalResultLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            finalResultLayout.Size = new Size(449, 109);
+            finalResultLayout.TabIndex = 0;
+            // 
+            // lblUTitle
+            // 
+            lblUTitle.Dock = DockStyle.Fill;
+            lblUTitle.Font = new Font("Segoe UI", 8.5F);
+            lblUTitle.ForeColor = Color.DimGray;
+            lblUTitle.Location = new Point(3, 0);
+            lblUTitle.Name = "lblUTitle";
+            lblUTitle.Size = new Size(272, 109);
+            lblUTitle.TabIndex = 0;
+            lblUTitle.Text = "U  (k=2, P=95%)";
+            lblUTitle.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // lblR_U
+            // 
+            lblR_U.Dock = DockStyle.Fill;
+            lblR_U.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            lblR_U.ForeColor = Color.DarkGreen;
+            lblR_U.Location = new Point(281, 0);
+            lblR_U.Name = "lblR_U";
+            lblR_U.Size = new Size(165, 109);
+            lblR_U.TabIndex = 1;
+            lblR_U.Text = "—";
+            lblR_U.TextAlign = ContentAlignment.MiddleRight;
             // 
             // bottomBar
             // 
@@ -513,6 +837,13 @@ namespace HM_19MB_Demo
             gridPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)gridData).EndInit();
             resultPanel.ResumeLayout(false);
+            resultCards.ResumeLayout(false);
+            grpMeasurementCharacteristics.ResumeLayout(false);
+            measurementCharacteristicsLayout.ResumeLayout(false);
+            grpUncertaintyComponents.ResumeLayout(false);
+            uncertaintyComponentsLayout.ResumeLayout(false);
+            grpFinalResult.ResumeLayout(false);
+            finalResultLayout.ResumeLayout(false);
             bottomBar.ResumeLayout(false);
             bottomBar.PerformLayout();
             ResumeLayout(false);
@@ -556,6 +887,20 @@ namespace HM_19MB_Demo
         private DataGridView gridData;
         private Panel resultPanel;
         private TableLayoutPanel resultCards;
+        private GroupBox grpMeasurementCharacteristics;
+        private TableLayoutPanel measurementCharacteristicsLayout;
+        private Label lblDtTitle;
+        private Label lblOdTitle;
+        private Label lblDdTitle;
+        private GroupBox grpUncertaintyComponents;
+        private TableLayoutPanel uncertaintyComponentsLayout;
+        private Label lblUch1Title;
+        private Label lblUch2Title;
+        private Label lblUchTitle;
+        private Label lblUbkTitle;
+        private GroupBox grpFinalResult;
+        private TableLayoutPanel finalResultLayout;
+        private Label lblUTitle;
         private FlowLayoutPanel bottomBar;
         private Button btnCalculateAndAdd;
         private Button btnAddToTable;

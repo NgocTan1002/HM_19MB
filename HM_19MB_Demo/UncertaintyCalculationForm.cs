@@ -31,6 +31,11 @@ namespace HM_19MB_Demo
         private DataGridView _gridResults = null!;
         private DataGridView _gridBudget = null!;
 
+        private int ChannelColumn(int channelIndex) => channelIndex + 1;
+        private int Ttn1Column => _j + 1;
+        private int Ttn2Column => _j + 2;
+        private int TtnMeanColumn => _j + 3;
+
         public UncertaintyCalculationForm()
             : this(0, null)
         {
@@ -275,8 +280,8 @@ namespace HM_19MB_Demo
                     row.Cells[0].Value = $"Lần {i + 1}";
                     for (int col = 1; col < gridData.Columns.Count; col++)
                         row.Cells[col].Value = "0.00";
-                    row.Cells[_j + 3].ReadOnly = true;
-                    row.Cells[_j + 3].Style.BackColor = SystemColors.Control;
+                    row.Cells[TtnMeanColumn].ReadOnly = true;
+                    row.Cells[TtnMeanColumn].Style.BackColor = SystemColors.Control;
                 }
 
                 AddSummaryRow("t̄ⱼ (hiệu chính)", Color.LightBlue);
@@ -317,7 +322,7 @@ namespace HM_19MB_Demo
                 availableWidth -= SystemInformation.VerticalScrollBarWidth;
             if (availableWidth <= 0) return;
 
-            int totalWeight = 55 + 75 + (_j * 70) + 75 + 68;
+            int totalWeight = 55 + (_j * 70) + 75 + 75 + 68;
             int usedWidth = 0;
 
             int WidthFromWeight(int weight)
@@ -326,19 +331,22 @@ namespace HM_19MB_Demo
             gridData.Columns[0].Width = WidthFromWeight(55);
             usedWidth += gridData.Columns[0].Width;
 
-            gridData.Columns[1].Width = WidthFromWeight(75);
-            usedWidth += gridData.Columns[1].Width;
+            gridData.Columns[ChannelColumn(0)].Width = WidthFromWeight(70);
+            usedWidth += gridData.Columns[ChannelColumn(0)].Width;
 
-            for (int j = 0; j < _j; j++)
+            for (int j = 1; j < _j; j++)
             {
-                gridData.Columns[j + 2].Width = WidthFromWeight(70);
-                usedWidth += gridData.Columns[j + 2].Width;
+                gridData.Columns[ChannelColumn(j)].Width = WidthFromWeight(70);
+                usedWidth += gridData.Columns[ChannelColumn(j)].Width;
             }
 
-            gridData.Columns[_j + 2].Width = WidthFromWeight(75);
-            usedWidth += gridData.Columns[_j + 2].Width;
+            gridData.Columns[Ttn1Column].Width = WidthFromWeight(75);
+            usedWidth += gridData.Columns[Ttn1Column].Width;
 
-            gridData.Columns[_j + 3].Width = Math.Max(45, availableWidth - usedWidth);
+            gridData.Columns[Ttn2Column].Width = WidthFromWeight(75);
+            usedWidth += gridData.Columns[Ttn2Column].Width;
+
+            gridData.Columns[TtnMeanColumn].Width = Math.Max(45, availableWidth - usedWidth);
         }
 
         private void FitGridDataRows()
@@ -424,10 +432,10 @@ namespace HM_19MB_Demo
 
             for (int i = 0; i < _n; i++)
             {
-                ttn1[i] = ReadGridDouble(i, 1);
+                ttn1[i] = ReadGridDouble(i, Ttn1Column);
                 for (int j = 0; j < _j; j++)
-                    measurementData[i, j] = ReadGridDouble(i, j + 2);
-                ttn2[i] = ReadGridDouble(i, _j + 2);
+                    measurementData[i, j] = ReadGridDouble(i, ChannelColumn(j));
+                ttn2[i] = ReadGridDouble(i, Ttn2Column);
             }
 
             double.TryParse(txtUMax.Text, out double uMax);
@@ -472,30 +480,30 @@ namespace HM_19MB_Demo
             {
                 for (int i = 0; i < _n; i++)
                 {
-                    double ttn1 = ReadGridDouble(i, 1);
-                    double ttn2 = ReadGridDouble(i, _j + 2);
-                    gridData.Rows[i].Cells[_j + 3].Value = ((ttn1 + ttn2) / 2.0).ToString("F4");
+                    double ttn1 = ReadGridDouble(i, Ttn1Column);
+                    double ttn2 = ReadGridDouble(i, Ttn2Column);
+                    gridData.Rows[i].Cells[TtnMeanColumn].Value = ((ttn1 + ttn2) / 2.0).ToString("F4");
                 }
 
                 int correctedMeanRow = _n;
                 int stdDevRow = _n + 1;
                 int typeARow = _n + 2;
 
-                gridData.Rows[correctedMeanRow].Cells[1].Value = "—";
-                gridData.Rows[correctedMeanRow].Cells[_j + 2].Value = "—";
-                gridData.Rows[correctedMeanRow].Cells[_j + 3].Value = r.Ttn.ToString("F4");
-                gridData.Rows[stdDevRow].Cells[1].Value = "—";
-                gridData.Rows[stdDevRow].Cells[_j + 2].Value = "—";
-                gridData.Rows[stdDevRow].Cells[_j + 3].Value = "—";
-                gridData.Rows[typeARow].Cells[1].Value = "—";
-                gridData.Rows[typeARow].Cells[_j + 2].Value = "—";
-                gridData.Rows[typeARow].Cells[_j + 3].Value = "—";
+                gridData.Rows[correctedMeanRow].Cells[Ttn1Column].Value = "—";
+                gridData.Rows[correctedMeanRow].Cells[Ttn2Column].Value = "—";
+                gridData.Rows[correctedMeanRow].Cells[TtnMeanColumn].Value = r.Ttn.ToString("F4");
+                gridData.Rows[stdDevRow].Cells[Ttn1Column].Value = "—";
+                gridData.Rows[stdDevRow].Cells[Ttn2Column].Value = "—";
+                gridData.Rows[stdDevRow].Cells[TtnMeanColumn].Value = "—";
+                gridData.Rows[typeARow].Cells[Ttn1Column].Value = "—";
+                gridData.Rows[typeARow].Cells[Ttn2Column].Value = "—";
+                gridData.Rows[typeARow].Cells[TtnMeanColumn].Value = "—";
 
                 for (int j = 0; j < _j; j++)
                 {
-                    gridData.Rows[correctedMeanRow].Cells[j + 2].Value = r.ChannelCorrectedMeans[j].ToString("F4");
-                    gridData.Rows[stdDevRow].Cells[j + 2].Value = r.ChannelStdDevs[j].ToString("F4");
-                    gridData.Rows[typeARow].Cells[j + 2].Value = r.ChannelTypeAUncertainties[j].ToString("F4");
+                    gridData.Rows[correctedMeanRow].Cells[ChannelColumn(j)].Value = r.ChannelCorrectedMeans[j].ToString("F4");
+                    gridData.Rows[stdDevRow].Cells[ChannelColumn(j)].Value = r.ChannelStdDevs[j].ToString("F4");
+                    gridData.Rows[typeARow].Cells[ChannelColumn(j)].Value = r.ChannelTypeAUncertainties[j].ToString("F4");
                 }
 
                 lblR_Dt.Text = $"Δt = {r.DeltaT:F4} °C";
@@ -528,52 +536,7 @@ namespace HM_19MB_Demo
 
         private void BuildResultCards()
         {
-            resultCards.Controls.Clear();
-
-            lblR_Dt = AddResultCard(0, 0, "Số hiệu chính Δt (CT4)");
-            lblR_Od = AddResultCard(1, 0, "Độ ổn định δtod (CT5)");
-            lblR_Dd = AddResultCard(2, 0, "Độ đồng đều δtdd (CT6)");
-            lblR_Uch1 = AddResultCard(3, 0, "uch1 — loại A (CT7)");
-            lblR_Uch2 = AddResultCard(0, 1, "uch2 — loại B (CT10/11)");
-            lblR_Uch = AddResultCard(1, 1, "uch — liên hợp chuẩn (CT12)");
-            lblR_Ubk = AddResultCard(2, 1, "ubk — liên hợp tủ (CT18)");
-            lblR_U = AddResultCard(3, 1, "U mở rộng k=2 P=95% (CT19)");
-
             ResetResultLabels();
-        }
-
-        private Label AddResultCard(int column, int row, string title)
-        {
-            var panel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                Margin = new Padding(3),
-                Padding = new Padding(8, 3, 8, 3),
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-
-            var titleLabel = new Label
-            {
-                Dock = DockStyle.Top,
-                Font = new Font("Segoe UI", 10F),
-                Height = 22,
-                Text = title,
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            var valueLabel = new Label
-            {
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                Text = "—",
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            panel.Controls.Add(valueLabel);
-            panel.Controls.Add(titleLabel);
-            resultCards.Controls.Add(panel, column, row);
-            return valueLabel;
         }
 
         private CalibrationResultRow MapToCalibrationRow(UncertaintyFullResult r, UncertaintyInput input)
@@ -607,13 +570,13 @@ namespace HM_19MB_Demo
 
             for (int i = 0; i < _n; i++)
             {
-                double ttn1 = ReadGridDouble(i, 1);
-                double ttn2 = ReadGridDouble(i, _j + 2);
+                double ttn1 = ReadGridDouble(i, Ttn1Column);
+                double ttn2 = ReadGridDouble(i, Ttn2Column);
                 double chiThi = (ttn1 + ttn2) / 2.0;
 
                 for (int j = 0; j < _j; j++)
                 {
-                    if (!double.TryParse(gridData.Rows[i].Cells[j + 2].Value?.ToString(), out double val))
+                    if (!double.TryParse(gridData.Rows[i].Cells[ChannelColumn(j)].Value?.ToString(), out double val))
                         continue;
 
                     list.Add(new ChiTietLanDo
@@ -712,7 +675,7 @@ namespace HM_19MB_Demo
             {
                 var values = lines[i].Split(',');
                 for (int j = 0; j < values.Length && j < _j; j++)
-                    gridData.Rows[i - 1].Cells[j + 2].Value = values[j];
+                    gridData.Rows[i - 1].Cells[ChannelColumn(j)].Value = values[j];
             }
 
             RecalculateAll();
