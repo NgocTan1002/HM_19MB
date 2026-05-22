@@ -28,7 +28,7 @@ namespace HM_19MB_Demo
         private UncertaintyCalculationForm? _uncertaintyForm;
         private bool _forceCloseUncertaintyForm;
         private int _currentKenhCount = 3; // k hiện tại (3/5/9/10)
-        private int _currentMeasurementCount = 10; // n hiện tại
+        private int _currentMeasurementCount = 5; // n hiện tại
         private bool _updatingCalibrationConfig;
         private bool _updatingCalibrationGrid;
 
@@ -60,6 +60,7 @@ namespace HM_19MB_Demo
             _gridCalibration.ReadOnly = true;
             _gridCalibration.EditMode = DataGridViewEditMode.EditProgrammatically;
             _gridCalibration.DataError += (s, e) => e.ThrowException = false;
+            ConfigureCalibrationGridHeaderStyle();
 
             _gridCalibration.SelectionChanged += (s, e) =>
             {
@@ -115,11 +116,29 @@ namespace HM_19MB_Demo
             }
         }
 
+        private void ConfigureCalibrationGridHeaderStyle()
+        {
+            _gridCalibration.EnableHeadersVisualStyles = false;
+            _gridCalibration.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            _gridCalibration.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            _gridCalibration.ColumnHeadersHeight = 76;
+            _gridCalibration.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
+            {
+                Alignment = DataGridViewContentAlignment.MiddleCenter,
+                BackColor = Color.FromArgb(230, 238, 248),
+                ForeColor = Color.Black,
+                Font = _gridCalibration.Font,
+                Padding = new Padding(0, 4, 0, 4),
+                WrapMode = DataGridViewTriState.True,
+            };
+        }
+
         // ── Xây dựng cột động ─────────────────────────────────────────────
 
         private void RebuildCalibrationColumns(int kenhCount)
         {
             _gridCalibration.Columns.Clear();
+            ConfigureCalibrationGridHeaderStyle();
 
             void AddCol(string name, string header, int fillWeight = 60,
                         DataGridViewContentAlignment align = DataGridViewContentAlignment.MiddleCenter,
@@ -138,14 +157,16 @@ namespace HM_19MB_Demo
                         BackColor = backColor ?? Color.White,
                     },
                 };
+                col.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                col.HeaderCell.Style.WrapMode = DataGridViewTriState.True;
                 _gridCalibration.Columns.Add(col);
             }
 
             // Cột cố định — phần A.1
             AddCol(ColStt, "STT", 35);
             AddCol(ColGiaTriDat, "Giá trị đặt\n(°C)", 70);
-            AddCol(ColGiaTriChiThi, "Giá trị chỉ thị\n(°C)", 70);
-
+            AddCol(ColGiaTriChiThi, "Giá trị chỉ thị (°C)", 70);
+ 
             // Cột kênh — động
             for (int i = 1; i <= kenhCount; i++)
                 AddCol($"CalKenh{i}", $"Kênh {i}\n(°C)", 60);
@@ -160,7 +181,7 @@ namespace HM_19MB_Demo
                    Color.FromArgb(255, 255, 240));
             AddCol(ColDoDongDeu, "Độ đồng đều\n(°C)", 68, DataGridViewContentAlignment.MiddleCenter,
                    Color.FromArgb(255, 255, 240));
-            AddCol(ColDKDB, "ĐKĐB mở rộng\n(°C)\nk=2, P=95%", 90, DataGridViewContentAlignment.MiddleCenter,
+            AddCol(ColDKDB, "ĐKĐB mở rộng\n(°C)", 90, DataGridViewContentAlignment.MiddleCenter,
                    Color.FromArgb(255, 245, 235));
 
             _gridCalibration.Rows.Clear();

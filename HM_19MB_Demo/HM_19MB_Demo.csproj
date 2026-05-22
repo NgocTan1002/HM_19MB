@@ -48,6 +48,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Resources\Templates\Tu_nhiet_3Pos.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Templates\Tu_nhiet_5Pos.xlsx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="test_template.cs" />
     <Compile Remove="TempReader\**\*.cs" />
     <EmbeddedResource Remove="Form1_CalibrationResults.resx" />

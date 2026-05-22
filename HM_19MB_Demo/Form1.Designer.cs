@@ -600,7 +600,7 @@ namespace HM_19MB_Demo
             numMeasurementCount.Name = "numMeasurementCount";
             numMeasurementCount.Size = new Size(60, 27);
             numMeasurementCount.TabIndex = 4;
-            numMeasurementCount.Value = new decimal(new int[] { 10, 0, 0, 0 });
+            numMeasurementCount.Value = new decimal(new int[] { 5, 0, 0, 0 });
             // 
             // _btnAddCalibPoint
             // 

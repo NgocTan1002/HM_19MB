@@ -37,7 +37,7 @@ namespace HM_19MB_Demo
             }
 
             // Xuất Word — hỏi người dùng
-            await ExcelExporter.ExportWordAsync(meta, calibRows, owner);
+            await ExcelExporter.ExportWordAsync(meta, calibRows, kenhCount, owner);
 
             // Xuất Excel — hỏi người dùng (dialog riêng)
             await ExcelExporter.ExportExcelAsync(meta, calibRows, kenhCount, owner);

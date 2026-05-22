@@ -252,7 +252,7 @@ namespace HM_19MB_Demo
                 var ttn1Column = new DataGridViewTextBoxColumn
                 {
                     Name = "Ttn1",
-                    HeaderText = "Tủ lần 1 ttn1i (°C)",
+                    HeaderText = "Chỉ thị tủ lần 1(°C)",
                     Width = 75,
                     FillWeight = 75,
                     SortMode = DataGridViewColumnSortMode.NotSortable
@@ -263,7 +263,7 @@ namespace HM_19MB_Demo
                 var ttn2Column = new DataGridViewTextBoxColumn
                 {
                     Name = "Ttn2",
-                    HeaderText = "Tủ lần 2 ttn2i (°C)",
+                    HeaderText = "Chỉ thị tủ lần 2(°C)",
                     Width = 75,
                     FillWeight = 75,
                     SortMode = DataGridViewColumnSortMode.NotSortable
@@ -274,7 +274,7 @@ namespace HM_19MB_Demo
                 var ttnMeanColumn = new DataGridViewTextBoxColumn
                 {
                     Name = "TtnMean",
-                    HeaderText = "t̄tn,i (°C)",
+                    HeaderText = "Chỉ thị tủ của loạt đo(°C)",
                     ReadOnly = true,
                     Width = 68,
                     FillWeight = 68,
@@ -294,9 +294,9 @@ namespace HM_19MB_Demo
                     row.Cells[TtnMeanColumn].Style.BackColor = SystemColors.Control;
                 }
 
-                AddSummaryRow("t̄ⱼ (hiệu chính)", Color.LightBlue);
-                AddSummaryRow("Sⱼ (độ lệch chuẩn)", SystemColors.Control);
-                AddSummaryRow("uch1,j (loại A)", SystemColors.Control);
+                AddSummaryRow("Chỉ thị chuẩn", Color.LightBlue);
+                AddSummaryRow("Độ lệch chuẩn", SystemColors.Control);
+                AddSummaryRow("ĐKĐBĐ chuẩn (loại A)", SystemColors.Control);
                 FitGridDataLayout();
                 ResetResultLabels();
             }
@@ -560,7 +560,7 @@ namespace HM_19MB_Demo
             ReplaceWithMathLabel(lblUch2Title, "ĐKĐBĐ chuẩn u SUB{ch2}", 9f);
             ReplaceWithMathLabel(lblUchTitle, "Liên hợp chuẩn u SUB{ch}", 9f);
             ReplaceWithMathLabel(lblUbkTitle, "Liên hợp tủ u SUB{bk}", 9f);
-            ReplaceWithMathLabel(lblUTitle, "U = k _cdot_ u SUB{c} (k=2, P=95%)", 11f);
+            ReplaceWithMathLabel(lblUTitle, "U(k=2, P=95%)", 11f);
 
             _mathResultLabelsInitialized = true;
         }

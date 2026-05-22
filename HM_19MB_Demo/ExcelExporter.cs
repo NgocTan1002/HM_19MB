@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using A = DocumentFormat.OpenXml.Drawing;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -19,6 +20,7 @@ namespace HM_19MB_Demo
         public static async Task ExportWordAsync(
             SessionMetadata meta,
             List<CalibrationResultRow> calibRows,
+            int kenhCount,
             IWin32Window owner)
         {
             using var dialog = new SaveFileDialog
@@ -51,28 +53,68 @@ namespace HM_19MB_Demo
                 ["DoAmTuongDoi"]     = meta.DoAmTuongDoi,
                 ["ThietBiChuan"]     = meta.ThietBiChuan,
                 ["NgayHieuChuan"]    = meta.NgayHieuChuan.ToString("dd/MM/yyyy"),
-                ["BangKetQua"] = calibRows.Select((r, i) =>
-                    new Dictionary<string, object>
-                    {
-                        ["STT"] = (i + 1).ToString(),
-                        ["GiaTriDat"] = r.GiaTriDat.ToString("F1"),
-                        ["GiaTriChiThi"] = r.GiaTriChiThi.ToString("F2"),  // t̄_tn
-                        ["TrungBinh"] = r.GiaTriTrungBinh.ToString("F2"), // t̄_ch
-                        ["SoHieuChinh"] = r.SoHieuChinh.ToString("F2"),
-                        ["DoOnDinh"] = r.DoOnDinh.ToString("F2"),
-                        ["DoDongDeu"] = r.DoDongDeu.ToString("F2"),
-                        ["DKDB"] = $"±{r.DoKhongDamBao:F2}",
-                    }).ToList()
             };
 
             await Task.Run(() =>
             {
                 MiniSoftware.MiniWord.SaveAsByTemplate(
                     dialog.FileName, templatePath, values);
+                ReplaceWordProbeImage(dialog.FileName, GetExportChannelCount(calibRows, kenhCount));
                 FillWordResultTable(dialog.FileName, calibRows);
             });
 
             ToastNotification.ShowSuccess($"Đã xuất: {Path.GetFileName(dialog.FileName)}");
+        }
+
+        private static void ReplaceWordProbeImage(string filePath, int channelCount)
+        {
+            using var doc = WordprocessingDocument.Open(filePath, true);
+            var mainPart = doc.MainDocumentPart;
+            if (mainPart?.Document.Body == null)
+                return;
+
+            var blip = mainPart.Document.Body.Descendants<A.Blip>().FirstOrDefault();
+            string? oldRelationshipId = blip?.Embed?.Value;
+            if (blip == null || string.IsNullOrWhiteSpace(oldRelationshipId))
+                return;
+
+            var image = GetProbeGuideImage(channelCount);
+            if (image == null)
+                return;
+
+            ImagePart? oldPart = null;
+            try
+            {
+                oldPart = mainPart.GetPartById(oldRelationshipId) as ImagePart;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                oldPart = null;
+            }
+
+            var imagePart = mainPart.AddImagePart(ImagePartType.Png);
+            using (var stream = new MemoryStream())
+            {
+                image.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                stream.Position = 0;
+                imagePart.FeedData(stream);
+            }
+
+            blip.Embed = mainPart.GetIdOfPart(imagePart);
+
+            if (oldPart != null)
+                mainPart.DeletePart(oldPart);
+
+            mainPart.Document.Save();
+        }
+
+        private static System.Drawing.Image? GetProbeGuideImage(int channelCount)
+        {
+            return channelCount <= 3
+                ? Properties.Resources.probe_3
+                : channelCount <= 5
+                    ? Properties.Resources.probe_5
+                    : Properties.Resources.probe_9;
         }
 
         private static void FillWordResultTable(string filePath, List<CalibrationResultRow> calibRows)
@@ -83,7 +125,7 @@ namespace HM_19MB_Demo
 
             var templateRow = body
                 .Descendants<W.TableRow>()
-                .FirstOrDefault(row => GetWordText(row).Contains("{{STT}}", StringComparison.Ordinal));
+                .FirstOrDefault(row => GetDirectWordRowText(row).Contains("{{STT}}", StringComparison.Ordinal));
 
             if (templateRow == null)
                 return;
@@ -97,6 +139,7 @@ namespace HM_19MB_Demo
             foreach (var item in calibRows.Select((row, index) => new { row, index }))
             {
                 var newRow = (W.TableRow)templateRow.CloneNode(true);
+                RemoveWordPaginationArtifacts(newRow);
                 ReplaceWordRowTokens(newRow, CreateWordResultValues(item.row, item.index));
                 parentTable.InsertBefore(newRow, templateRow);
             }
@@ -115,15 +158,17 @@ namespace HM_19MB_Demo
             {
                 string firstCellText = current.Elements<W.TableCell>()
                     .FirstOrDefault()?
-                    .InnerText
+                    .Elements<W.Paragraph>()
+                    .SelectMany(p => p.Descendants<W.Text>())
+                    .Select(t => t.Text)
+                    .Aggregate(string.Empty, (acc, text) => acc + text)
                     .Trim() ?? string.Empty;
 
-                string fullText = GetWordText(current).Trim();
                 bool isPlaceholderTail =
                     string.Equals(firstCellText, ".", StringComparison.Ordinal) ||
                     string.Equals(firstCellText, "N", StringComparison.OrdinalIgnoreCase);
 
-                if (!isPlaceholderTail || fullText.Contains("{{", StringComparison.Ordinal))
+                if (!isPlaceholderTail)
                     yield break;
 
                 var next = current.NextSibling<W.TableRow>();
@@ -158,9 +203,34 @@ namespace HM_19MB_Demo
             }
         }
 
+        private static void RemoveWordPaginationArtifacts(W.TableRow row)
+        {
+            foreach (var pageBreak in row.Descendants<W.LastRenderedPageBreak>().ToList())
+                pageBreak.Remove();
+
+            foreach (var pageBreakBefore in row.Descendants<W.PageBreakBefore>().ToList())
+                pageBreakBefore.Remove();
+
+            foreach (var br in row.Descendants<W.Break>()
+                         .Where(b => b.Type != null && b.Type.Value == W.BreakValues.Page)
+                         .ToList())
+            {
+                br.Remove();
+            }
+        }
+
         private static string GetWordText(OpenXmlElement element)
         {
             return string.Concat(element.Descendants<W.Text>().Select(t => t.Text));
+        }
+
+        private static string GetDirectWordRowText(W.TableRow row)
+        {
+            return string.Concat(row
+                .Elements<W.TableCell>()
+                .SelectMany(cell => cell.Elements<W.Paragraph>())
+                .SelectMany(paragraph => paragraph.Descendants<W.Text>())
+                .Select(text => text.Text));
         }
 
         public static async Task ExportExcelAsync(
@@ -191,11 +261,15 @@ namespace HM_19MB_Demo
         {
             // Xác định template dựa trên số kênh
             int channelCount = GetExportChannelCount(calibRows, kenhCount);
+            string templateFileName = channelCount <= 3
+                ? "Tu_nhiet_3Pos.xlsx"
+                : "Tu_nhiet_5Pos.xlsx";
+
             string sheetName = channelCount <= 3 ? "3 Pos" : "5 Pos";
-            
+
             string templatePath = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
-                "Resources", "Templates", "Tu_nhiet_V3.xlsx");
+                "Resources", "Templates", templateFileName);
 
             if (!File.Exists(templatePath))
                 throw new FileNotFoundException($"Không tìm thấy template: {templatePath}");
