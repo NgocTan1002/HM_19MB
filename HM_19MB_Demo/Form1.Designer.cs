@@ -88,6 +88,7 @@ namespace HM_19MB_Demo
             lblBaudRate = new Label();
             _btnConnect = new Button();
             _btnExport = new Button();
+            _btnSessionManager = new Button();
             _btnUncertainty = new Button();
             _lblStatus = new Label();
             mainLayout.SuspendLayout();
@@ -195,7 +196,7 @@ namespace HM_19MB_Demo
             metadataFieldsPanel.Dock = DockStyle.Fill;
             metadataFieldsPanel.Location = new Point(3, 3);
             metadataFieldsPanel.Name = "metadataFieldsPanel";
-            metadataFieldsPanel.Size = new Size(834, 335);
+            metadataFieldsPanel.Size = new Size(834, 294);
             metadataFieldsPanel.TabIndex = 0;
             // 
             // lblDeviceName
@@ -385,7 +386,7 @@ namespace HM_19MB_Demo
             lblWorkingTemp.AutoSize = true;
             lblWorkingTemp.Location = new Point(10, 193);
             lblWorkingTemp.Name = "lblWorkingTemp";
-            lblWorkingTemp.Size = new Size(130, 20);
+            lblWorkingTemp.Size = new Size(129, 20);
             lblWorkingTemp.TabIndex = 201;
             lblWorkingTemp.Text = "Nhiệt độ làm việc:";
             lblWorkingTemp.TextAlign = ContentAlignment.MiddleLeft;
@@ -395,7 +396,7 @@ namespace HM_19MB_Demo
             txtWorkingTemp.Location = new Point(160, 190);
             txtWorkingTemp.Name = "txtWorkingTemp";
             txtWorkingTemp.Size = new Size(660, 27);
-            txtWorkingTemp.TabIndex = 202;
+            txtWorkingTemp.TabIndex = 21;
             // 
             // lblTechnicalSpecs
             // 
@@ -806,6 +807,7 @@ namespace HM_19MB_Demo
             bottomFlow.Controls.Add(lblBaudRate);
             bottomFlow.Controls.Add(_btnConnect);
             bottomFlow.Controls.Add(_btnExport);
+            bottomFlow.Controls.Add(_btnSessionManager);
             bottomFlow.Controls.Add(_btnUncertainty);
             bottomFlow.Controls.Add(_lblStatus);
             bottomFlow.Dock = DockStyle.Fill;
@@ -858,10 +860,20 @@ namespace HM_19MB_Demo
             _btnExport.Text = "Xuất biên bản hiệu chuẩn";
             _btnExport.UseVisualStyleBackColor = true;
             // 
+            // _btnSessionManager
+            // 
+            _btnSessionManager.Location = new Point(628, 3);
+            _btnSessionManager.Name = "_btnSessionManager";
+            _btnSessionManager.Size = new Size(157, 38);
+            _btnSessionManager.TabIndex = 7;
+            _btnSessionManager.Text = "Quản lý phiên đo";
+            _btnSessionManager.UseVisualStyleBackColor = true;
+            _btnSessionManager.Click += _btnSessionManager_ClickAsync;
+            // 
             // _btnUncertainty
             // 
             _btnUncertainty.BackColor = Color.White;
-            _btnUncertainty.Location = new Point(628, 4);
+            _btnUncertainty.Location = new Point(791, 4);
             _btnUncertainty.Margin = new Padding(3, 4, 3, 4);
             _btnUncertainty.Name = "_btnUncertainty";
             _btnUncertainty.Size = new Size(225, 37);
@@ -874,7 +886,7 @@ namespace HM_19MB_Demo
             _lblStatus.AutoSize = true;
             _lblStatus.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             _lblStatus.ForeColor = SystemColors.ActiveCaptionText;
-            _lblStatus.Location = new Point(874, 11);
+            _lblStatus.Location = new Point(1037, 11);
             _lblStatus.Margin = new Padding(18, 11, 0, 0);
             _lblStatus.Name = "_lblStatus";
             _lblStatus.Size = new Size(97, 20);
@@ -1109,5 +1121,6 @@ namespace HM_19MB_Demo
         private Button _btnAddCalibPoint;
         private Button button1;
         private Button _btnDeleteCalibPoint;
+        private Button _btnSessionManager;
     }
 }

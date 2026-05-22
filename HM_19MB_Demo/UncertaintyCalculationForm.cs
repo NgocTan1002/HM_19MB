@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -33,6 +34,19 @@ namespace HM_19MB_Demo
         private DataGridView _gridResults = null!;
         private DataGridView _gridBudget = null!;
         private bool _mathResultLabelsInitialized;
+        private AutoCaptureState _autoCaptureState = AutoCaptureState.Stopped;
+        private DateTime? _autoTargetReachedAt;
+        private DateTime? _nextAutoSampleAt;
+        private int _nextAutoSampleRow;
+
+        private enum AutoCaptureState
+        {
+            Stopped,
+            WaitingForTarget,
+            Stabilizing,
+            Sampling,
+            Completed
+        }
 
         private sealed class StandardTraceabilityData
         {
@@ -127,6 +141,9 @@ namespace HM_19MB_Demo
             btnCalculateAndAdd.Enabled = false;
             lblStatus.Text = string.Empty;
 
+            if (changed && _autoCaptureState != AutoCaptureState.Stopped)
+                StopAutoCapture("Tự động đã dừng do thay đổi số kênh/số lần đo.");
+
             if (notifyOwner && !_updatingConfigFromOwner)
                 _onConfigChanged?.Invoke(_j, _n);
         }
@@ -135,6 +152,9 @@ namespace HM_19MB_Demo
         {
             btnApplyConfig.Click += BtnApplyConfig_Click;
             btnCalculateAndAdd.Click += BtnCalculateAndAdd_Click;
+            btnAutoStart.Click += BtnAutoStart_Click;
+            btnAutoStop.Click += BtnAutoStop_Click;
+            chkAutoCapture.CheckedChanged += ChkAutoCapture_CheckedChanged;
 
             gridData.CellValueChanged += GridData_CellValueChanged;
             gridData.CellEndEdit += GridData_CellEndEdit;
@@ -160,6 +180,197 @@ namespace HM_19MB_Demo
         {
             if (_suppressGridEvents) return;
             RecalculateAll(showErrors: false);
+        }
+
+        public void ReceiveMeasurementBlock(MeasurementBlock block)
+        {
+            if (IsDisposed) return;
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => ReceiveMeasurementBlock(block)));
+                return;
+            }
+
+            if (_autoCaptureState == AutoCaptureState.Stopped ||
+                _autoCaptureState == AutoCaptureState.Completed ||
+                !chkAutoCapture.Checked)
+            {
+                return;
+            }
+
+            ProcessAutoCaptureBlock(block);
+        }
+
+        private void ChkAutoCapture_CheckedChanged(object? sender, EventArgs e)
+        {
+            if (!chkAutoCapture.Checked && _autoCaptureState != AutoCaptureState.Stopped)
+                StopAutoCapture("Tự động: đã dừng.");
+        }
+
+        private void BtnAutoStart_Click(object? sender, EventArgs e)
+        {
+            StartAutoCapture();
+        }
+
+        private void BtnAutoStop_Click(object? sender, EventArgs e)
+        {
+            StopAutoCapture("Tự động: đã dừng.");
+        }
+
+        private void StartAutoCapture()
+        {
+            if (!TryReadTargetTemperature(out double target))
+            {
+                MessageBox.Show("Vui lòng nhập điểm kiểm tra hợp lệ trước khi bắt đầu tự động.",
+                    "Thiếu điểm kiểm tra", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtGiaTriDat.Focus();
+                return;
+            }
+
+            _nextAutoSampleRow = 0;
+            _autoTargetReachedAt = null;
+            _nextAutoSampleAt = null;
+            _autoCaptureState = AutoCaptureState.WaitingForTarget;
+
+            chkAutoCapture.Checked = true;
+            btnAutoStart.Enabled = false;
+            btnAutoStop.Enabled = true;
+            lblAutoStatus.ForeColor = Color.DarkBlue;
+            lblAutoStatus.Text = $"Đang chờ đạt {target:F1} °C...";
+        }
+
+        private void StopAutoCapture(string statusText)
+        {
+            _autoCaptureState = AutoCaptureState.Stopped;
+            _autoTargetReachedAt = null;
+            _nextAutoSampleAt = null;
+            btnAutoStart.Enabled = true;
+            btnAutoStop.Enabled = false;
+            lblAutoStatus.ForeColor = Color.DimGray;
+            lblAutoStatus.Text = statusText;
+        }
+
+        private void CompleteAutoCapture()
+        {
+            _autoCaptureState = AutoCaptureState.Completed;
+            _autoTargetReachedAt = null;
+            _nextAutoSampleAt = null;
+            btnAutoStart.Enabled = true;
+            btnAutoStop.Enabled = false;
+            lblAutoStatus.ForeColor = Color.DarkGreen;
+            lblAutoStatus.Text = $"Đã lấy đủ {_n}/{_n} lần đo kênh. Nhập chỉ thị tủ để tính toán.";
+        }
+
+        private void ProcessAutoCaptureBlock(MeasurementBlock block)
+        {
+            if (!TryReadTargetTemperature(out double target))
+            {
+                StopAutoCapture("Tự động: điểm kiểm tra không hợp lệ.");
+                return;
+            }
+
+            if (block.ProbeCount < _j)
+            {
+                lblAutoStatus.ForeColor = Color.DarkRed;
+                lblAutoStatus.Text = $"Thiết bị chỉ có {block.ProbeCount} kênh, cần {_j} kênh.";
+                return;
+            }
+
+            DateTime now = DateTime.Now;
+            double avg = block.AvgTemperature;
+            double tolerance = (double)numAutoTolerance.Value;
+            TimeSpan stableDuration = TimeSpan.FromMinutes((double)numAutoStableMinutes.Value);
+            bool targetReached = Math.Abs(avg - target) <= tolerance;
+
+            if (!targetReached)
+            {
+                _autoCaptureState = AutoCaptureState.WaitingForTarget;
+                _autoTargetReachedAt = null;
+                _nextAutoSampleAt = null;
+                lblAutoStatus.ForeColor = Color.DarkBlue;
+                lblAutoStatus.Text = $"Đang chờ đạt {target:F1} °C, hiện tại {avg:F1} °C.";
+                return;
+            }
+
+            _autoTargetReachedAt ??= now;
+
+            if (stableDuration > TimeSpan.Zero)
+            {
+                TimeSpan stableElapsed = now - _autoTargetReachedAt.Value;
+                if (stableElapsed < stableDuration)
+                {
+                    _autoCaptureState = AutoCaptureState.Stabilizing;
+                    lblAutoStatus.ForeColor = Color.DarkBlue;
+                    lblAutoStatus.Text =
+                        $"Đã gần điểm đặt {avg:F1} °C, ổn định {FormatDuration(stableElapsed)} / {FormatDuration(stableDuration)}.";
+                    return;
+                }
+            }
+
+            _autoCaptureState = AutoCaptureState.Sampling;
+            _nextAutoSampleAt ??= now;
+
+            if (now < _nextAutoSampleAt.Value)
+            {
+                lblAutoStatus.ForeColor = Color.DarkBlue;
+                lblAutoStatus.Text =
+                    $"Đang chờ lần đo {_nextAutoSampleRow + 1}/{_n}, còn {FormatDuration(_nextAutoSampleAt.Value - now)}.";
+                return;
+            }
+
+            CaptureChannelRow(block);
+        }
+
+        private void CaptureChannelRow(MeasurementBlock block)
+        {
+            if (_nextAutoSampleRow >= _n)
+            {
+                CompleteAutoCapture();
+                return;
+            }
+
+            _suppressGridEvents = true;
+            try
+            {
+                for (int j = 0; j < _j; j++)
+                {
+                    gridData.Rows[_nextAutoSampleRow].Cells[ChannelColumn(j)].Value =
+                        block.ProbeTemperatures[j].ToString("F2", CultureInfo.InvariantCulture);
+                }
+            }
+            finally
+            {
+                _suppressGridEvents = false;
+            }
+
+            InvalidateLastCalculation();
+            _nextAutoSampleRow++;
+
+            if (_nextAutoSampleRow >= _n)
+            {
+                CompleteAutoCapture();
+                return;
+            }
+
+            _nextAutoSampleAt = DateTime.Now.AddMinutes((double)numAutoIntervalMinutes.Value);
+            lblAutoStatus.ForeColor = Color.DarkGreen;
+            lblAutoStatus.Text = $"Đã lấy {_nextAutoSampleRow}/{_n}. Lần tiếp theo lúc {_nextAutoSampleAt:HH:mm:ss}.";
+        }
+
+        private bool TryReadTargetTemperature(out double target)
+        {
+            return double.TryParse(txtGiaTriDat.Text, NumberStyles.Float, CultureInfo.CurrentCulture, out target) ||
+                   double.TryParse(txtGiaTriDat.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out target);
+        }
+
+        private static string FormatDuration(TimeSpan value)
+        {
+            if (value < TimeSpan.Zero)
+                value = TimeSpan.Zero;
+
+            return value.TotalHours >= 1
+                ? value.ToString(@"h\:mm\:ss", CultureInfo.InvariantCulture)
+                : value.ToString(@"m\:ss", CultureInfo.InvariantCulture);
         }
 
         private void ApplyConfiguration()

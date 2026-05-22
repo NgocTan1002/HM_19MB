@@ -22,12 +22,21 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Update="SessionManagerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="SessionManagerForm.Designer.cs">
+      <DependentUpon>SessionManagerForm.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="SessionManagerForm.resx">
+      <DependentUpon>SessionManagerForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
 

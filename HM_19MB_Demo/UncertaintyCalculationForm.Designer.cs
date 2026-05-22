@@ -47,6 +47,18 @@ namespace HM_19MB_Demo
             txtResA = new TextBox();
             lblResD = new Label();
             txtResD = new TextBox();
+            autoCaptureStrip = new FlowLayoutPanel();
+            chkAutoCapture = new CheckBox();
+            lblAutoInterval = new Label();
+            numAutoIntervalMinutes = new NumericUpDown();
+            lblAutoTolerance = new Label();
+            numAutoTolerance = new NumericUpDown();
+            lblAutoStable = new Label();
+            numAutoStableMinutes = new NumericUpDown();
+            label1 = new Label();
+            btnAutoStart = new Button();
+            btnAutoStop = new Button();
+            lblAutoStatus = new Label();
             gridPanel = new Panel();
             gridData = new DataGridView();
             resultPanel = new Panel();
@@ -86,6 +98,10 @@ namespace HM_19MB_Demo
             ((System.ComponentModel.ISupportInitialize)numMeasurements).BeginInit();
             correctionStrip.SuspendLayout();
             typeBStrip.SuspendLayout();
+            autoCaptureStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numAutoIntervalMinutes).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numAutoTolerance).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numAutoStableMinutes).BeginInit();
             gridPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)gridData).BeginInit();
             resultPanel.SuspendLayout();
@@ -129,16 +145,18 @@ namespace HM_19MB_Demo
             inputLayout.Controls.Add(configStrip, 0, 0);
             inputLayout.Controls.Add(correctionStrip, 0, 1);
             inputLayout.Controls.Add(typeBStrip, 0, 2);
-            inputLayout.Controls.Add(gridPanel, 0, 3);
-            inputLayout.Controls.Add(resultPanel, 0, 4);
-            inputLayout.Controls.Add(bottomBar, 0, 5);
+            inputLayout.Controls.Add(autoCaptureStrip, 0, 3);
+            inputLayout.Controls.Add(gridPanel, 0, 4);
+            inputLayout.Controls.Add(resultPanel, 0, 5);
+            inputLayout.Controls.Add(bottomBar, 0, 6);
             inputLayout.Dock = DockStyle.Fill;
             inputLayout.Location = new Point(3, 3);
             inputLayout.Name = "inputLayout";
-            inputLayout.RowCount = 6;
+            inputLayout.RowCount = 7;
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36F));
+            inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 180F));
             inputLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
@@ -410,16 +428,158 @@ namespace HM_19MB_Demo
             txtResD.TabIndex = 7;
             txtResD.Text = "0.50";
             // 
+            // autoCaptureStrip
+            // 
+            autoCaptureStrip.BackColor = Color.FromArgb(248, 250, 253);
+            autoCaptureStrip.Controls.Add(chkAutoCapture);
+            autoCaptureStrip.Controls.Add(lblAutoInterval);
+            autoCaptureStrip.Controls.Add(numAutoIntervalMinutes);
+            autoCaptureStrip.Controls.Add(lblAutoTolerance);
+            autoCaptureStrip.Controls.Add(numAutoTolerance);
+            autoCaptureStrip.Controls.Add(lblAutoStable);
+            autoCaptureStrip.Controls.Add(numAutoStableMinutes);
+            autoCaptureStrip.Controls.Add(label1);
+            autoCaptureStrip.Controls.Add(btnAutoStart);
+            autoCaptureStrip.Controls.Add(btnAutoStop);
+            autoCaptureStrip.Controls.Add(lblAutoStatus);
+            autoCaptureStrip.Dock = DockStyle.Fill;
+            autoCaptureStrip.Location = new Point(0, 116);
+            autoCaptureStrip.Margin = new Padding(0);
+            autoCaptureStrip.Name = "autoCaptureStrip";
+            autoCaptureStrip.Padding = new Padding(8, 6, 8, 0);
+            autoCaptureStrip.Size = new Size(1183, 45);
+            autoCaptureStrip.TabIndex = 3;
+            autoCaptureStrip.WrapContents = false;
+            // 
+            // chkAutoCapture
+            // 
+            chkAutoCapture.AutoSize = true;
+            chkAutoCapture.Location = new Point(11, 9);
+            chkAutoCapture.Margin = new Padding(3, 3, 14, 0);
+            chkAutoCapture.Name = "chkAutoCapture";
+            chkAutoCapture.Size = new Size(87, 24);
+            chkAutoCapture.TabIndex = 0;
+            chkAutoCapture.Text = "Tự động";
+            chkAutoCapture.UseVisualStyleBackColor = true;
+            // 
+            // lblAutoInterval
+            // 
+            lblAutoInterval.AutoSize = true;
+            lblAutoInterval.Location = new Point(112, 11);
+            lblAutoInterval.Margin = new Padding(0, 5, 4, 0);
+            lblAutoInterval.Name = "lblAutoInterval";
+            lblAutoInterval.Size = new Size(35, 20);
+            lblAutoInterval.TabIndex = 1;
+            lblAutoInterval.Text = "Mỗi";
+            // 
+            // numAutoIntervalMinutes
+            // 
+            numAutoIntervalMinutes.DecimalPlaces = 1;
+            numAutoIntervalMinutes.Increment = new decimal(new int[] { 5, 0, 0, 65536 });
+            numAutoIntervalMinutes.Location = new Point(151, 7);
+            numAutoIntervalMinutes.Margin = new Padding(0, 1, 10, 0);
+            numAutoIntervalMinutes.Maximum = new decimal(new int[] { 1440, 0, 0, 0 });
+            numAutoIntervalMinutes.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
+            numAutoIntervalMinutes.Name = "numAutoIntervalMinutes";
+            numAutoIntervalMinutes.Size = new Size(70, 27);
+            numAutoIntervalMinutes.TabIndex = 2;
+            numAutoIntervalMinutes.Value = new decimal(new int[] { 5, 0, 0, 0 });
+            // 
+            // lblAutoTolerance
+            // 
+            lblAutoTolerance.AutoSize = true;
+            lblAutoTolerance.Location = new Point(231, 11);
+            lblAutoTolerance.Margin = new Padding(0, 5, 4, 0);
+            lblAutoTolerance.Name = "lblAutoTolerance";
+            lblAutoTolerance.Size = new Size(56, 20);
+            lblAutoTolerance.TabIndex = 3;
+            lblAutoTolerance.Text = "phút, ±";
+            // 
+            // numAutoTolerance
+            // 
+            numAutoTolerance.DecimalPlaces = 2;
+            numAutoTolerance.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
+            numAutoTolerance.Location = new Point(291, 7);
+            numAutoTolerance.Margin = new Padding(0, 1, 10, 0);
+            numAutoTolerance.Name = "numAutoTolerance";
+            numAutoTolerance.Size = new Size(70, 27);
+            numAutoTolerance.TabIndex = 4;
+            numAutoTolerance.Value = new decimal(new int[] { 5, 0, 0, 65536 });
+            // 
+            // lblAutoStable
+            // 
+            lblAutoStable.AutoSize = true;
+            lblAutoStable.Location = new Point(371, 11);
+            lblAutoStable.Margin = new Padding(0, 5, 4, 0);
+            lblAutoStable.Name = "lblAutoStable";
+            lblAutoStable.Size = new Size(121, 20);
+            lblAutoStable.TabIndex = 5;
+            lblAutoStable.Text = "°C, ổn định trong";
+            // 
+            // numAutoStableMinutes
+            // 
+            numAutoStableMinutes.DecimalPlaces = 1;
+            numAutoStableMinutes.Increment = new decimal(new int[] { 5, 0, 0, 65536 });
+            numAutoStableMinutes.Location = new Point(496, 7);
+            numAutoStableMinutes.Margin = new Padding(0, 1, 10, 0);
+            numAutoStableMinutes.Maximum = new decimal(new int[] { 1440, 0, 0, 0 });
+            numAutoStableMinutes.Name = "numAutoStableMinutes";
+            numAutoStableMinutes.Size = new Size(70, 27);
+            numAutoStableMinutes.TabIndex = 6;
+            numAutoStableMinutes.Value = new decimal(new int[] { 3, 0, 0, 0 });
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(579, 11);
+            label1.Margin = new Padding(3, 5, 8, 0);
+            label1.Name = "label1";
+            label1.Size = new Size(39, 20);
+            label1.TabIndex = 10;
+            label1.Text = "phút";
+            // 
+            // btnAutoStart
+            // 
+            btnAutoStart.Location = new Point(626, 7);
+            btnAutoStart.Margin = new Padding(0, 1, 6, 0);
+            btnAutoStart.Name = "btnAutoStart";
+            btnAutoStart.Size = new Size(82, 30);
+            btnAutoStart.TabIndex = 7;
+            btnAutoStart.Text = "Bắt đầu";
+            btnAutoStart.UseVisualStyleBackColor = true;
+            // 
+            // btnAutoStop
+            // 
+            btnAutoStop.Enabled = false;
+            btnAutoStop.Location = new Point(714, 7);
+            btnAutoStop.Margin = new Padding(0, 1, 12, 0);
+            btnAutoStop.Name = "btnAutoStop";
+            btnAutoStop.Size = new Size(70, 30);
+            btnAutoStop.TabIndex = 8;
+            btnAutoStop.Text = "Dừng";
+            btnAutoStop.UseVisualStyleBackColor = true;
+            // 
+            // lblAutoStatus
+            // 
+            lblAutoStatus.AutoSize = true;
+            lblAutoStatus.ForeColor = Color.DimGray;
+            lblAutoStatus.Location = new Point(796, 11);
+            lblAutoStatus.Margin = new Padding(0, 5, 0, 0);
+            lblAutoStatus.Name = "lblAutoStatus";
+            lblAutoStatus.Size = new Size(138, 20);
+            lblAutoStatus.TabIndex = 9;
+            lblAutoStatus.Text = "Tự động: chưa chạy";
+            // 
             // gridPanel
             // 
             gridPanel.Controls.Add(gridData);
             gridPanel.Dock = DockStyle.Fill;
-            gridPanel.Location = new Point(0, 116);
+            gridPanel.Location = new Point(0, 161);
             gridPanel.Margin = new Padding(0);
             gridPanel.Name = "gridPanel";
             gridPanel.Padding = new Padding(8);
-            gridPanel.Size = new Size(1183, 445);
-            gridPanel.TabIndex = 3;
+            gridPanel.Size = new Size(1183, 400);
+            gridPanel.TabIndex = 4;
             // 
             // gridData
             // 
@@ -433,7 +593,7 @@ namespace HM_19MB_Demo
             gridData.Name = "gridData";
             gridData.RowHeadersVisible = false;
             gridData.RowHeadersWidth = 51;
-            gridData.Size = new Size(1167, 429);
+            gridData.Size = new Size(1167, 384);
             gridData.TabIndex = 0;
             // 
             // resultPanel
@@ -834,6 +994,11 @@ namespace HM_19MB_Demo
             correctionStrip.PerformLayout();
             typeBStrip.ResumeLayout(false);
             typeBStrip.PerformLayout();
+            autoCaptureStrip.ResumeLayout(false);
+            autoCaptureStrip.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)numAutoIntervalMinutes).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numAutoTolerance).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numAutoStableMinutes).EndInit();
             gridPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)gridData).EndInit();
             resultPanel.ResumeLayout(false);
@@ -882,6 +1047,17 @@ namespace HM_19MB_Demo
         private TextBox txtResA;
         private Label lblResD;
         private TextBox txtResD;
+        private FlowLayoutPanel autoCaptureStrip;
+        private CheckBox chkAutoCapture;
+        private Label lblAutoInterval;
+        private NumericUpDown numAutoIntervalMinutes;
+        private Label lblAutoTolerance;
+        private NumericUpDown numAutoTolerance;
+        private Label lblAutoStable;
+        private NumericUpDown numAutoStableMinutes;
+        private Button btnAutoStart;
+        private Button btnAutoStop;
+        private Label lblAutoStatus;
 
         private Panel gridPanel;
         private DataGridView gridData;
@@ -914,5 +1090,6 @@ namespace HM_19MB_Demo
         private Label lblR_Uch;
         private Label lblR_Ubk;
         private Label lblR_U;
+        private Label label1;
     }
 }

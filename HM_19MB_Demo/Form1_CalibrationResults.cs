@@ -26,7 +26,6 @@ namespace HM_19MB_Demo
 
         // ── State ─────────────────────────────────────────────────────────
         private UncertaintyCalculationForm? _uncertaintyForm;
-        private bool _forceCloseUncertaintyForm;
         private int _currentKenhCount = 3; // k hiện tại (3/5/9/10)
         private int _currentMeasurementCount = 5; // n hiện tại
         private bool _updatingCalibrationConfig;
@@ -205,6 +204,8 @@ namespace HM_19MB_Demo
             {
                 if (!_uncertaintyForm.Visible)
                     _uncertaintyForm.Show(this);
+                if (_lastBlock != null)
+                    _uncertaintyForm.ReceiveMeasurementBlock(_lastBlock);
                 _uncertaintyForm.BringToFront();
                 _uncertaintyForm.Focus();
                 return;
@@ -219,20 +220,13 @@ namespace HM_19MB_Demo
             );
 
             ConfigureUncertaintyFormLifetime(_uncertaintyForm);
+            if (_lastBlock != null)
+                _uncertaintyForm.ReceiveMeasurementBlock(_lastBlock);
             _uncertaintyForm.Show(this);
         }
 
         private void ConfigureUncertaintyFormLifetime(UncertaintyCalculationForm form)
         {
-            form.FormClosing += (s, e) =>
-            {
-                if (!_forceCloseUncertaintyForm && e.CloseReason == CloseReason.UserClosing)
-                {
-                    e.Cancel = true;
-                    form.Hide();
-                }
-            };
-
             form.FormClosed += (s, e) =>
             {
                 if (ReferenceEquals(_uncertaintyForm, form))
@@ -583,15 +577,7 @@ namespace HM_19MB_Demo
             UpdateCalibrationActionButtons();
             if (_uncertaintyForm != null && !_uncertaintyForm.IsDisposed)
             {
-                _forceCloseUncertaintyForm = true;
-                try
-                {
-                    _uncertaintyForm.Close();
-                }
-                finally
-                {
-                    _forceCloseUncertaintyForm = false;
-                }
+                _uncertaintyForm.Close();
             }
         }
 

@@ -31,6 +31,7 @@ namespace HM_19MB_Demo
 
         // ── Session state ────────────────────────────────────────────────────
         private int? _currentSessionId = null;
+        private SessionManagerForm? _sessionManagerForm;
         private bool IsHumidityMeasurementEnabled => _chkHumidity.Checked;
 
         // ── Probe colors (referenced by Designer) ────────────────────────────
@@ -225,6 +226,8 @@ namespace HM_19MB_Demo
 
             UpdateGrid(block);
             UpdateChart(block);
+            if (_uncertaintyForm != null && !_uncertaintyForm.IsDisposed)
+                _uncertaintyForm.ReceiveMeasurementBlock(block);
             _lblLastReceived.Text = $"Lần nhận cuối: {block.Timestamp:HH:mm dd/MM/yyyy}  |  Thiết bị: {block.DeviceId}";
             _lblStatus.Text = $"Đang kết nối — nhận lúc {DateTime.Now:HH:mm}";
         }
@@ -338,6 +341,8 @@ namespace HM_19MB_Demo
             {
                 if (!_uncertaintyForm.Visible)
                     _uncertaintyForm.Show(this);
+                if (_lastBlock != null)
+                    _uncertaintyForm.ReceiveMeasurementBlock(_lastBlock);
                 _uncertaintyForm.BringToFront();
                 _uncertaintyForm.Focus();
                 return;
@@ -350,6 +355,8 @@ namespace HM_19MB_Demo
                 onResultAdded: OnCalibrationResultAdded,
                 onConfigChanged: (k, n) => SetCalibrationConfig(k, n, clearRowsOnChannelChange: true));
             ConfigureUncertaintyFormLifetime(_uncertaintyForm);
+            if (_lastBlock != null)
+                _uncertaintyForm.ReceiveMeasurementBlock(_lastBlock);
             _uncertaintyForm.Show(this);
         }
 
@@ -774,15 +781,7 @@ namespace HM_19MB_Demo
 
             if (_uncertaintyForm != null && !_uncertaintyForm.IsDisposed)
             {
-                _forceCloseUncertaintyForm = true;
-                try
-                {
-                    _uncertaintyForm.Close();
-                }
-                finally
-                {
-                    _forceCloseUncertaintyForm = false;
-                }
+                _uncertaintyForm.Close();
                 _uncertaintyForm = null;
             }
             int editingRowIndex = selectedRow.Index;
@@ -851,6 +850,130 @@ namespace HM_19MB_Demo
                     }
                 });
             }
+        }
+
+        private void _btnSessionManager_ClickAsync(object? sender, EventArgs e)
+        {
+            if (_sessionManagerForm != null && !_sessionManagerForm.IsDisposed)
+            {
+                if (!_sessionManagerForm.Visible)
+                    _sessionManagerForm.Show(this);
+                if (_sessionManagerForm.WindowState == FormWindowState.Minimized)
+                    _sessionManagerForm.WindowState = FormWindowState.Normal;
+                _sessionManagerForm.BringToFront();
+                _sessionManagerForm.Focus();
+                return;
+            }
+
+            _sessionManagerForm = new SessionManagerForm();
+            _sessionManagerForm.FormClosed += async (_, _) =>
+            {
+                var mgr = _sessionManagerForm;
+                _sessionManagerForm = null;
+                if (mgr == null)
+                    return;
+                if (mgr.DialogResult != DialogResult.OK)
+                {
+                    mgr.Dispose();
+                    return;
+                }
+
+                if (mgr.IsNewSession)
+            {
+                // ── Tạo phiên hoàn toàn mới ──────────────────────────
+                StartNewSession();
+
+                // Xóa metadata form để user điền lại
+                ClearMetadataFields();
+
+                _lblStatus.Text = "Phiên mới — chưa lưu";
+                _lblStatus.ForeColor = Color.DarkBlue;
+                ToastNotification.ShowSuccess("Đã tạo phiên đo mới. Vui lòng điền thông tin thiết bị.");
+            }
+                else if (mgr.SelectedSessionId.HasValue)
+            {
+                // ── Load lại phiên cũ ─────────────────────────────────
+                await LoadExistingSessionAsync(mgr.SelectedSessionId.Value);
+            }
+
+                mgr.Dispose();
+            };
+            _sessionManagerForm.Show(this);
+        }
+
+        private async Task LoadExistingSessionAsync(int phienId)
+        {
+            try
+            {
+                await DatabaseService.EnsureSchemaAsync();
+
+                // 1. Load metadata
+                var meta = await DatabaseService.LayPhienAsync(phienId);
+                if (meta == null)
+                {
+                    MessageBox.Show("Không tìm thấy phiên đo này.", "Lỗi",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 2. Reset trạng thái hiện tại
+                StartNewSession();
+                _currentSessionId = phienId;
+
+                // 3. Điền metadata lên form
+                LoadMetadataToForm(meta);
+
+                // 4. Load kết quả hiệu chuẩn vào grid
+                OnSessionIdAssigned(); // gọi TryLoadCalibrationResultsAsync()
+
+                _lblStatus.Text = $"Đã mở phiên #{phienId} — {meta.TenThietBi}";
+                _lblStatus.ForeColor = Color.DarkGreen;
+                ToastNotification.ShowSuccess($"Đã mở phiên đo: {meta.TenThietBi} ({meta.SoHieu})");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi mở phiên:\n{ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void LoadMetadataToForm(SessionMetadata meta)
+        {
+            txtDeviceName.Text = meta.TenThietBi;
+            txtDeviceCode.Text = meta.KyHieu;
+            txtDeviceNumber.Text = meta.SoHieu;
+            txtSealNumber.Text = meta.SoTem;
+            txtManufacturer.Text = meta.NoiSanXuat;
+            txtManufactureYear.Text = meta.NamSanXuat;
+            txtUsingUnit.Text = meta.DonViSuDung;
+            txtMethod.Text = meta.PhuongPhap;
+            txtEnvTemp.Text = meta.NhietDoMoiTruong;
+            txtEnvHumidity.Text = meta.DoAmTuongDoi;
+            txtTechnicalSpecs.Text = meta.DacTinhKyThuat;
+            txtMeasuringDevices.Text = meta.ThietBiChuan;
+            txtCalibDay.Text = meta.NgayHieuChuan.Day.ToString();
+            txtCalibMonth.Text = meta.NgayHieuChuan.Month.ToString();
+            txtCalibYear.Text = meta.NgayHieuChuan.Year.ToString();
+        }
+
+        private void ClearMetadataFields()
+        {
+            txtDeviceName.Text = "Tủ nhiệt";
+            txtDeviceCode.Text = "";
+            txtDeviceNumber.Text = "";
+            txtSealNumber.Text = "";
+            txtManufacturer.Text = "";
+            txtManufactureYear.Text = "";
+            txtUsingUnit.Text = "";
+            txtMethod.Text = "QTHC 1.013 : 2019";
+            txtEnvTemp.Text = "";
+            txtEnvHumidity.Text = "";
+            txtTechnicalSpecs.Text = "";
+            txtMeasuringDevices.Text = "";
+            var now = DateTime.Now;
+            txtCalibDay.Text = now.Day.ToString();
+            txtCalibMonth.Text = now.Month.ToString();
+            txtCalibYear.Text = now.Year.ToString();
         }
     }
 }

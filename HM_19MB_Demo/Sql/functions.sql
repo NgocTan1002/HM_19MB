@@ -471,3 +471,61 @@ BEGIN
     DELETE FROM chi_tiet_lan_do WHERE ket_qua_hc_id = p_ket_qua_hc_id;
 END;
 $$;
+
+-- ----------------------------------------------------------------
+-- fn_lay_danh_sach_phien: Lấy danh sách tất cả phiên đo
+-- Trả về: id, tên thiết bị, số hiệu, ngày hiệu chuẩn, số điểm đo,
+--         số lần đo thô, ngày tạo
+-- ----------------------------------------------------------------
+DROP FUNCTION IF EXISTS fn_lay_danh_sach_phien();
+ 
+CREATE OR REPLACE FUNCTION fn_lay_danh_sach_phien()
+RETURNS TABLE (
+    id                  INT,
+    ten_thiet_bi        VARCHAR,
+    ky_hieu             VARCHAR,
+    so_hieu             VARCHAR,
+    don_vi_su_dung      VARCHAR,
+    ngay_hieu_chuan     DATE,
+    so_diem_kiem_tra    BIGINT,   -- số dòng trong ket_qua_hieu_chuan
+    so_lan_do_tho       BIGINT,   -- số dòng trong ket_qua_do
+    ngay_tao            TIMESTAMP
+)
+LANGUAGE sql
+STABLE
+AS $$
+    SELECT
+        p.id,
+        p.ten_thiet_bi,
+        p.ky_hieu,
+        p.so_hieu,
+        p.don_vi_su_dung,
+        p.ngay_hieu_chuan,
+        COALESCE((
+            SELECT COUNT(*) FROM ket_qua_hieu_chuan kqhc
+            WHERE kqhc.phien_id = p.id
+        ), 0) AS so_diem_kiem_tra,
+        COALESCE((
+            SELECT COUNT(*) FROM ket_qua_do kqd
+            WHERE kqd.phien_id = p.id
+        ), 0) AS so_lan_do_tho,
+        p.ngay_tao
+    FROM phien_hieu_chuan p
+    ORDER BY p.ngay_tao DESC;
+$$;
+ 
+ 
+-- ----------------------------------------------------------------
+-- fn_xoa_phien: Xóa toàn bộ phiên đo (cascade)
+-- ----------------------------------------------------------------
+DROP FUNCTION IF EXISTS fn_xoa_phien(INT);
+ 
+CREATE OR REPLACE FUNCTION fn_xoa_phien(p_phien_id INT)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM phien_hieu_chuan WHERE id = p_phien_id;
+    -- ket_qua_do và ket_qua_hieu_chuan sẽ tự xóa nhờ ON DELETE CASCADE
+END;
+$$;
